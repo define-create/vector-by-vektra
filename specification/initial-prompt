@@ -1,0 +1,54 @@
+
+
+## CLAUDE CODE MASTER PROMPT
+
+You are a senior full-stack engineer.
+
+Build a production-ready application called **Vector by Vektra** using:
+
+* Next.js 14 App Router
+* TypeScript
+* Prisma ORM
+* Supabase Postgres
+* Auth.js
+* Stripe
+* Deployed to Vercel
+
+### Core Requirements
+
+1. Manual match entry only
+2. Single-entry truth
+3. 60-minute edit window
+4. Admin void + merge + identity edit
+5. Immutable audit log
+6. Nightly rating recompute (full replay)
+7. Doubles-aware ELO
+8. Trajectory chart using rating snapshots
+9. Under-chart win% and point differential
+10. Pro tier unlocks network intelligence
+11. Shadow profiles auto-created
+12. Claim attaches matches automatically
+
+### Deliverables
+
+1. Full Prisma schema
+2. API route handlers
+3. Rating engine service
+4. Admin recompute endpoint
+5. Stripe webhook handler
+6. Auth integration
+7. Minimal dark UI
+8. Bottom navigation
+9. Typed service layer
+10. Production-ready env configuration
+
+Follow strict typing.
+Separate rating logic into `/lib/rating-engine`.
+Avoid hard deletes.
+Use soft void.
+
+End of prompt.
+
+---
+
+
