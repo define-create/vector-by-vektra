@@ -1,0 +1,259 @@
+This is the **complete, production-ready master specification** for:
+
+**Vector by Vektra**
+Hosted on **Vercel**
+Database on **Supabase (Postgres)**
+Manual-entry first → Network-enabled → Scalable
+
+Everything below is internally consistent and ready for execution.
+
+---
+
+# A) FULL TECHNICAL BUILD PLAN
+
+(Next.js + Supabase + Vercel + Scaling Path)
+
+---
+
+## 1. Core Stack
+
+### Frontend & API
+
+* **Next.js 14+ (App Router)**
+* TypeScript
+* Server Components where possible
+* Route Handlers for API
+* Deployed on **Vercel**
+
+### Database
+
+* **Supabase Postgres**
+* Prisma ORM
+* pgBouncer (pooled runtime connection)
+* DIRECT_URL for migrations
+
+### Auth
+
+* Auth.js (NextAuth)
+* Email/password
+* Email verification required for Pro tier
+* Roles: `user`, `admin`
+
+### Payments
+
+* Stripe subscriptions
+* Webhooks update `users.plan`
+
+### Batch Processing
+
+* Vercel Cron → `/api/admin/recompute`
+* Admin-triggerable recompute endpoint
+* Future-ready for QStash if dataset grows
+
+---
+
+## 2. Database Schema (Production-Ready)
+
+### Users
+
+* id (uuid)
+* email (unique)
+* emailVerifiedAt
+* handle (unique)
+* displayName
+* role (user|admin)
+* plan (free|pro)
+* createdAt
+
+---
+
+### Players
+
+* id
+* userId (nullable)
+* displayName
+* claimed (bool)
+* rating (float)
+* ratingConfidence (float)
+* createdAt
+
+Shadow profile = userId null.
+
+---
+
+### Matches
+
+* id
+* enteredByUserId
+* matchDate
+* lockedAt
+* voidedAt
+* dataSource (manual|future_scraped)
+* createdAt
+
+---
+
+### MatchParticipants
+
+* id
+* matchId
+* playerId
+* team (1|2)
+
+---
+
+### Games
+
+* id
+* matchId
+* gameOrder
+* team1Score
+* team2Score
+
+---
+
+### RatingRuns
+
+* id
+* runType (nightly|admin)
+* startedAt
+* finishedAt
+* status
+
+---
+
+### RatingSnapshots
+
+* id
+* runId
+* playerId
+* rating
+* matchId
+* matchDate
+
+---
+
+### AuditEvents (Immutable)
+
+* id
+* entityType
+* entityId
+* actionType
+* adminUserId
+* metadata (json)
+* createdAt
+
+---
+
+## 3. Rating Engine (Authoritative Design)
+
+### Algorithm
+
+Doubles-aware ELO:
+
+TeamRating = (P1 + P2) / 2
+
+Expected = logistic(teamA − teamB)
+
+K = baseK * recencyWeight * marginWeight
+
+Updates applied per match in chronological order.
+
+---
+
+### Batch Replay Process
+
+1. Fetch non-void matches sorted by:
+
+   * matchDate
+   * createdAt (tie-breaker)
+2. Initialize all players at baseline (1000)
+3. Replay every match
+4. Store rating after each match in `RatingSnapshots`
+5. Update current rating in `Players`
+
+---
+
+### Why Full Replay?
+
+* Safe after merges
+* Safe after voids
+* Deterministic
+* No rating drift errors
+
+---
+
+## 4. Trajectory Endpoint
+
+`GET /api/trajectory?horizon=10games|7days|30days`
+
+Returns:
+
+* ratingSeries
+* winRate
+* record
+* pointDifferential
+
+Rating slope derived from RatingSnapshots only.
+
+---
+
+## 5. Permissions Model
+
+### Free
+
+* Enter matches
+* View personal trajectory
+* Personal predictions (own dataset)
+
+### Pro
+
+* Player search
+* View network ratings
+* Head-to-head network data
+* Network matchup probabilities
+
+---
+
+## 6. Supabase Configuration
+
+* SSL enforced
+* Connection pooling enabled
+* Daily backups
+* No hard deletes
+
+---
+
+## 7. Vercel Configuration
+
+`vercel.json`:
+
+* Cron at 3:00 UTC nightly
+* Secure secret header required
+
+Regions:
+
+* US East initially
+
+---
+
+## 8. Scaling Path
+
+### Phase 1 (<50k matches)
+
+* Full replay fine
+* Serverless OK
+
+### Phase 2 (50k–500k matches)
+
+* Chunked replay
+* Possibly queue-based recompute
+
+### Phase 3 (500k+ matches)
+
+* Incremental rating engine
+* Partitioned rating pools
+* Background worker architecture
+
+---
+
