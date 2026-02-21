@@ -1,13 +1,15 @@
 # vector-by-vektra
 
 
-Vector by Vektra — v1 Locked State
+##Vector by Vektra — v1 Locked State##
+
 Product Position
 
-Strategic trajectory instrument for competitive pickleball players.
-Private-first. Discoverable in-app. Network intelligence gated by Pro.
+    Strategic trajectory instrument for competitive pickleball players.
+    Private-first. Discoverable in-app. Network intelligence gated by Pro.
 
 Core Decisions Locked
+
 Infrastructure
 
 Hosting: Vercel
