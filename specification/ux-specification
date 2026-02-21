@@ -1,0 +1,102 @@
+This is the complete, master UX specification for:
+
+Vector by Vektra
+Hosted on Vercel
+Database on Supabase (Postgres)
+Manual-entry first → Network-enabled → Scalable
+
+
+
+# B) PRODUCT UX SPECIFICATION (Claude-Ready)
+
+---
+
+## Navigation (Bottom Tabs)
+
+1. Command
+2. Enter
+3. Matchups
+4. Trajectory
+
+Dark-first. No extra screens.
+
+---
+
+## 1. Command Screen
+
+* Rating (large numeric)
+* 90-day Win %
+* Compounding Index
+* Drift Score
+* Last Match summary
+* Edit timer (if active)
+* Upcoming Match Probability
+
+No scrolling required.
+
+---
+
+## 2. Enter Screen (Fast After Play)
+
+Flow:
+
+1. Select Partner (autocomplete + recent chips)
+2. Select Opponent 1 & 2
+3. WIN / LOSS toggle
+4. Game scores (numeric keypad auto-advance)
+5. Submit
+
+Total target time: < 60 seconds.
+
+---
+
+## 3. Matchups Screen
+
+Search bar (Pro feature)
+
+Displays:
+
+* Player rating
+* Rating confidence
+* Head-to-head stats
+* Win probability
+* Volatility band
+
+Free users see limited version + quiet Pro gate.
+
+---
+
+## 4. Trajectory Screen
+
+Segmented control:
+
+* 10 Games (default)
+* 7 Days
+* 1 Month
+
+Primary:
+
+* Rating slope chart
+
+Under-chart stats:
+
+* Win %
+* Record
+* Point differential
+
+No extra graphs.
+
+---
+
+## 5. Admin UX
+
+* Void match
+* Merge players
+* Edit identity
+* Audit log view
+* Trigger recompute
+
+All actions audited.
+
+---
+
