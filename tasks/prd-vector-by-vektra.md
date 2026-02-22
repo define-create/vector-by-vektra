@@ -147,20 +147,21 @@
     - Drift Score (see Section 10.2 for full definition)
     - Last match summary
     - Edit timer (visible only when an editable match exists within the 60-minute window)
+    - Upcoming Match Probability (win probability against the player's most likely next opponent, derived from personal match history — free tier, no network data required)
 29. The Command screen must not require scrolling to see all primary data on a standard mobile viewport.
 
 ### 4.7 Matchups Screen
 
-30. The Matchups screen must display a player search bar.
-31. For any searched player, the system must display:
+30. The Matchups screen must display a player search bar. The search bar is a **Pro-only feature**; free users see it in a locked/disabled state with a quiet Pro gate label.
+31. For any player looked up via search (Pro), the system must display:
     - Their current rating
     - Rating confidence score
     - Head-to-head stats between the searching user and the searched player
     - Win probability for the searching user against the searched player
     - Volatility band (rating uncertainty range)
-32. In the MVP, the Matchups screen is available to all authenticated users for their own direct opponents (players they have actually played).
-33. Full player network search (players they have not directly played) is gated to the Pro tier (phase 2).
-34. Free users must see a quiet, non-intrusive Pro upgrade prompt on the Matchups screen where network search would appear.
+32. Free users must see a limited default view on the Matchups screen showing their most recently played opponents' ratings and head-to-head record — auto-populated without requiring search. This does not require Pro.
+33. The full player search bar (search any player by name or handle) is gated to Pro. Network search (players the user has never played) is also Pro, and is phase 2 only.
+34. Free users must see a quiet, non-intrusive Pro upgrade prompt adjacent to the locked search bar. No blocking modals or aggressive upsells.
 
 ### 4.8 Admin Panel
 
@@ -188,15 +189,18 @@
 
 ## 5. Non-Goals (Out of Scope — MVP)
 
-- **Stripe / Pro tier billing:** No payment processing in MVP. Pro features are gated in the UI but not enforced via Stripe until phase 2.
+- **Stripe / Pro tier billing:** No payment processing in MVP. Pro features are gated in the UI but not enforced via Stripe until phase 2. Pricing when shipped: $9.99/month or $79/year.
 - **Singles match tracking:** MVP supports doubles only.
 - **Network intelligence:** Viewing ratings of players the user has never played (shared-opponent graph) is phase 2.
 - **Predictive win% against never-played opponents:** Phase 2.
-- **Push / email notifications:** Weekly trajectory insight emails and drift alerts are phase 2.
+- **Retention loop notifications:** Weekly trajectory insight digest, "Drift detected" alert, "Upcoming opponent probability updated" notification, and rivalry tracking are all phase 2.
+- **Rivalry tracking:** Automatic detection and display of recurring opponent matchups is phase 2.
+- **Push / email notifications:** All outbound notification types are phase 2.
 - **Mobile native app:** This is a web app only (PWA-ready layout, but no native build).
 - **Social features:** No follows, no public profiles, no leaderboards in MVP.
 - **OAuth login (Google, etc.):** Email/password only in MVP.
 - **Scraped or imported match data:** `dataSource = manual` only in MVP.
+- **Opponent match confirmation:** Opponent-side verification of submitted matches is phase 2 (enables the `Cᵥ` multiplier in Rating Confidence — see Section 10.3).
 
 ---
 
@@ -210,11 +214,12 @@
 
 ### Navigation
 
-- Bottom tab navigation with four tabs:
+- Bottom tab navigation with four tabs (and no others):
   1. **Command** — personal dashboard
   2. **Enter** — match entry flow
   3. **Matchups** — opponent lookup
   4. **Trajectory** — rating chart
+- The Admin panel is accessed at a separate route (e.g., `/admin`) and is **not part of the bottom navigation**. It is only reachable by users with `role = admin`. No admin UI appears in the main player-facing shell.
 
 ### Enter Screen Flow
 
@@ -267,6 +272,33 @@ CRON_SECRET           # Shared secret for /api/admin/recompute
 ### Scaling Note
 
 Full replay rating recompute is appropriate up to ~50,000 matches. Beyond that, chunked or incremental recompute should be evaluated. Design the rating engine as a pure function so it is replaceable without changing the API surface.
+
+### Schema Delta (PRD additions vs. original Technical Build Plan)
+
+The original Technical Build Plan defines the base schema. The following fields are **additions required by this PRD** that are not in the original spec:
+
+**`Players` table additions:**
+
+| Field | Type | Required by |
+|---|---|---|
+| `claimedAt` | `DateTime?` | Shadow profile claiming (req 15) |
+| `trustTier` | `Enum (unverified\|verified_email\|established)` | Shadow profile claiming (req 15), phase 2 network weighting |
+| `ratingVolatility` | `Float?` | Volatility band computation (Section 10.4) — store σΔ during nightly run to avoid on-demand aggregation |
+
+**`RatingSnapshots` table additions:**
+
+| Field | Type | Required by |
+|---|---|---|
+| `effectiveK` | `Float` | Compounding Index computation (Section 10.1) |
+| `expectedScore` | `Float` | Compounding Index (10.1) and Drift Score (10.2) computation |
+
+**`RatingRuns` table additions:**
+
+| Field | Type | Required by |
+|---|---|---|
+| `notes` | `String? (max 120)` | Admin recompute reason (req 22–23) |
+
+**`Auth` scope correction:** The original Technical Build Plan states email verification is required for Pro tier only. This PRD additionally requires email verification to claim a shadow profile (req 14). The `emailVerifiedAt` field on `Users` is unchanged; only the enforcement scope is expanded.
 
 ---
 
