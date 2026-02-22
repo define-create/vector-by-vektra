@@ -98,31 +98,31 @@ Example:
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch
-  - [ ] 0.1 Create and checkout a new branch: `git checkout -b feature/vector-mvp`
+- [x] 0.0 Create feature branch
+  - [x] 0.1 Create and checkout a new branch: `git checkout -b feature/vector-mvp`
 
-- [ ] 1.0 Project scaffolding, infrastructure & database schema
-  - [ ] 1.1 Initialize Next.js 14 App Router project with TypeScript strict mode: `npx create-next-app@latest vector-by-vektra --typescript --app --tailwind --eslint`
-  - [ ] 1.2 Install Prisma and database dependencies: `npm install prisma @prisma/client`; run `npx prisma init`
-  - [ ] 1.3 Install remaining dependencies: `npm install next-auth @auth/prisma-adapter bcryptjs @types/bcryptjs`
-  - [ ] 1.4 Configure `prisma/schema.prisma` datasource with `provider = "postgresql"`, `url = env("DATABASE_URL")`, `directUrl = env("DIRECT_URL")` and `previewFeatures = ["driverAdapters"]` if needed for pgBouncer
-  - [ ] 1.5 Write the `Users` model in `prisma/schema.prisma` (id, email, emailVerifiedAt, handle, displayName, role, plan, passwordHash, createdAt)
-  - [ ] 1.6 Write the `Players` model (id, userId nullable, displayName, claimed, claimedAt, trustTier, rating, ratingConfidence, ratingVolatility, createdAt, deletedAt)
-  - [ ] 1.7 Write the `Matches` model (id, enteredByUserId, matchDate, lockedAt, voidedAt, dataSource, createdAt)
-  - [ ] 1.8 Write the `MatchParticipants` model (id, matchId, playerId, team)
-  - [ ] 1.9 Write the `Games` model (id, matchId, gameOrder, team1Score, team2Score)
-  - [ ] 1.10 Write the `RatingRuns` model (id, runType, startedAt, finishedAt, status, notes)
-  - [ ] 1.11 Write the `RatingSnapshots` model (id, runId, playerId, matchId, matchDate, rating, effectiveK, expectedScore)
-  - [ ] 1.12 Write the `AuditEvents` model (id, entityType, entityId, actionType, adminUserId, metadata Json, createdAt) — no updatedAt, no soft-delete
-  - [ ] 1.13 Run `npx prisma migrate dev --name init` and verify all tables appear in the Supabase dashboard
-  - [ ] 1.14 Create `lib/db.ts` — Prisma client singleton safe for serverless (use global variable pattern to avoid hot-reload connection exhaustion)
-  - [ ] 1.15 Create `.env.local` with DATABASE_URL (pgBouncer), DIRECT_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, CRON_SECRET
-  - [ ] 1.16 Create `.env.example` with all variable names but no values (safe to commit)
-  - [ ] 1.17 Create `vercel.json` with cron job: `{ "crons": [{ "path": "/api/admin/recompute", "schedule": "0 3 * * *" }] }`
-  - [ ] 1.18 Configure Tailwind CSS dark mode as default (add `darkMode: 'class'` to `tailwind.config.ts`; add `class="dark"` to root `<html>` in `app/layout.tsx`)
-  - [ ] 1.19 Create `app/(tabs)/layout.tsx` with bottom navigation shell rendering `<BottomNav />` and `{children}`
-  - [ ] 1.20 Create `components/nav/BottomNav.tsx` — four tabs: Command (`/`), Enter (`/enter`), Matchups (`/matchups`), Trajectory (`/trajectory`); highlight active tab
-  - [ ] 1.21 Create placeholder `page.tsx` files for all four tabs (Command, Enter, Matchups, Trajectory) returning a heading only
+- [x] 1.0 Project scaffolding, infrastructure & database schema
+  - [x] 1.1 Initialize Next.js 16 App Router project with TypeScript strict mode (scaffolded into existing repo directory)
+  - [x] 1.2 Install Prisma and database dependencies: prisma, @prisma/client, @prisma/adapter-pg, pg; run `npx prisma init`
+  - [x] 1.3 Install remaining dependencies: next-auth, @auth/prisma-adapter, bcryptjs, @types/bcryptjs
+  - [x] 1.4 Configure Prisma 7: datasource provider in schema.prisma; urls in prisma.config.ts (DIRECT_URL for migrations, DATABASE_URL for runtime via pg adapter)
+  - [x] 1.5 Write the `Users` model in `prisma/schema.prisma`
+  - [x] 1.6 Write the `Players` model
+  - [x] 1.7 Write the `Matches` model
+  - [x] 1.8 Write the `MatchParticipants` model
+  - [x] 1.9 Write the `Games` model
+  - [x] 1.10 Write the `RatingRuns` model
+  - [x] 1.11 Write the `RatingSnapshots` model
+  - [x] 1.12 Write the `AuditEvents` model (no updatedAt, no soft-delete)
+  - [x] 1.13 Schema applied via Supabase SQL editor; _prisma_migrations bootstrapped manually; all 9 tables verified connected
+  - [x] 1.14 Create `lib/db.ts` — Prisma client singleton with pg adapter (serverless-safe global pattern)
+  - [x] 1.15 Create `.env.local` with DATABASE_URL (pgBouncer), DIRECT_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, CRON_SECRET
+  - [x] 1.16 Create `.env.example` with all variable names but no values (safe to commit)
+  - [x] 1.17 Create `vercel.json` with cron job at 03:00 UTC and region iad1
+  - [x] 1.18 Configure Tailwind CSS dark mode: @custom-variant dark in globals.css; class="dark" on root html
+  - [x] 1.19 Create `app/(tabs)/layout.tsx` with bottom navigation shell
+  - [x] 1.20 Create `components/nav/BottomNav.tsx` — four tabs at /command, /enter, /matchups, /trajectory
+  - [x] 1.21 Create placeholder page.tsx for all four tabs; root / redirects to /command
 
 - [ ] 2.0 Authentication & user management
   - [ ] 2.1 Create `app/api/auth/[...nextauth]/route.ts` — configure Auth.js with PrismaAdapter and CredentialsProvider (email + bcrypt password check); include `role` in the session token

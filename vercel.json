@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/admin/recompute",
+      "schedule": "0 3 * * *"
+    }
+  ],
+  "regions": ["iad1"]
+}
