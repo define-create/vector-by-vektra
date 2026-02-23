@@ -18,7 +18,8 @@ function formatCountdown(msRemaining: number): string {
 export default function EditTimer({ expiresAt }: EditTimerProps) {
   const expiry = new Date(expiresAt).getTime();
 
-  const [label, setLabel] = useState(() => formatCountdown(expiry - Date.now()));
+  // null on server/first render to avoid SSR↔client hydration mismatch from Date.now()
+  const [label, setLabel] = useState<string | null>(null);
 
   useEffect(() => {
     function tick() {
@@ -30,10 +31,12 @@ export default function EditTimer({ expiresAt }: EditTimerProps) {
     }
 
     const id = setInterval(tick, 1000);
-    tick(); // immediate first render
+    tick(); // immediate first render on client
 
     return () => clearInterval(id);
   }, [expiry]);
+
+  if (label === null) return null;
 
   if (label === "Locked") {
     return (

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -16,7 +17,7 @@ interface GameInput {
 }
 
 interface CreateMatchBody {
-  matchDate: string; // ISO date string
+  matchDate: string; // ISO datetime string
   partnerId?: string;
   partnerName?: string;
   opponent1Id?: string;
@@ -227,6 +228,7 @@ export async function POST(req: NextRequest) {
     try {
       await runRecompute("nightly");
       ratingUpdated = true;
+      revalidatePath("/command");
     } catch (recomputeErr) {
       console.error("[POST /api/matches] Post-match recompute failed:", recomputeErr);
     }

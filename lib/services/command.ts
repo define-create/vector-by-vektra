@@ -12,8 +12,15 @@ import { computeUpcomingProbability } from "@/lib/metrics/upcoming-probability";
 export interface LastMatch {
   matchDate: string;
   outcome: "win" | "loss";
+  partnerName: string;
   opponentNames: string[];
   score: string;
+}
+
+export interface CommunityStats {
+  avg: number;
+  min: number;
+  max: number;
 }
 
 export interface CommandData {
@@ -21,9 +28,10 @@ export interface CommandData {
   winPct90d: number | null;
   compoundingIndex: number | null;
   driftScore: number | null;
-  lastMatch: LastMatch | null;
+  recentMatchHistory: LastMatch[];
   editTimer: { expiresAt: string | null };
   upcomingProbability: number | null;
+  communityStats: CommunityStats | null;
 }
 
 export async function getCommandData(userId: string): Promise<CommandData> {
@@ -32,9 +40,10 @@ export async function getCommandData(userId: string): Promise<CommandData> {
     winPct90d: null,
     compoundingIndex: null,
     driftScore: null,
-    lastMatch: null,
+    recentMatchHistory: [],
     editTimer: { expiresAt: null },
     upcomingProbability: null,
+    communityStats: null,
   };
 
   const myPlayer = await prisma.player.findFirst({
@@ -47,8 +56,9 @@ export async function getCommandData(userId: string): Promise<CommandData> {
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
   const sixtyMinutesAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-  const [recentMatches, last10Snapshots, editableMatch, recentOpponentParticipants] =
+  const [recentMatches, last10Snapshots, editableMatch, recentOpponentParticipants, communityAgg, historyParticipants] =
     await Promise.all([
+      // 90-day window — used only for win% calculation
       prisma.matchParticipant.findMany({
         where: {
           playerId: myPlayer.id,
@@ -94,18 +104,54 @@ export async function getCommandData(userId: string): Promise<CommandData> {
         orderBy: { match: { matchDate: "desc" } },
         take: 20,
       }),
+
+      // Community rating stats (all non-deleted players, including shadow profiles)
+      prisma.player.aggregate({
+        where: { deletedAt: null },
+        _avg: { rating: true },
+        _min: { rating: true },
+        _max: { rating: true },
+        _count: { id: true },
+      }),
+
+      // Match history — no date filter, last 20 regardless of age
+      prisma.matchParticipant.findMany({
+        where: { playerId: myPlayer.id, match: { voidedAt: null } },
+        include: {
+          match: {
+            include: {
+              participants: { include: { player: { select: { id: true, displayName: true } } } },
+              games: true,
+            },
+          },
+        },
+        orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
+        take: 20,
+      }),
     ]);
 
-  // Win % and last match
+  // Win % — 90-day window only
   let wins90 = 0;
   let losses90 = 0;
-  let lastMatch: LastMatch | null = null;
 
-  const sortedRecent = recentMatches
-    .filter((p) => p.match)
-    .sort((a, b) => b.match.matchDate.getTime() - a.match.matchDate.getTime());
+  for (const participation of recentMatches) {
+    const match = participation.match;
+    const myTeam = participation.team;
+    let t1Wins = 0;
+    let t2Wins = 0;
+    for (const g of match.games) {
+      if (g.team1Score > g.team2Score) t1Wins++;
+      else if (g.team2Score > g.team1Score) t2Wins++;
+    }
+    if (myTeam === 1 ? t1Wins > t2Wins : t2Wins > t1Wins) wins90++;
+    else losses90++;
+  }
 
-  for (const participation of sortedRecent) {
+  const totalGames90 = wins90 + losses90;
+  const winPct90d = totalGames90 > 0 ? wins90 / totalGames90 : null;
+
+  // Match history — last 20 matches regardless of date
+  const recentMatchHistory: LastMatch[] = historyParticipants.map((participation) => {
     const match = participation.match;
     const myTeam = participation.team;
 
@@ -117,34 +163,29 @@ export async function getCommandData(userId: string): Promise<CommandData> {
     }
     const myTeamWon = myTeam === 1 ? t1Wins > t2Wins : t2Wins > t1Wins;
 
-    if (myTeamWon) wins90++;
-    else losses90++;
+    const partner = match.participants.find(
+      (p) => p.team === myTeam && p.player.id !== myPlayer.id,
+    );
+    const opponents = match.participants
+      .filter((p) => p.team !== myTeam)
+      .map((p) => p.player.displayName);
+    const gameScores = match.games
+      .sort((a, b) => a.gameOrder - b.gameOrder)
+      .map((g) =>
+        myTeam === 1
+          ? `${g.team1Score}–${g.team2Score}`
+          : `${g.team2Score}–${g.team1Score}`,
+      )
+      .join(", ");
 
-    if (!lastMatch) {
-      const opponents = match.participants
-        .filter((p) => p.team !== myTeam)
-        .map((p) => p.player.displayName);
-
-      const gameScores = match.games
-        .sort((a, b) => a.gameOrder - b.gameOrder)
-        .map((g) =>
-          myTeam === 1
-            ? `${g.team1Score}–${g.team2Score}`
-            : `${g.team2Score}–${g.team1Score}`,
-        )
-        .join(", ");
-
-      lastMatch = {
-        matchDate: match.matchDate.toISOString(),
-        outcome: myTeamWon ? "win" : "loss",
-        opponentNames: opponents,
-        score: gameScores,
-      };
-    }
-  }
-
-  const totalGames90 = wins90 + losses90;
-  const winPct90d = totalGames90 > 0 ? wins90 / totalGames90 : null;
+    return {
+      matchDate: match.matchDate.toISOString(),
+      outcome: myTeamWon ? "win" : "loss",
+      partnerName: partner?.player.displayName ?? "Unknown",
+      opponentNames: opponents,
+      score: gameScores,
+    };
+  });
 
   // CI + Drift
   const snapsAsc = [...last10Snapshots].sort(
@@ -185,13 +226,29 @@ export async function getCommandData(userId: string): Promise<CommandData> {
   }
   const upcomingProbability = computeUpcomingProbability(myPlayer.rating, recentOpponents);
 
+  // Community stats
+  let communityStats: CommunityStats | null = null;
+  if (
+    communityAgg._count.id >= 3 &&
+    communityAgg._avg.rating !== null &&
+    communityAgg._min.rating !== null &&
+    communityAgg._max.rating !== null
+  ) {
+    communityStats = {
+      avg: communityAgg._avg.rating,
+      min: communityAgg._min.rating,
+      max: communityAgg._max.rating,
+    };
+  }
+
   return {
     rating: myPlayer.rating,
     winPct90d,
     compoundingIndex,
     driftScore,
-    lastMatch,
+    recentMatchHistory,
     editTimer: { expiresAt: editExpiresAt },
     upcomingProbability,
+    communityStats,
   };
 }

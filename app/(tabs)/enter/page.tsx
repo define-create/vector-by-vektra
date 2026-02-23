@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import PlayerSelector from "@/components/enter/PlayerSelector";
 import OutcomeToggle from "@/components/enter/OutcomeToggle";
 import GameScoreInput, { type GameScore } from "@/components/enter/GameScoreInput";
@@ -41,10 +42,11 @@ const STEP_LABELS: Record<Step, string> = {
 // ---------------------------------------------------------------------------
 
 export default function EnterPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("partner");
 
   // Form state
-  const [matchDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [matchDate] = useState(() => new Date().toISOString());
   const [partner, setPartner] = useState<PlayerValue | null>(null);
   const [opponent1, setOpponent1] = useState<PlayerValue | null>(null);
   const [opponent2, setOpponent2] = useState<PlayerValue | null>(null);
@@ -155,6 +157,7 @@ export default function EnterPage() {
       } else {
         setSubmittedMatchId(data.match?.id ?? null);
         setSuccess(true);
+        router.refresh(); // clear Router Cache so /command re-fetches on next visit
       }
     } catch {
       setSubmitError("Network error — please try again");
@@ -173,7 +176,7 @@ export default function EnterPage() {
         <div className="text-5xl">✓</div>
         <h2 className="text-2xl font-bold text-zinc-50">Match Recorded</h2>
         <p className="text-zinc-400">
-          Your match has been saved. Ratings update nightly.
+          Match saved. Your rating has been updated.
         </p>
         <button
           type="button"
@@ -269,7 +272,13 @@ export default function EnterPage() {
         {step === "review" && (
           <div className="flex flex-col gap-5 text-sm">
             <div className="rounded-xl bg-zinc-800 p-4 space-y-3">
-              <ReviewRow label="Date" value={matchDate} />
+              <ReviewRow
+                label="Date"
+                value={new Date(matchDate).toLocaleString("en-US", {
+                  month: "short", day: "numeric",
+                  hour: "numeric", minute: "2-digit",
+                })}
+              />
               <ReviewRow
                 label="Partner"
                 value={partner?.name ?? "—"}
