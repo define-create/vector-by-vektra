@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const geist = Geist({
@@ -20,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geist.variable} antialiased bg-zinc-950 text-zinc-50`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

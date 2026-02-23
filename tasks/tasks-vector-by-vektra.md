@@ -124,15 +124,15 @@ Example:
   - [x] 1.20 Create `components/nav/BottomNav.tsx` — four tabs at /command, /enter, /matchups, /trajectory
   - [x] 1.21 Create placeholder page.tsx for all four tabs; root / redirects to /command
 
-- [ ] 2.0 Authentication & user management
-  - [ ] 2.1 Create `app/api/auth/[...nextauth]/route.ts` — configure Auth.js with PrismaAdapter and CredentialsProvider (email + bcrypt password check); include `role` in the session token
-  - [ ] 2.2 Create `app/api/auth/register/route.ts` — POST handler: validate email/handle uniqueness, hash password with bcrypt, create `User` record (role='user', plan='free'), return 201 or error
-  - [ ] 2.3 Add email verification token generation to the register route: create a signed token (e.g., using `crypto.randomBytes`), store hashed token + expiry on the user, send verification email
-  - [ ] 2.4 Create `app/api/auth/verify-email/route.ts` — GET handler: validate token, set `emailVerifiedAt = now()`, invalidate the token
-  - [ ] 2.5 Set up an email sender (Resend or Nodemailer with SMTP) — add `EMAIL_FROM` and SMTP/API env vars; create `lib/email.ts` with a `sendVerificationEmail()` function
-  - [ ] 2.6 Create `middleware.ts` — protect `/admin/*` routes (redirect to `/sign-in` if not admin); protect `/api/admin/*` routes (return 403 if not admin); protect all other authenticated routes
-  - [ ] 2.7 Build `app/register/page.tsx` — registration form (email, handle, display name, password, confirm password); calls POST `/api/auth/register`; redirects to sign-in on success with a "Check your email" message
-  - [ ] 2.8 Build `app/sign-in/page.tsx` — sign-in form (email, password); uses `signIn()` from Auth.js; redirects to Command on success
+- [x] 2.0 Authentication & user management
+  - [x] 2.1 Create `app/api/auth/[...nextauth]/route.ts` — configure Auth.js with PrismaAdapter and CredentialsProvider (email + bcrypt password check); include `role` in the session token
+  - [x] 2.2 Create `app/api/auth/register/route.ts` — POST handler: validate email/handle uniqueness, hash password with bcrypt, create `User` record (role='user', plan='free'), return 201 or error
+  - [x] 2.3 Add email verification token generation to the register route: create a signed token (e.g., using `crypto.randomBytes`), store hashed token + expiry on the user, send verification email
+  - [x] 2.4 Create `app/api/auth/verify-email/route.ts` — GET handler: validate token, set `emailVerifiedAt = now()`, invalidate the token
+  - [x] 2.5 Set up an email sender (Resend or Nodemailer with SMTP) — add `EMAIL_FROM` and SMTP/API env vars; create `lib/email.ts` with a `sendVerificationEmail()` function
+  - [x] 2.6 Create `middleware.ts` — protect `/admin/*` routes (redirect to `/sign-in` if not admin); protect `/api/admin/*` routes (return 403 if not admin); protect all other authenticated routes
+  - [x] 2.7 Build `app/register/page.tsx` — registration form (email, handle, display name, password, confirm password); calls POST `/api/auth/register`; redirects to sign-in on success with a "Check your email" message
+  - [x] 2.8 Build `app/sign-in/page.tsx` — sign-in form (email, password); uses `signIn()` from Auth.js; redirects to Command on success
 
 - [ ] 3.0 Rating engine & batch processing
   - [ ] 3.1 Create `lib/rating-engine/types.ts` — export TypeScript interfaces: `MatchRecord` (matchId, matchDate, createdAt, team1PlayerIds, team2PlayerIds, team1Won), `PlayerState` (playerId, rating), `SnapshotWrite` (playerId, matchId, matchDate, rating, effectiveK, expectedScore, runId)
