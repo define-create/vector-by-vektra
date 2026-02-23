@@ -29,7 +29,7 @@ export default function GameScoreInput({ games, onChange }: GameScoreInputProps)
 
     // Auto-advance focus: after entering team1Score advance to team2Score of same game;
     // after team2Score advance to team1Score of next game (if exists).
-    if (raw !== "" && !isNaN(Number(raw))) {
+    if (raw.length >= 2 && !isNaN(Number(raw))) {
       const currentInputIndex = gameIndex * 2 + (field === "team1Score" ? 0 : 1);
       const nextRef = inputRefs.current[currentInputIndex + 1];
       if (nextRef) {
