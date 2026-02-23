@@ -134,16 +134,16 @@ Example:
   - [x] 2.7 Build `app/register/page.tsx` — registration form (email, handle, display name, password, confirm password); calls POST `/api/auth/register`; redirects to sign-in on success with a "Check your email" message
   - [x] 2.8 Build `app/sign-in/page.tsx` — sign-in form (email, password); uses `signIn()` from Auth.js; redirects to Command on success
 
-- [ ] 3.0 Rating engine & batch processing
-  - [ ] 3.1 Create `lib/rating-engine/types.ts` — export TypeScript interfaces: `MatchRecord` (matchId, matchDate, createdAt, team1PlayerIds, team2PlayerIds, team1Won), `PlayerState` (playerId, rating), `SnapshotWrite` (playerId, matchId, matchDate, rating, effectiveK, expectedScore, runId)
-  - [ ] 3.2 Create `lib/rating-engine/elo.ts` — implement and export: `teamRating(r1, r2)` → average; `expectedScore(teamARating, teamBRating)` → logistic; `kFactor(baseK, recencyWeight, marginWeight)` → product; `computeRatingDelta(winner, loser, expectedWinner)` → K × (1 − E)
-  - [ ] 3.3 Write `lib/rating-engine/elo.test.ts` — test: expectedScore(1000, 1000) ≈ 0.5; expectedScore(1200, 1000) > 0.5; kFactor output is positive and bounded; rating delta is positive for wins, negative for losses
-  - [ ] 3.4 Create `lib/rating-engine/replay.ts` — implement `replayAllMatches(matches: MatchRecord[], runId: string): { snapshots: SnapshotWrite[], finalRatings: Map<string, number> }`: (1) initialize all players at 1000, (2) sort matches by matchDate then createdAt, (3) for each match compute teamRatings, expectedScore, kFactor, delta, update ratings, push SnapshotWrite
-  - [ ] 3.5 Write `lib/rating-engine/replay.test.ts` — test: two players, one match → both get snapshots; voided matches excluded when caller filters; same input always produces same output (determinism); chronological ordering respected
-  - [ ] 3.6 Create `lib/rating-engine/post-replay.ts` — implement `computeRatingConfidence(playerId, allMatches, snapshots): number` using the four-component formula from Section 10.3 (Cₙ, Cᵣ, Cᵈ, Cₛ); implement `computeRatingVolatility(playerId, snapshots): number` (σΔ of last 20 rating deltas)
-  - [ ] 3.7 Write `lib/rating-engine/post-replay.test.ts` — test each confidence component independently (Cₙ saturates at high n; Cᵣ decays with d; Cᵈ penalizes low diversity; Cₛ penalizes high σΔ); full product is clamped 0–1
-  - [ ] 3.8 Create `lib/rating-engine/index.ts` — barrel export: `export { replayAllMatches } from './replay'`, `export { computeRatingConfidence, computeRatingVolatility } from './post-replay'`, `export type { MatchRecord, SnapshotWrite } from './types'`
-  - [ ] 3.9 Create `app/api/admin/recompute/route.ts` — POST handler with full guard chain:
+- [x] 3.0 Rating engine & batch processing
+  - [x] 3.1 Create `lib/rating-engine/types.ts` — export TypeScript interfaces: `MatchRecord` (matchId, matchDate, createdAt, team1PlayerIds, team2PlayerIds, team1Won), `PlayerState` (playerId, rating), `SnapshotWrite` (playerId, matchId, matchDate, rating, effectiveK, expectedScore, runId)
+  - [x] 3.2 Create `lib/rating-engine/elo.ts` — implement and export: `teamRating(r1, r2)` → average; `expectedScore(teamARating, teamBRating)` → logistic; `kFactor(baseK, recencyWeight, marginWeight)` → product; `computeRatingDelta(winner, loser, expectedWinner)` → K × (1 − E)
+  - [x] 3.3 Write `lib/rating-engine/elo.test.ts` — test: expectedScore(1000, 1000) ≈ 0.5; expectedScore(1200, 1000) > 0.5; kFactor output is positive and bounded; rating delta is positive for wins, negative for losses
+  - [x] 3.4 Create `lib/rating-engine/replay.ts` — implement `replayAllMatches(matches: MatchRecord[], runId: string): { snapshots: SnapshotWrite[], finalRatings: Map<string, number> }`: (1) initialize all players at 1000, (2) sort matches by matchDate then createdAt, (3) for each match compute teamRatings, expectedScore, kFactor, delta, update ratings, push SnapshotWrite
+  - [x] 3.5 Write `lib/rating-engine/replay.test.ts` — test: two players, one match → both get snapshots; voided matches excluded when caller filters; same input always produces same output (determinism); chronological ordering respected
+  - [x] 3.6 Create `lib/rating-engine/post-replay.ts` — implement `computeRatingConfidence(playerId, allMatches, snapshots): number` using the four-component formula from Section 10.3 (Cₙ, Cᵣ, Cᵈ, Cₛ); implement `computeRatingVolatility(playerId, snapshots): number` (σΔ of last 20 rating deltas)
+  - [x] 3.7 Write `lib/rating-engine/post-replay.test.ts` — test each confidence component independently (Cₙ saturates at high n; Cᵣ decays with d; Cᵈ penalizes low diversity; Cₛ penalizes high σΔ); full product is clamped 0–1
+  - [x] 3.8 Create `lib/rating-engine/index.ts` — barrel export: `export { replayAllMatches } from './replay'`, `export { computeRatingConfidence, computeRatingVolatility } from './post-replay'`, `export type { MatchRecord, SnapshotWrite } from './types'`
+  - [x] 3.9 Create `app/api/admin/recompute/route.ts` — POST handler with full guard chain:
     - (a) Validate `x-cron-secret` header equals `CRON_SECRET` env var; return 401 if missing/wrong
     - (b) Check `runType` in request body or header to distinguish cron vs admin trigger
     - (c) For admin trigger: check no `RatingRun` with `status = 'running'`; check last admin run started < 10 min ago; require `notes` field (max 120 chars)

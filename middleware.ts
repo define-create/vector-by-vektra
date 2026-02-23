@@ -21,8 +21,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin API routes — require admin role, return 403 otherwise
+  // Admin API routes — require admin role, return 403 otherwise.
+  // Exception: also accept requests authenticated via CRON_SECRET so the
+  // Vercel cron job (which has no user session) can reach /api/admin/recompute.
   if (pathname.startsWith("/api/admin")) {
+    const cronSecret = req.headers.get("x-cron-secret");
+    if (cronSecret && cronSecret === process.env.CRON_SECRET) {
+      return NextResponse.next();
+    }
     if (!token || token.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
