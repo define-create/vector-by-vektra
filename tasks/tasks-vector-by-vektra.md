@@ -155,10 +155,10 @@ Example:
     - (i) Update `RatingRun` with `status = 'succeeded'`, `finishedAt = now()`
     - (j) On any error: set `RatingRun.status = 'failed'`; return 500
 
-- [ ] 4.0 Match entry & shadow profiles
-  - [ ] 4.1 Create `lib/services/players.ts` — implement `findOrCreateShadowPlayer(displayName: string, prisma): Promise<Player>`: search for existing unclaimed player by display name (case-insensitive); if not found, create new Player with `userId = null`, `claimed = false`, `trustTier = 'unverified'`, `rating = 1000`
-  - [ ] 4.2 Create `lib/services/audit.ts` — implement `writeAuditEvent(params: { entityType, entityId, actionType, adminUserId?, metadata? }, prisma): Promise<void>`; this must use a Prisma `create()` (never `update()` or `upsert()` on AuditEvents)
-  - [ ] 4.3 Create `app/api/matches/route.ts` — POST handler:
+- [x] 4.0 Match entry & shadow profiles
+  - [x] 4.1 Create `lib/services/players.ts` — implement `findOrCreateShadowPlayer(displayName: string, prisma): Promise<Player>`: search for existing unclaimed player by display name (case-insensitive); if not found, create new Player with `userId = null`, `claimed = false`, `trustTier = 'unverified'`, `rating = 1000`
+  - [x] 4.2 Create `lib/services/audit.ts` — implement `writeAuditEvent(params: { entityType, entityId, actionType, adminUserId?, metadata? }, prisma): Promise<void>`; this must use a Prisma `create()` (never `update()` or `upsert()` on AuditEvents)
+  - [x] 4.3 Create `app/api/matches/route.ts` — POST handler:
     - Require authenticated session
     - Validate body: matchDate, partnerId or partnerName, opponent1Id or opponent1Name, opponent2Id or opponent2Name, outcome (win|loss), games array (gameOrder, team1Score, team2Score)
     - For each name-only player: call `findOrCreateShadowPlayer()`
@@ -166,35 +166,35 @@ Example:
     - Create `MatchParticipants` (entering user's player + partner = team 1; two opponents = team 2)
     - Create `Games` records
     - Return created match with `editExpiresAt = createdAt + 60 minutes`
-  - [ ] 4.4 Create `app/api/matches/[id]/route.ts` — PATCH handler:
+  - [x] 4.4 Create `app/api/matches/[id]/route.ts` — PATCH handler:
     - Require authenticated session
     - Verify match belongs to session user (`enteredByUserId`)
     - Check `now() <= match.createdAt + 60 minutes`; if expired, return 403 with "Match is locked"
     - Update Games records (scores/outcome only — participants cannot change)
     - Return updated match
-  - [ ] 4.5 Create `app/api/players/search/route.ts` — GET handler: accept `?q=` query param; search `Players.displayName` case-insensitively (ILIKE); return top 10 results with id, displayName, rating, claimed
-  - [ ] 4.6 Create `app/api/players/recent/route.ts` — GET handler: return the current user's last 5 distinct partners and last 5 distinct opponents from their match history (for chip suggestions in Enter screen)
-  - [ ] 4.7 Create `app/api/players/[id]/claim/route.ts` — POST handler:
+  - [x] 4.5 Create `app/api/players/search/route.ts` — GET handler: accept `?q=` query param; search `Players.displayName` case-insensitively (ILIKE); return top 10 results with id, displayName, rating, claimed
+  - [x] 4.6 Create `app/api/players/recent/route.ts` — GET handler: return the current user's last 5 distinct partners and last 5 distinct opponents from their match history (for chip suggestions in Enter screen)
+  - [x] 4.7 Create `app/api/players/[id]/claim/route.ts` — POST handler:
     - Require authenticated session with `emailVerifiedAt` set; return 403 if email not verified
     - Check target player has `userId = null` (not yet claimed); return 409 if already claimed
     - Check session user does not already have a player profile (`Players.userId = session.user.id`); return 409 if so
     - Update Player: set `userId`, `claimed = true`, `claimedAt = now()`, `trustTier = 'verified_email'`
     - Call `writeAuditEvent({ actionType: 'claim', entityType: 'Player', entityId: playerId })`
     - Return updated player
-  - [ ] 4.8 Build `components/enter/PlayerSelector.tsx` — Client Component: text input with debounced autocomplete fetching from `/api/players/search`; shows recent chips (from `/api/players/recent`) by default; allows typing a new name if no match found (will create shadow profile on submit)
-  - [ ] 4.9 Build `components/enter/OutcomeToggle.tsx` — Client Component: WIN / LOSS two-option toggle; styled as large tap targets
-  - [ ] 4.10 Build `components/enter/GameScoreInput.tsx` — Client Component: renders two numeric inputs (Team 1 / Team 2) per game; numeric keyboard on mobile; auto-advances focus to next field on input; supports adding multiple games
-  - [ ] 4.11 Build `app/(tabs)/enter/page.tsx` — Client Component orchestrating the 5-step flow: partner selector → opponent selectors → outcome toggle → game scores → submit; calls POST `/api/matches`; shows success state with "Match recorded" after submit
+  - [x] 4.8 Build `components/enter/PlayerSelector.tsx` — Client Component: text input with debounced autocomplete fetching from `/api/players/search`; shows recent chips (from `/api/players/recent`) by default; allows typing a new name if no match found (will create shadow profile on submit)
+  - [x] 4.9 Build `components/enter/OutcomeToggle.tsx` — Client Component: WIN / LOSS two-option toggle; styled as large tap targets
+  - [x] 4.10 Build `components/enter/GameScoreInput.tsx` — Client Component: renders two numeric inputs (Team 1 / Team 2) per game; numeric keyboard on mobile; auto-advances focus to next field on input; supports adding multiple games
+  - [x] 4.11 Build `app/(tabs)/enter/page.tsx` — Client Component orchestrating the 5-step flow: partner selector → opponent selectors → outcome toggle → game scores → submit; calls POST `/api/matches`; shows success state with "Match recorded" after submit
 
-- [ ] 5.0 Player-facing screens
-  - [ ] 5.1 Create `lib/metrics/compounding-index.ts` — implement `computeCI(snapshots: SnapshotWrite[]): number` per Section 10.1: normalize deltas by Kᵢ → Nᵢ; compute surplus Sᵢ = Actualᵢ − Eᵢ; compute M = avg(Nᵢ × Sᵢ); compute A = slope of Nᵢ series (linear regression); return CI = 100 × (0.7M + 0.3A)
-  - [ ] 5.2 Write `lib/metrics/compounding-index.test.ts` — test: flat performance → CI near 0; improving performance against tough opponents → CI > 0; declining → CI < 0
-  - [ ] 5.3 Create `lib/metrics/drift-score.ts` — implement `computeDriftScore(snapshots: SnapshotWrite[], actuals: number[]): number` per Section 10.2: PEᵢ = Actualᵢ − Eᵢ; DriftRaw = avg(PEᵢ); return 100 × DriftRaw
-  - [ ] 5.4 Write `lib/metrics/drift-score.test.ts` — test: all wins when expected → positive drift; all losses when expected → negative drift; results match expectations → near 0
-  - [ ] 5.5 Create `lib/metrics/volatility-band.ts` — implement `computeVolatilityBand(p: number, confidenceA: number, confidenceB: number, volatilityA: number, volatilityB: number): { lower: number, upper: number, width: number }` per Section 10.4
-  - [ ] 5.6 Write `lib/metrics/volatility-band.test.ts` — test: high confidence + low volatility → narrow band (≤5%); low confidence + high volatility → wide band (≥10%); width always within 3%–20% clamp
-  - [ ] 5.7 Create `lib/metrics/upcoming-probability.ts` — implement `computeUpcomingProbability(currentPlayerRating: number, recentOpponents: { rating: number }[]): number | null`: find the most frequently faced opponent in last 20 matches; compute ELO logistic win probability; return null if no match history
-  - [ ] 5.8 Create `app/api/command/route.ts` — GET handler: fetch current player's data and return:
+- [x] 5.0 Player-facing screens
+  - [x] 5.1 Create `lib/metrics/compounding-index.ts` — implement `computeCI(snapshots: SnapshotWrite[]): number` per Section 10.1: normalize deltas by Kᵢ → Nᵢ; compute surplus Sᵢ = Actualᵢ − Eᵢ; compute M = avg(Nᵢ × Sᵢ); compute A = slope of Nᵢ series (linear regression); return CI = 100 × (0.7M + 0.3A)
+  - [x] 5.2 Write `lib/metrics/compounding-index.test.ts` — test: flat performance → CI near 0; improving performance against tough opponents → CI > 0; declining → CI < 0
+  - [x] 5.3 Create `lib/metrics/drift-score.ts` — implement `computeDriftScore(snapshots: SnapshotWrite[], actuals: number[]): number` per Section 10.2: PEᵢ = Actualᵢ − Eᵢ; DriftRaw = avg(PEᵢ); return 100 × DriftRaw
+  - [x] 5.4 Write `lib/metrics/drift-score.test.ts` — test: all wins when expected → positive drift; all losses when expected → negative drift; results match expectations → near 0
+  - [x] 5.5 Create `lib/metrics/volatility-band.ts` — implement `computeVolatilityBand(p: number, confidenceA: number, confidenceB: number, volatilityA: number, volatilityB: number): { lower: number, upper: number, width: number }` per Section 10.4
+  - [x] 5.6 Write `lib/metrics/volatility-band.test.ts` — test: high confidence + low volatility → narrow band (≤5%); low confidence + high volatility → wide band (≥10%); width always within 3%–20% clamp
+  - [x] 5.7 Create `lib/metrics/upcoming-probability.ts` — implement `computeUpcomingProbability(currentPlayerRating: number, recentOpponents: { rating: number }[]): number | null`: find the most frequently faced opponent in last 20 matches; compute ELO logistic win probability; return null if no match history
+  - [x] 5.8 Create `app/api/command/route.ts` — GET handler: fetch current player's data and return:
     - `rating`: Players.rating
     - `winPct90d`: win % over last 90 days from match history
     - `compoundingIndex`: compute from last 10 RatingSnapshots using CI formula
@@ -202,26 +202,26 @@ Example:
     - `lastMatch`: summary of most recent match (date, outcome, opponent names, score)
     - `editTimer`: `{ expiresAt: string | null }` — only if a match exists with createdAt + 60min > now
     - `upcomingProbability`: from `computeUpcomingProbability()`
-  - [ ] 5.9 Create `app/api/trajectory/route.ts` — GET handler: accept `?horizon=10games|7days|30days`; filter `RatingSnapshots` for current player by horizon; return `{ ratingSeries: { matchDate, rating }[], winRate, record: { wins, losses }, pointDifferential }`
-  - [ ] 5.10 Create `app/api/matchups/[playerId]/route.ts` — GET handler (authenticated): fetch opponent player; compute win probability (ELO logistic); compute volatility band; return `{ rating, ratingConfidence, h2h: { wins, losses }, winProbability, volatilityBand }` — requires Pro plan check; if free user and player is not a direct opponent, return 403
-  - [ ] 5.11 Build `components/command/EditTimer.tsx` — Client Component: receives `expiresAt` prop; uses `setInterval` to decrement and display "Editable for MM:SS"; clears interval and shows "Locked" when expired
-  - [ ] 5.12 Build `app/(tabs)/command/page.tsx` — Server Component: fetches `/api/command`; renders rating (large numeric), 90-day win%, CI value, Drift Score value, last match summary, `<EditTimer />`, upcoming probability; no scrolling required (all visible on mobile viewport)
-  - [ ] 5.13 Build `components/trajectory/RatingChart.tsx` — Client Component: receives `ratingSeries` array; renders a simple line chart (use a lightweight library like `recharts` or `chart.js` with react-chartjs-2); x-axis = matchDate, y-axis = rating
-  - [ ] 5.14 Build `app/(tabs)/trajectory/page.tsx` — Client Component: segmented control for horizon (10 Games / 7 Days / 1 Month, default 10 Games); fetches `/api/trajectory?horizon=` on segment change; renders `<RatingChart />`; under chart: win%, record (W-L), point differential
-  - [ ] 5.15 Build `components/matchups/ProGate.tsx` — Client Component: renders a muted, disabled search input with a small "Pro" badge label; quiet, no modal
-  - [ ] 5.16 Build `app/(tabs)/matchups/page.tsx` — Server Component: for free users, fetch and render last 5 opponents (rating + H2H record) from `/api/players/recent`; render `<ProGate />` search bar below; for Pro users, render enabled search bar that calls `/api/matchups/[playerId]` and displays full matchup card
+  - [x] 5.9 Create `app/api/trajectory/route.ts` — GET handler: accept `?horizon=10games|7days|30days`; filter `RatingSnapshots` for current player by horizon; return `{ ratingSeries: { matchDate, rating }[], winRate, record: { wins, losses }, pointDifferential }`
+  - [x] 5.10 Create `app/api/matchups/[playerId]/route.ts` — GET handler (authenticated): fetch opponent player; compute win probability (ELO logistic); compute volatility band; return `{ rating, ratingConfidence, h2h: { wins, losses }, winProbability, volatilityBand }` — requires Pro plan check; if free user and player is not a direct opponent, return 403
+  - [x] 5.11 Build `components/command/EditTimer.tsx` — Client Component: receives `expiresAt` prop; uses `setInterval` to decrement and display "Editable for MM:SS"; clears interval and shows "Locked" when expired
+  - [x] 5.12 Build `app/(tabs)/command/page.tsx` — Server Component: fetches `/api/command`; renders rating (large numeric), 90-day win%, CI value, Drift Score value, last match summary, `<EditTimer />`, upcoming probability; no scrolling required (all visible on mobile viewport)
+  - [x] 5.13 Build `components/trajectory/RatingChart.tsx` — Client Component: receives `ratingSeries` array; renders a simple line chart (use a lightweight library like `recharts` or `chart.js` with react-chartjs-2); x-axis = matchDate, y-axis = rating
+  - [x] 5.14 Build `app/(tabs)/trajectory/page.tsx` — Client Component: segmented control for horizon (10 Games / 7 Days / 1 Month, default 10 Games); fetches `/api/trajectory?horizon=` on segment change; renders `<RatingChart />`; under chart: win%, record (W-L), point differential
+  - [x] 5.15 Build `components/matchups/ProGate.tsx` — Client Component: renders a muted, disabled search input with a small "Pro" badge label; quiet, no modal
+  - [x] 5.16 Build `app/(tabs)/matchups/page.tsx` — Server Component: for free users, fetch and render last 5 opponents (rating + H2H record) from `/api/players/recent`; render `<ProGate />` search bar below; for Pro users, render enabled search bar that calls `/api/matchups/[playerId]` and displays full matchup card
 
-- [ ] 6.0 Admin panel
-  - [ ] 6.1 Create `app/admin/layout.tsx` — admin layout: check `session.user.role === 'admin'` server-side; redirect to `/` if not admin; render admin navigation (separate from bottom nav) and `{children}`
-  - [ ] 6.2 Create `app/api/admin/matches/route.ts` — GET handler (admin only): accept `?q=` search param; return paginated list of matches with player names, dates, void status
-  - [ ] 6.3 Create `app/api/admin/matches/[id]/void/route.ts` — POST handler (admin only): set `Match.voidedAt = now()`; call `writeAuditEvent({ actionType: 'void_match', entityType: 'Match', entityId: id })`; return updated match
-  - [ ] 6.4 Build `app/admin/matches/page.tsx` — search/list matches; "Void" button per match; confirmation dialog ("Void this match? This cannot be undone without an admin recompute."); calls POST `/api/admin/matches/[id]/void`
-  - [ ] 6.5 Create `app/api/admin/players/route.ts` — GET handler (admin only): list players with search by displayName
-  - [ ] 6.6 Create `app/api/admin/players/merge/route.ts` — POST handler (admin only): accept `{ keepId, mergeId }`; in a Prisma transaction: reassign all `MatchParticipants.playerId` from mergeId → keepId; set `Players.deletedAt = now()` on merge player; call `writeAuditEvent({ actionType: 'merge_players', metadata: { keepId, mergeId } })`
-  - [ ] 6.7 Create `app/api/admin/players/[id]/route.ts` — PATCH handler (admin only): accept `{ displayName }` (and any other identity fields); update `Player`; call `writeAuditEvent({ actionType: 'identity_edit', entityId: id, metadata: { before, after } })`
-  - [ ] 6.8 Build `app/admin/players/page.tsx` — two panels: (1) Merge: select two players via search, preview merge, confirm; (2) Identity edit: select player, edit displayName, save; both panels post to their respective API routes
-  - [ ] 6.9 Create `app/api/admin/audit-events/route.ts` — GET handler (admin only): return `AuditEvents` sorted by `createdAt DESC`, paginated; never expose an update or delete endpoint for this table
-  - [ ] 6.10 Build `app/admin/audit/page.tsx` — read-only paginated table of AuditEvents (createdAt, actionType, entityType, entityId, adminUserId, metadata preview)
-  - [ ] 6.11 Build `components/admin/RecomputeModal.tsx` — Client Component: reason dropdown (Merge / Void match / Identity correction / Other); confirmation text "This rewrites ratings and snapshots."; Confirm and Cancel buttons; on confirm, calls POST `/api/admin/recompute` with reason in body
-  - [ ] 6.12 Build `app/admin/recompute/page.tsx` — status display (last run: time, duration, trigger type, status badge running/succeeded/failed, notes); "Trigger Recompute" button that opens `<RecomputeModal />`; poll or refresh to show live status when a run is in progress
-  - [ ] 6.13 Build `app/admin/page.tsx` — admin index with links to: Void Matches, Merge/Edit Players, Audit Log, Recompute
+- [x] 6.0 Admin panel
+  - [x] 6.1 Create `app/admin/layout.tsx` — admin layout: check `session.user.role === 'admin'` server-side; redirect to `/` if not admin; render admin navigation (separate from bottom nav) and `{children}`
+  - [x] 6.2 Create `app/api/admin/matches/route.ts` — GET handler (admin only): accept `?q=` search param; return paginated list of matches with player names, dates, void status
+  - [x] 6.3 Create `app/api/admin/matches/[id]/void/route.ts` — POST handler (admin only): set `Match.voidedAt = now()`; call `writeAuditEvent({ actionType: 'void_match', entityType: 'Match', entityId: id })`; return updated match
+  - [x] 6.4 Build `app/admin/matches/page.tsx` — search/list matches; "Void" button per match; confirmation dialog ("Void this match? This cannot be undone without an admin recompute."); calls POST `/api/admin/matches/[id]/void`
+  - [x] 6.5 Create `app/api/admin/players/route.ts` — GET handler (admin only): list players with search by displayName
+  - [x] 6.6 Create `app/api/admin/players/merge/route.ts` — POST handler (admin only): accept `{ keepId, mergeId }`; in a Prisma transaction: reassign all `MatchParticipants.playerId` from mergeId → keepId; set `Players.deletedAt = now()` on merge player; call `writeAuditEvent({ actionType: 'merge_players', metadata: { keepId, mergeId } })`
+  - [x] 6.7 Create `app/api/admin/players/[id]/route.ts` — PATCH handler (admin only): accept `{ displayName }` (and any other identity fields); update `Player`; call `writeAuditEvent({ actionType: 'identity_edit', entityId: id, metadata: { before, after } })`
+  - [x] 6.8 Build `app/admin/players/page.tsx` — two panels: (1) Merge: select two players via search, preview merge, confirm; (2) Identity edit: select player, edit displayName, save; both panels post to their respective API routes
+  - [x] 6.9 Create `app/api/admin/audit-events/route.ts` — GET handler (admin only): return `AuditEvents` sorted by `createdAt DESC`, paginated; never expose an update or delete endpoint for this table
+  - [x] 6.10 Build `app/admin/audit/page.tsx` — read-only paginated table of AuditEvents (createdAt, actionType, entityType, entityId, adminUserId, metadata preview)
+  - [x] 6.11 Build `components/admin/RecomputeModal.tsx` — Client Component: reason dropdown (Merge / Void match / Identity correction / Other); confirmation text "This rewrites ratings and snapshots."; Confirm and Cancel buttons; on confirm, calls POST `/api/admin/recompute` with reason in body
+  - [x] 6.12 Build `app/admin/recompute/page.tsx` — status display (last run: time, duration, trigger type, status badge running/succeeded/failed, notes); "Trigger Recompute" button that opens `<RecomputeModal />`; poll or refresh to show live status when a run is in progress
+  - [x] 6.13 Build `app/admin/page.tsx` — admin index with links to: Void Matches, Merge/Edit Players, Audit Log, Recompute
