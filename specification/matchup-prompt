@@ -1,0 +1,146 @@
+You are implementing the "Matchups" screen for Vector by Vektra.
+
+Framework:
+
+Next.js (App Router)
+
+TypeScript
+
+TailwindCSS
+
+shadcn/ui allowed
+
+Dark theme only
+
+Goal:
+Recreate the institutional “Matchups” screen as specified by the guideline below.
+
+Design guidelines:
+
+match the rest of the app design principles. 
+
+No gradients
+
+No glass effects
+
+No gamified UI
+
+No green/red status coloring
+
+Numeric alignment precision required
+
+Tabular numerals required (font-feature-settings: "tnum")
+
+Layout:
+
+
+Primary Card:
+
+rounded-xl (20px equivalent)
+
+border border-[#374155]
+
+
+Head-to-Head Card:
+
+same styling as primary card
+
+Projection Card Structure:
+
+Left side:
+
+Probability (text-[170px] font-bold tracking-tight leading-none)
+
+Moneyline (text-[66px] font-bold leading-none)
+
+“Model Line” (text-sm)
+
+Right side:
+2-column grid
+gap-x-16 gap-y-10
+Labels:
+text-sm 
+Values:
+text-2xl font-medium 
+
+Metrics:
+
+Δ Rating
+
+Confidence
+
+Volatility
+
+Momentum
+
+Expectation Gap
+
+Use consistent baseline spacing:
+label mb-2 value
+
+Ledger:
+
+Title:
+text-4xl font-bold
+
+Meta:
+text-sm text
+
+Ledger Header:
+grid grid-cols-[200px_60px_1fr_80px]
+text-xs uppercase tracking-wide text
+
+Ledger Row:
+grid same template
+py-5
+border-b border
+Delta column:
+text-right tabular-nums
+
+Data:
+
+Props:
+probability: number
+moneyline: number | "Even"
+ratingDiff: number
+confidence: number
+volatility: string
+momentum: number
+expectationGap: number
+ledger: Array<{date:string,result:"W"|"L",score:string,delta:number}>
+
+Rounding logic:
+
+Probability:
+Math.round(probability)
+
+Moneyline:
+If probability >= 0.5:
+-100 * p / (1-p)
+Else:
+100 * (1-p) / p
+
+Round to nearest 5.
+
+If probability between 0.47 and 0.53:
+Return "Even"
+
+Typography:
+Enable tabular numerals:
+className="tabular-nums"
+or
+style={{ fontFeatureSettings: '"tnum"' }}
+
+The result should feel:
+
+Bloomberg terminal
+
+Institutional
+
+Quiet
+
+Precision-aligned
+
+Do not add creative interpretation.
+Implement exactly as specified.
+

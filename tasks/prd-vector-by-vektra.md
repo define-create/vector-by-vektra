@@ -626,6 +626,40 @@ Unconfirmed accounts receive a floor of 0.7× on this component.
 
 ---
 
+Based on the PRD and what the nightly recompute actually touches (ratings reset → full replay → new RatingSnapshots → update Players), here's what changes for users:
+
+Command screen (/command)
+
+Display element	                    Changes after batch?	        Source
+Rating (large number)	            ✅ Yes	                        Players.rating — rewritten each run
+Rating progress bar + context text	✅ Yes	                        All players' ratings (community avg/min/max shift)
+CI	                                ✅ Yes	                        RatingSnapshots.effectiveK + expectedScore
+Drift Score	                        ✅ Yes	                        RatingSnapshots.expectedScore
+Upcoming match win probability	    ✅ Yes	                        Derived from current ratings
+Win % (90d)	                        ❌ No	                        Match outcome data only
+Recent Matches list	                ❌ No	                        Match records don't change
+Edit timer	                        ❌ No	                        Based on Match.createdAt
+
+
+Trajectory screen (/trajectory)
+
+Display element	                    Changes?	                    Source
+Rating chart	                    ✅ Yes	                        RatingSnapshots — fully regenerated
+Win %, W/L record, point diff	    ❌ No	                        Match outcome data only
+
+
+Matchups screen (/matchups)
+
+Display element	                            Changes?	            Source
+Opponent ratings	                        ✅ Yes	                Players.rating
+Rating confidence label (Low/Medium/High)	✅ Yes	                Players.ratingConfidence
+Win probability	                            ✅ Yes	                Derived from ratings
+Volatility band (±%)	                    ✅ Yes	                Players.ratingConfidence + ratingVolatility
+
+Summary: Everything derived from Players.rating, Players.ratingConfidence, Players.ratingVolatility, or RatingSnapshots changes after the batch. Everything derived purely from match outcome records (win %, score data) does not.
+
+---
+
 ### 10.4 Volatility Band
 
 **What it answers:** "How much could this win probability forecast realistically swing?"

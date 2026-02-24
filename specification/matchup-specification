@@ -1,0 +1,260 @@
+1️⃣ Detailed Screen Specification
+
+Atlas by Vektra — Matchup Projection Screen (v7 Canonical)
+Theme: Deep Graphite Institutional
+
+A. Purpose
+
+    This screen provides:
+
+    Model-based win probability
+
+    Implied fair moneyline (American odds)
+
+    Structural signals explaining projection
+
+    Historical head-to-head ledger
+
+    It is clinical, quantitative, and neutral.
+
+    No motivational language. No gamification.
+
+B. Layout Overview (Top → Bottom)
+    1. Header
+
+        Title: “Matchup Projection”
+
+        Subtitle: “Model Output · Fair Line”
+
+        Typography:
+
+            Title: 60px bold
+
+            Subtitle: 28px regular
+
+            Subtitle luminance reduced 
+
+        Spacing:
+
+            130px from top safe area
+
+            65px vertical gap between title and subtitle
+
+2. Primary Projection Card
+
+    Container:
+
+    Border radius: 20px
+
+    Border: RGB(55,65,85)
+
+    Padding: 60px outer, 120px internal left margin
+
+    A. Teams Block
+
+        Top-left:
+
+        You / Partner
+        vs Opponent / Partner
+
+        Primary team: 46px
+
+        Opponent line: 30px
+
+        Opponent slightly dimmed
+
+    B. Forecast Block (Left Dominant)
+
+        Position: Left-aligned
+
+        Probability: 170px bold
+
+        Moneyline: 66px bold
+
+        Moneyline placed 405px from top of card
+
+        “Model Line” meta label below (28px, dimmed)
+
+        Example:
+
+        63%
+        −170
+        Model Line
+
+        C. Structural Metrics Grid (Right Column)
+
+        Grid origin:
+
+        X: 660px from left
+
+        Y: card_top + 220px
+
+        2-column grid
+        Row gap: 150px
+        Column gap: 260px
+        Label → value gap: 44px
+
+        Metrics included:
+
+        Δ Rating (+36)
+
+        Confidence (0.68)
+
+        Volatility (±7%)
+
+        Momentum (+14)
+
+        Expectation Gap (−8)
+
+        Typography:
+
+        Label: 30px
+
+        Value: 46px
+
+        Label luminance
+
+        Value luminance
+
+        All values left-aligned within grid cell.
+
+3. Head-to-Head Ledger Card
+
+    Container:
+
+    Same radius (20px)
+
+    Same border logic
+
+    Positioned below projection card
+
+    Top offset: offset from screen top
+
+A. Title Block
+
+    Head-to-Head Ledger
+    Record: 3–2 · Avg Margin: +2.6
+
+    Typography:
+
+    Title: 60px bold
+
+    Meta: 28px dimmed
+
+B. Ledger Columns
+
+    Headers (dimmed):
+
+    Date
+
+    R
+
+    Score
+
+    Δ
+
+    Row height: 92px
+    Δ column right-aligned
+    Score left-aligned
+    Result single character (W/L)
+
+    Example row:
+
+    2025-02-14 W 21–17, 18–21, 11–8 +12
+
+    Numeric delta right-aligned to fixed column x = 1040px.
+
+C. Color System
+
+    Extend the current color system.
+
+    No green/red for favorite.
+    Color reserved for future directional change only.
+
+D. Behavior Rules
+
+    Probability rounded to nearest whole %
+
+    Moneyline rounded to nearest 5
+
+    Moneyline derived from probability (zero-vig)
+
+    If 47%–53% → show “Even” instead of moneyline
+
+    No separators between forecast and signals
+
+    Sensitivity hidden in this version
+
+2️⃣ UX Details Document
+    Tone
+
+    Institutional
+
+    Analytical
+
+    Quiet authority
+
+    No emotional reinforcement
+
+    No hype
+
+    Hierarchy Rules
+
+    Probability dominates everything.
+
+    Moneyline reinforces probability.
+
+    Structural metrics explain forecast.
+
+    Ledger provides empirical grounding.
+
+    Eye flow:
+
+    Top-left → Probability → Moneyline → Right grid → Ledger.
+
+    Cognitive Design Principles
+
+    Numeric-first design
+
+    Tabular alignment
+
+    Baseline rhythm consistency
+
+    Controlled luminance hierarchy
+
+    No decorative UI elements
+
+    Interaction Behavior
+
+    Future interactions allowed:
+
+    Tap ledger → expand to full scroll view
+
+    Tap metric label → tooltip explanation
+
+    Long press moneyline → formula explanation
+
+    But default screen remains static and clean.
+
+    Accessibility
+
+    Minimum contrast ratio: 4.5:1 for labels
+
+    7:1 for numeric values
+
+    Tap targets minimum 44px height
+
+    Dark theme OLED optimized
+
+    Performance
+
+    No gradients
+
+    No blur
+
+    No heavy shadows
+
+    Static layout (GPU friendly)
+
+
+
