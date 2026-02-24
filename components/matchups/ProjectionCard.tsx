@@ -23,19 +23,19 @@ const METRIC_INFO = {
   },
   confidence: {
     label: "Confidence",
-    body: "How reliable the model's win probability is, on a 0–1 scale. Higher confidence reflects more head-to-head history and consistent patterns. Below 0.5, treat the projection as a rough estimate — there isn't enough data to be precise.",
+    body: "How reliable the model's win probability is, on a 0–1 scale. A value near 1.00 means both teams have many matches and stable ratings — the projection is well-grounded. Below 0.50 means at least one player is new or rarely plays, so treat the forecast as a rough estimate.",
   },
   volatility: {
     label: "Volatility",
-    body: "How unpredictable this matchup tends to be relative to ratings. Low volatility means outcomes track expectations closely. High volatility means results swing — even a clear favorite can lose on any given day.",
+    body: "The uncertainty band around the win probability, shown as ±N%. It ranges from ±3% (very predictable — ratings are stable and consistent) to ±20% (highly unpredictable — one or more players have few matches or erratic recent results). A ±5% band means the true probability likely sits within 5 points of the displayed figure.",
   },
   momentum: {
     label: "Momentum",
-    body: "Compares your team's recent rating trajectory to the opponents'. A positive number means your side has been improving more recently; negative means the opponents have been trending upward. It nudges the win probability away from the purely rating-based baseline.",
+    body: "Compares your team's recent rating trajectory to the opponents', typically ranging from −30 to +30. Positive means your side has been gaining ground recently; negative means the opponents have been trending upward. Values above +10 or below −10 represent a meaningful structural edge or deficit in recent form.",
   },
   expectationGap: {
     label: "Expectation Gap",
-    body: "How much your team has over- or under-performed the model's expectations in recent head-to-head matches against this specific opponent pairing. Positive means you've beaten expectations consistently; negative means you've fallen short. Shown dimmed when fewer than 3 matches are on record.",
+    body: "How much your team has over- or under-performed the model's expectations in recent head-to-head matches, typically ranging from −15 to +15. Positive means you've beaten expectations consistently; negative means you've fallen short. Shown dimmed when fewer than 3 qualifying matches are on record — the value is unreliable at that point.",
   },
 } as const;
 
