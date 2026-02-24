@@ -111,8 +111,8 @@ export default async function CommandPage() {
         </div>
       )}
 
-      {/* Match history list */}
-      <MatchHistoryList matches={data.recentMatchHistory} />
+      {/* Match history list — long-press a row to navigate to matchup projection */}
+      <MatchHistoryList matches={data.recentMatchHistory} myPlayerId={data.myPlayerId} />
     </div>
   );
 }

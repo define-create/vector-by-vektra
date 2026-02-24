@@ -196,7 +196,7 @@ export default function PlayerSelector({
 
       {/* Selected player indicator */}
       {value?.id && (
-        <p className="text-xs text-emerald-400">✓ {inputValue}</p>
+        <p className="text-xs text-emerald-400">✓ Player selected</p>
       )}
       {value && !value.id && value.name && (
         <p className="text-xs text-amber-400">New player — shadow profile will be created</p>

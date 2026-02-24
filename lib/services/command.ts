@@ -13,7 +13,9 @@ export interface LastMatch {
   matchDate: string;
   outcome: "win" | "loss";
   partnerName: string;
+  partnerId: string;
   opponentNames: string[];
+  opponentIds: string[];
   score: string;
 }
 
@@ -24,6 +26,7 @@ export interface CommunityStats {
 }
 
 export interface CommandData {
+  myPlayerId: string | null;
   rating: number | null;
   winPct90d: number | null;
   compoundingIndex: number | null;
@@ -36,6 +39,7 @@ export interface CommandData {
 
 export async function getCommandData(userId: string): Promise<CommandData> {
   const empty: CommandData = {
+    myPlayerId: null,
     rating: null,
     winPct90d: null,
     compoundingIndex: null,
@@ -166,9 +170,9 @@ export async function getCommandData(userId: string): Promise<CommandData> {
     const partner = match.participants.find(
       (p) => p.team === myTeam && p.player.id !== myPlayer.id,
     );
-    const opponents = match.participants
-      .filter((p) => p.team !== myTeam)
-      .map((p) => p.player.displayName);
+    const opponentParticipants = match.participants.filter((p) => p.team !== myTeam);
+    const opponents = opponentParticipants.map((p) => p.player.displayName);
+    const opponentIds = opponentParticipants.map((p) => p.player.id);
     const gameScores = match.games
       .sort((a, b) => a.gameOrder - b.gameOrder)
       .map((g) =>
@@ -182,7 +186,9 @@ export async function getCommandData(userId: string): Promise<CommandData> {
       matchDate: match.matchDate.toISOString(),
       outcome: myTeamWon ? "win" : "loss",
       partnerName: partner?.player.displayName ?? "Unknown",
+      partnerId: partner?.player.id ?? "",
       opponentNames: opponents,
+      opponentIds,
       score: gameScores,
     };
   });
@@ -242,6 +248,7 @@ export async function getCommandData(userId: string): Promise<CommandData> {
   }
 
   return {
+    myPlayerId: myPlayer.id,
     rating: myPlayer.rating,
     winPct90d,
     compoundingIndex,

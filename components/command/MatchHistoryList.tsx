@@ -1,8 +1,15 @@
+"use client";
+
+import { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { type LastMatch } from "@/lib/services/command";
 
 interface Props {
   matches: LastMatch[];
+  myPlayerId: string | null;
 }
+
+const LONG_PRESS_MS = 500;
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -12,9 +19,33 @@ function formatDate(iso: string): string {
  * Compact scrollable list of recent matches — two-row layout per entry.
  * Row 1: date + outcome badge (left) · score (right)
  * Row 2: "with Partner · vs. Opp1 & Opp2" — wraps naturally, no truncation.
- * Server-renderable — no client state needed.
+ *
+ * Long-press on a row navigates to /matchups with all 4 player IDs pre-populated.
  */
-export function MatchHistoryList({ matches }: Props) {
+export function MatchHistoryList({ matches, myPlayerId }: Props) {
+  const router = useRouter();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function startLongPress(match: LastMatch) {
+    if (!myPlayerId || !match.partnerId || match.opponentIds.length < 2) return;
+    timerRef.current = setTimeout(() => {
+      const params = new URLSearchParams({
+        player1: myPlayerId,
+        player2: match.partnerId,
+        player3: match.opponentIds[0]!,
+        player4: match.opponentIds[1]!,
+      });
+      router.push(`/matchups?${params.toString()}`);
+    }, LONG_PRESS_MS);
+  }
+
+  function cancelLongPress() {
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
   return (
     <div>
       <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Recent Matches</p>
@@ -26,7 +57,24 @@ export function MatchHistoryList({ matches }: Props) {
           matches.map((m, i) => (
             <div
               key={i}
-              className={`px-4 py-2 ${i > 0 ? "border-t border-zinc-700/50" : ""}`}
+              className={`px-4 py-2 select-none ${i > 0 ? "border-t border-zinc-700/50" : ""}`}
+              onTouchStart={() => startLongPress(m)}
+              onTouchEnd={cancelLongPress}
+              onTouchMove={cancelLongPress}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                startLongPress(m);
+                // Immediately fire for desktop right-click (no delay needed)
+                cancelLongPress();
+                if (!myPlayerId || !m.partnerId || m.opponentIds.length < 2) return;
+                const params = new URLSearchParams({
+                  player1: myPlayerId,
+                  player2: m.partnerId,
+                  player3: m.opponentIds[0]!,
+                  player4: m.opponentIds[1]!,
+                });
+                router.push(`/matchups?${params.toString()}`);
+              }}
             >
               {/* Row 1: date + outcome · score */}
               <div className="flex items-center justify-between">
