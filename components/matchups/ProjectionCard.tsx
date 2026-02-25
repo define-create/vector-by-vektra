@@ -23,7 +23,7 @@ const METRIC_INFO = {
   },
   confidence: {
     label: "Confidence",
-    body: "How reliable the model's win probability is, on a 0–1 scale. A value near 1.00 means both teams have many matches and stable ratings — the projection is well-grounded. Below 0.50 means at least one player is new or rarely plays, so treat the forecast as a rough estimate.",
+    body: "How reliable the model's win probability is, shown as a percentage. Near 100% means both teams have many matches and stable ratings — the projection is well-grounded. Below 50% means at least one player is new or rarely plays, so treat the forecast as a rough estimate.",
   },
   volatility: {
     label: "Volatility",
@@ -31,7 +31,7 @@ const METRIC_INFO = {
   },
   momentum: {
     label: "Momentum",
-    body: "Compares your team's recent rating trajectory to the opponents', typically ranging from −30 to +30. Positive means your side has been gaining ground recently; negative means the opponents have been trending upward. Values above +10 or below −10 represent a meaningful structural edge or deficit in recent form.",
+    body: "Compares your team's recent rating trajectory to the opponents'. ↑↑ Hot or ↑ Rising means your side has been gaining ground; → Steady means no meaningful trend; ↓ Fading or ↓↓ Cold means the opponents have been trending upward. The number in parentheses is the raw score (typically −30 to +30).",
   },
   expectationGap: {
     label: "Expectation Gap",
@@ -78,6 +78,18 @@ function formatMoneyline(ml: number | "Even"): string {
   return ml >= 0 ? `+${ml}` : `${ml}`;
 }
 
+function formatMomentum(n: number): string {
+  const label =
+    n >= 15  ? "↑↑ Hot"   :
+    n >= 5   ? "↑ Rising" :
+    n > -5   ? "→ Steady" :
+    n > -15  ? "↓ Fading" :
+               "↓↓ Cold";
+  const rounded = Math.round(n);
+  const sign = rounded >= 0 ? "+" : "";
+  return `${label} (${sign}${rounded})`;
+}
+
 // ---------------------------------------------------------------------------
 // MetricCell
 // ---------------------------------------------------------------------------
@@ -87,18 +99,17 @@ interface MetricCellProps {
   value: string;
   info: MetricInfo;
   dimmed?: boolean;
-  wide?: boolean;
 }
 
-function MetricCell({ label, value, info, dimmed, wide }: MetricCellProps) {
+function MetricCell({ label, value, info, dimmed }: MetricCellProps) {
   return (
-    <div className={`flex flex-col${wide ? " col-span-2" : ""}`}>
-      <div className="flex items-center gap-1 mb-1">
-        <span className="text-xs text-zinc-500">{label}</span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-zinc-500 leading-none">{label}</span>
         <MetricInfoSheet metric={info} />
       </div>
       <span
-        className={`text-xl font-medium tabular-nums ${dimmed ? "text-zinc-500" : "text-zinc-50"}`}
+        className={`text-sm font-medium tabular-nums leading-none ${dimmed ? "text-zinc-500" : "text-zinc-50"}`}
       >
         {value}
       </span>
@@ -138,7 +149,7 @@ export default function ProjectionCard({
         <p className="text-sm text-zinc-500 leading-snug">vs {oppPair}</p>
       </div>
 
-      {/* Forecast Block (left) + Metrics Grid (right) — side by side */}
+      {/* Forecast Block (left) + Metrics column (right) — side by side */}
       <div className="flex items-start gap-5">
         {/* Forecast Block */}
         <div className="flex flex-col flex-none">
@@ -151,19 +162,13 @@ export default function ProjectionCard({
           <span className="text-xs text-zinc-500 mt-2">Model Line</span>
         </div>
 
-        {/* Structural Metrics Grid */}
-        <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-4 pt-1">
-          <MetricCell label="Δ Rating"   value={signedNum(ratingDiff, 1)}   info={METRIC_INFO.ratingDiff} />
-          <MetricCell label="Confidence" value={confidence.toFixed(2)}       info={METRIC_INFO.confidence} />
-          <MetricCell label="Volatility" value={volatility}                  info={METRIC_INFO.volatility} />
-          <MetricCell label="Momentum"   value={signedNum(momentum, 1)}      info={METRIC_INFO.momentum} />
-          <MetricCell
-            label="Expectation Gap"
-            value={signedNum(expectationGap, 1)}
-            info={METRIC_INFO.expectationGap}
-            dimmed={expectationGapLowSample}
-            wide
-          />
+        {/* Structural Metrics — single column */}
+        <div className="flex-1 flex flex-col gap-3 pl-3">
+          <MetricCell label="Δ Rating"        value={signedNum(ratingDiff, 1)}            info={METRIC_INFO.ratingDiff} />
+          <MetricCell label="Confidence"      value={`${Math.round(confidence * 100)}%`}  info={METRIC_INFO.confidence} />
+          <MetricCell label="Volatility"      value={volatility}                           info={METRIC_INFO.volatility} />
+          <MetricCell label="Momentum"        value={formatMomentum(momentum)}             info={METRIC_INFO.momentum} />
+          <MetricCell label="Expectation Gap" value={signedNum(expectationGap, 1)}         info={METRIC_INFO.expectationGap} dimmed={expectationGapLowSample} />
         </div>
       </div>
     </div>
