@@ -225,3 +225,9 @@ Example:
   - [x] 6.11 Build `components/admin/RecomputeModal.tsx` — Client Component: reason dropdown (Merge / Void match / Identity correction / Other); confirmation text "This rewrites ratings and snapshots."; Confirm and Cancel buttons; on confirm, calls POST `/api/admin/recompute` with reason in body
   - [x] 6.12 Build `app/admin/recompute/page.tsx` — status display (last run: time, duration, trigger type, status badge running/succeeded/failed, notes); "Trigger Recompute" button that opens `<RecomputeModal />`; poll or refresh to show live status when a run is in progress
   - [x] 6.13 Build `app/admin/page.tsx` — admin index with links to: Void Matches, Merge/Edit Players, Audit Log, Recompute
+
+- [x] 10.0 Profile setup — claim or start fresh (PRD: `tasks/prd-claim-profile.md`)
+  - [x] 10.1 Modify `app/api/players/search/route.ts` — add optional `?unclaimed=true` query param; when set, add `userId: null` filter to Prisma where clause so only unclaimed shadow profiles are returned
+  - [x] 10.2 Modify `lib/services/command.ts` — add `hasPlayer: boolean` and `emailVerified: boolean` to `CommandData` interface and `getCommandData` return; look up `user.emailVerifiedAt` in parallel with player query; return early with `hasPlayer: false` when no player linked
+  - [x] 10.3 Create `components/command/ClaimProfilePrompt.tsx` — client component: debounced search calling `/api/players/search?q=…&unclaimed=true`; result list with "This is me" button per row calling `POST /api/players/{id}/claim`; inline error for 403 (email not verified); `router.refresh()` on success; "Start Fresh →" button navigating to `/enter`
+  - [x] 10.4 Modify `app/(tabs)/command/page.tsx` — import `ClaimProfilePrompt`; before rendering stats, check `!data.hasPlayer` and render `<ClaimProfilePrompt emailVerified={data.emailVerified} />` in its place; existing stats UI unchanged

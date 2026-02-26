@@ -26,6 +26,9 @@ export interface CommunityStats {
 }
 
 export interface CommandData {
+  hasPlayer: boolean;
+  emailVerified: boolean;
+  userDisplayName: string;
   myPlayerId: string | null;
   rating: number | null;
   winPct90d: number | null;
@@ -38,7 +41,7 @@ export interface CommandData {
 }
 
 export async function getCommandData(userId: string): Promise<CommandData> {
-  const empty: CommandData = {
+  const empty: Omit<CommandData, "hasPlayer" | "emailVerified" | "userDisplayName"> = {
     myPlayerId: null,
     rating: null,
     winPct90d: null,
@@ -50,11 +53,15 @@ export async function getCommandData(userId: string): Promise<CommandData> {
     communityStats: null,
   };
 
-  const myPlayer = await prisma.player.findFirst({
-    where: { userId, deletedAt: null },
-  });
+  const [myPlayer, userRecord] = await Promise.all([
+    prisma.player.findFirst({ where: { userId, deletedAt: null } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { emailVerifiedAt: true, displayName: true } }),
+  ]);
 
-  if (!myPlayer) return empty;
+  const emailVerified = userRecord?.emailVerifiedAt != null;
+  const userDisplayName = userRecord?.displayName ?? "";
+
+  if (!myPlayer) return { ...empty, hasPlayer: false, emailVerified, userDisplayName };
 
   const now = new Date();
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
@@ -248,6 +255,9 @@ export async function getCommandData(userId: string): Promise<CommandData> {
   }
 
   return {
+    hasPlayer: true,
+    emailVerified,
+    userDisplayName,
     myPlayerId: myPlayer.id,
     rating: myPlayer.rating,
     winPct90d,

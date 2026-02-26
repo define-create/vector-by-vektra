@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
   const q = searchParams.get("q")?.trim() ?? "";
+  const unclaimedOnly = searchParams.get("unclaimed") === "true";
 
   if (!q) {
     return NextResponse.json({ players: [] });
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest) {
     where: {
       displayName: { contains: q, mode: "insensitive" },
       deletedAt: null,
+      ...(unclaimedOnly ? { userId: null } : {}),
     },
     select: {
       id: true,

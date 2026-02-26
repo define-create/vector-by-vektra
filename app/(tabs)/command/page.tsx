@@ -5,6 +5,7 @@ import EditTimer from "@/components/command/EditTimer";
 import { MetricInfoSheet } from "@/components/command/MetricInfoSheet";
 import { RatingContext } from "@/components/command/RatingContext";
 import { MatchHistoryList } from "@/components/command/MatchHistoryList";
+import { ClaimProfilePrompt } from "@/components/command/ClaimProfilePrompt";
 import { getCommandData } from "@/lib/services/command";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,14 @@ export default async function CommandPage() {
   if (!session?.user?.id) redirect("/sign-in");
 
   const data = await getCommandData(session.user.id);
+
+  if (!data.hasPlayer) {
+    return (
+      <div className="flex h-full flex-col overflow-y-auto p-5">
+        <ClaimProfilePrompt emailVerified={data.emailVerified} userDisplayName={data.userDisplayName} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden p-5 gap-4">
