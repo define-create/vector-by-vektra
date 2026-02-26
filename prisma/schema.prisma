@@ -53,6 +53,7 @@ enum AuditActionType {
   edit_player_identity
   claim_profile
   trigger_recompute
+  rename_tag
 }
 
 enum AuditEntityType {
@@ -115,6 +116,7 @@ model Match {
   id              String      @id @default(cuid())
   enteredByUserId String
   matchDate       DateTime
+  tag             String?     // optional event/league label, free-text
   lockedAt        DateTime?
   voidedAt        DateTime?
   dataSource      DataSource  @default(manual)

@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/admin/matches", label: "Matches" },
   { href: "/admin/players", label: "Players" },
   { href: "/admin/recompute", label: "Recompute" },
+  { href: "/admin/tags", label: "Tags" },
   { href: "/admin/audit", label: "Audit Log" },
 ];
 

@@ -17,6 +17,7 @@ export interface LastMatch {
   opponentNames: string[];
   opponentIds: string[];
   score: string;
+  tag: string | null;
 }
 
 export interface CommunityStats {
@@ -25,13 +26,19 @@ export interface CommunityStats {
   max: number;
 }
 
+export interface CommandFilter {
+  from?: Date;
+  to?: Date;
+  tag?: string;
+}
+
 export interface CommandData {
   hasPlayer: boolean;
   emailVerified: boolean;
   userDisplayName: string;
   myPlayerId: string | null;
   rating: number | null;
-  winPct90d: number | null;
+  winPct: number | null;
   compoundingIndex: number | null;
   driftScore: number | null;
   recentMatchHistory: LastMatch[];
@@ -40,11 +47,11 @@ export interface CommandData {
   communityStats: CommunityStats | null;
 }
 
-export async function getCommandData(userId: string): Promise<CommandData> {
+export async function getCommandData(userId: string, filter?: CommandFilter): Promise<CommandData> {
   const empty: Omit<CommandData, "hasPlayer" | "emailVerified" | "userDisplayName"> = {
     myPlayerId: null,
     rating: null,
-    winPct90d: null,
+    winPct: null,
     compoundingIndex: null,
     driftScore: null,
     recentMatchHistory: [],
@@ -64,88 +71,128 @@ export async function getCommandData(userId: string): Promise<CommandData> {
   if (!myPlayer) return { ...empty, hasPlayer: false, emailVerified, userDisplayName };
 
   const now = new Date();
-  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
   const sixtyMinutesAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-  const [recentMatches, last10Snapshots, editableMatch, recentOpponentParticipants, communityAgg, historyParticipants] =
-    await Promise.all([
-      // 90-day window — used only for win% calculation
-      prisma.matchParticipant.findMany({
-        where: {
-          playerId: myPlayer.id,
-          match: { voidedAt: null, matchDate: { gte: ninetyDaysAgo } },
+  // Build the match filter clause based on the active filter
+  // Always exclude voided matches
+  const matchWhere = {
+    voidedAt: null,
+    ...(filter?.from || filter?.to
+      ? {
+          matchDate: {
+            ...(filter.from ? { gte: filter.from } : {}),
+            ...(filter.to ? { lte: filter.to } : {}),
+          },
+        }
+      : {}),
+    ...(filter?.tag ? { tag: filter.tag } : {}),
+  };
+
+  // Snapshot filter: for date range use matchDate, for tag use match.tag relation
+  const snapshotWhere = {
+    playerId: myPlayer.id,
+    ...(filter?.from || filter?.to
+      ? {
+          matchDate: {
+            ...(filter?.from ? { gte: filter.from } : {}),
+            ...(filter?.to ? { lte: filter.to } : {}),
+          },
+        }
+      : {}),
+    ...(filter?.tag ? { match: { tag: filter.tag } } : {}),
+  };
+
+  const [
+    filteredMatches,
+    filteredSnapshots,
+    editableMatch,
+    recentOpponentParticipants,
+    communityAgg,
+    historyParticipants,
+  ] = await Promise.all([
+    // Filtered matches — used for win% calculation
+    prisma.matchParticipant.findMany({
+      where: {
+        playerId: myPlayer.id,
+        match: matchWhere,
+      },
+      include: {
+        match: {
+          include: {
+            participants: { include: { player: { select: { id: true, displayName: true } } } },
+            games: true,
+          },
         },
-        include: {
-          match: {
-            include: {
-              participants: { include: { player: { select: { id: true, displayName: true } } } },
-              games: true,
+      },
+      orderBy: { match: { matchDate: "desc" } },
+    }),
+
+    // Filtered snapshots — used for CI + Drift (up to 10 most recent in the window)
+    prisma.ratingSnapshot.findMany({
+      where: snapshotWhere,
+      orderBy: { matchDate: "desc" },
+      take: 10,
+    }),
+
+    // Edit timer — always unfiltered (last 60 minutes regardless of active filter)
+    prisma.match.findFirst({
+      where: {
+        enteredByUserId: userId,
+        createdAt: { gt: sixtyMinutesAgo },
+        voidedAt: null,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+
+    // Upcoming probability — always unfiltered (uses recent opponents for forward-looking calc)
+    prisma.matchParticipant.findMany({
+      where: { playerId: myPlayer.id, match: { voidedAt: null } },
+      include: {
+        match: {
+          include: {
+            participants: {
+              include: { player: { select: { id: true, rating: true } } },
             },
           },
         },
-        orderBy: { match: { matchDate: "desc" } },
-      }),
+      },
+      orderBy: { match: { matchDate: "desc" } },
+      take: 20,
+    }),
 
-      prisma.ratingSnapshot.findMany({
-        where: { playerId: myPlayer.id },
-        orderBy: { matchDate: "desc" },
-        take: 10,
-      }),
+    // Community rating stats — always unfiltered (all-time community aggregate)
+    prisma.player.aggregate({
+      where: { deletedAt: null },
+      _avg: { rating: true },
+      _min: { rating: true },
+      _max: { rating: true },
+      _count: { id: true },
+    }),
 
-      prisma.match.findFirst({
-        where: {
-          enteredByUserId: userId,
-          createdAt: { gt: sixtyMinutesAgo },
-          voidedAt: null,
-        },
-        orderBy: { createdAt: "desc" },
-      }),
-
-      prisma.matchParticipant.findMany({
-        where: { playerId: myPlayer.id, match: { voidedAt: null } },
-        include: {
-          match: {
-            include: {
-              participants: {
-                include: { player: { select: { id: true, rating: true } } },
-              },
-            },
+    // Match history — filtered, last 20 in the active window
+    prisma.matchParticipant.findMany({
+      where: {
+        playerId: myPlayer.id,
+        match: matchWhere,
+      },
+      include: {
+        match: {
+          include: {
+            participants: { include: { player: { select: { id: true, displayName: true } } } },
+            games: true,
           },
         },
-        orderBy: { match: { matchDate: "desc" } },
-        take: 20,
-      }),
+      },
+      orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
+      take: 20,
+    }),
+  ]);
 
-      // Community rating stats (all non-deleted players, including shadow profiles)
-      prisma.player.aggregate({
-        where: { deletedAt: null },
-        _avg: { rating: true },
-        _min: { rating: true },
-        _max: { rating: true },
-        _count: { id: true },
-      }),
+  // Win % — all matches in the filter window (no date cap when unfiltered)
+  let wins = 0;
+  let losses = 0;
 
-      // Match history — no date filter, last 20 regardless of age
-      prisma.matchParticipant.findMany({
-        where: { playerId: myPlayer.id, match: { voidedAt: null } },
-        include: {
-          match: {
-            include: {
-              participants: { include: { player: { select: { id: true, displayName: true } } } },
-              games: true,
-            },
-          },
-        },
-        orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
-        take: 20,
-      }),
-    ]);
-
-  // Win % — 90-day window only
-  let wins90 = 0;
-  let losses90 = 0;
-
-  for (const participation of recentMatches) {
+  for (const participation of filteredMatches) {
     const match = participation.match;
     const myTeam = participation.team;
     let t1Wins = 0;
@@ -154,14 +201,14 @@ export async function getCommandData(userId: string): Promise<CommandData> {
       if (g.team1Score > g.team2Score) t1Wins++;
       else if (g.team2Score > g.team1Score) t2Wins++;
     }
-    if (myTeam === 1 ? t1Wins > t2Wins : t2Wins > t1Wins) wins90++;
-    else losses90++;
+    if (myTeam === 1 ? t1Wins > t2Wins : t2Wins > t1Wins) wins++;
+    else losses++;
   }
 
-  const totalGames90 = wins90 + losses90;
-  const winPct90d = totalGames90 > 0 ? wins90 / totalGames90 : null;
+  const totalGames = wins + losses;
+  const winPct = totalGames > 0 ? wins / totalGames : null;
 
-  // Match history — last 20 matches regardless of date
+  // Match history — filtered window, last 20
   const recentMatchHistory: LastMatch[] = historyParticipants.map((participation) => {
     const match = participation.match;
     const myTeam = participation.team;
@@ -197,11 +244,12 @@ export async function getCommandData(userId: string): Promise<CommandData> {
       opponentNames: opponents,
       opponentIds,
       score: gameScores,
+      tag: match.tag ?? null,
     };
   });
 
-  // CI + Drift
-  const snapsAsc = [...last10Snapshots].sort(
+  // CI + Drift — computed from filtered snapshots
+  const snapsAsc = [...filteredSnapshots].sort(
     (a, b) => a.matchDate.getTime() - b.matchDate.getTime(),
   );
   const ciSnapshots = snapsAsc.map((s) => ({
@@ -222,12 +270,12 @@ export async function getCommandData(userId: string): Promise<CommandData> {
   const compoundingIndex = ciSnapshots.length >= 2 ? computeCI(ciSnapshots) : null;
   const driftScore = ciSnapshots.length >= 1 ? computeDriftScore(ciSnapshots, driftActuals) : null;
 
-  // Edit timer
+  // Edit timer — always unfiltered
   const editExpiresAt = editableMatch
     ? new Date(editableMatch.createdAt.getTime() + 60 * 60 * 1000).toISOString()
     : null;
 
-  // Upcoming probability
+  // Upcoming probability — always unfiltered (forward-looking)
   const recentOpponents: { id: string; rating: number }[] = [];
   for (const participation of recentOpponentParticipants) {
     const myTeam = participation.team;
@@ -239,7 +287,7 @@ export async function getCommandData(userId: string): Promise<CommandData> {
   }
   const upcomingProbability = computeUpcomingProbability(myPlayer.rating, recentOpponents);
 
-  // Community stats
+  // Community stats — always unfiltered
   let communityStats: CommunityStats | null = null;
   if (
     communityAgg._count.id >= 3 &&
@@ -260,7 +308,7 @@ export async function getCommandData(userId: string): Promise<CommandData> {
     userDisplayName,
     myPlayerId: myPlayer.id,
     rating: myPlayer.rating,
-    winPct90d,
+    winPct,
     compoundingIndex,
     driftScore,
     recentMatchHistory,

@@ -73,6 +73,7 @@
    - Individual game scores for each game played
 7. The system must allow entry of players who are not yet registered (shadow profiles) by name.
 8. The system must auto-create a shadow profile for any unregistered player referenced in a match.
+8a. The match entry form must include an optional "Add to event" field placed after the scores section. The field autocompletes from the player's previously used tags. The tag is stored on the match and may be edited within the 60-minute window.
 9. Each match may only be entered once (single-entry truth). A submitted match is the authoritative record.
 10. The system must enforce a 60-minute edit window anchored to the original submission time (`createdAt`):
     - `editExpiresAt = createdAt + 60 minutes`
@@ -142,12 +143,13 @@
 
 28. The Command screen must display:
     - Current rating (large numeric)
-    - 90-day win percentage
+    - Win percentage (all-time by default; scoped to active filter when one is set — label: "Win %")
     - Compounding Index (see Section 10.1 for full definition)
     - Drift Score (see Section 10.2 for full definition)
     - Last match summary
     - Edit timer (visible only when an editable match exists within the 60-minute window)
     - Upcoming Match Probability (win probability against the player's most likely next opponent, derived from personal match history — free tier, no network data required)
+28a. The Command screen must display a filter chip (default: "All Matches") below the rating display. See Section 4.10.
 29. The Command screen must not require scrolling to see all primary data on a standard mobile viewport.
 
 ### 4.7 Matchups Screen
@@ -178,12 +180,53 @@
     - Status (`running` | `succeeded` | `failed`)
     - Reason/notes (for admin-triggered runs)
 43. The recompute status page must make it immediately clear whether a run is currently in progress, to prevent duplicate triggers.
+44. The admin panel must include a tag management page. See Section 4.10.
 
 ### 4.9 Data Integrity
 
 44. The system must never hard-delete any match, player, or user record.
 45. All deletions must be implemented as soft deletes (timestamp fields: `voidedAt`, `deletedAt`).
 46. The `dataSource` field on matches must be set to `manual` for all MVP entries.
+
+---
+
+### 4.10 Period & Event Filtering
+
+**Overview:** Players can scope the Command screen to a specific time period or event tag. All contextual metrics (Win%, CI, Drift, match history) update to reflect only the filtered matches. The player's ELO rating is always all-time and is not affected by the filter.
+
+**Match tagging:**
+
+47. A match may optionally be assigned a single free-text tag (e.g., "Winter League", "Club Night", "Tournament") at entry time.
+48. The tag field is optional. Matches without a tag have no tag displayed.
+49. Tags are free-text strings entered by the user during match entry (Enter screen), in a dedicated optional "Add to event" field placed after the scores section.
+50. Tags are autocompleted from the player's previously used tags.
+51. A tag may be added or changed within the 60-minute edit window. After that, tags are locked with the match.
+52. Each match holds at most one tag.
+
+**Command screen filtering:**
+
+53. The Command screen must display a filter chip below the rating display. Default state: "All Matches".
+54. Tapping the filter chip opens a bottom sheet with two filter modes:
+    - **Date Range**: user selects a from-date and to-date. Matches outside the range are excluded.
+    - **Event Tag**: user selects one of their previously used tags. Only matches with that tag are included.
+55. When a filter is active:
+    - The filter chip shows a summary of the active filter (e.g., "Jan–Mar 2026" or "Winter League").
+    - Win%, CI, and Drift are recomputed using only matches in the filtered window.
+    - The match history list shows only filtered matches.
+    - Rating, edit timer, upcoming probability, and community stats are unaffected.
+56. The filter state is stored in URL search params (`?from=`, `?to=`, `?tag=`). Navigating back to Command restores the last filter.
+57. A "Clear Filter" action in the bottom sheet resets to the default "All Matches" view.
+58. If the filtered window contains fewer than 2 matches, CI and Drift display "—" (insufficient data).
+
+**Win % label:**
+
+59. The Win% metric on the Command screen is all-time by default (no 90-day cap). The label is simply "Win %" in all states. Filter context is communicated by the filter chip, not by modifying metric labels.
+
+**Admin tag management:**
+
+60. The admin panel must include a tag management page listing all unique tags with their match counts.
+61. Admins must be able to rename a tag (updates all matches with the old tag) or merge two tags (equivalent to renaming the source tag to the target tag name).
+62. Every tag rename/merge must write an audit event.
 
 ---
 
@@ -276,6 +319,12 @@ Full replay rating recompute is appropriate up to ~50,000 matches. Beyond that, 
 ### Schema Delta (PRD additions vs. original Technical Build Plan)
 
 The original Technical Build Plan defines the base schema. The following fields are **additions required by this PRD** that are not in the original spec:
+
+**`Match` table additions:**
+
+| Field | Type | Required by |
+|---|---|---|
+| `tag` | `String?` | Event filtering (Section 4.10) |
 
 **`Players` table additions:**
 

@@ -14,7 +14,8 @@ interface GameUpdateInput {
 }
 
 interface PatchMatchBody {
-  games: GameUpdateInput[];
+  games?: GameUpdateInput[];
+  tag?: string; // optional event/league label update
 }
 
 export async function PATCH(
@@ -35,23 +36,27 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  // Validate games
-  if (!Array.isArray(body.games) || body.games.length === 0) {
+  // Validate: at least games or tag must be present
+  const hasGames = Array.isArray(body.games) && body.games.length > 0;
+  const hasTag = typeof body.tag === "string";
+  if (!hasGames && !hasTag) {
     return NextResponse.json(
-      { error: "At least one game is required" },
+      { error: "At least one game or a tag update is required" },
       { status: 400 },
     );
   }
-  for (const g of body.games) {
-    if (
-      typeof g.gameOrder !== "number" ||
-      typeof g.team1Score !== "number" ||
-      typeof g.team2Score !== "number"
-    ) {
-      return NextResponse.json(
-        { error: "Each game must have gameOrder, team1Score, team2Score (numbers)" },
-        { status: 400 },
-      );
+  if (hasGames) {
+    for (const g of body.games!) {
+      if (
+        typeof g.gameOrder !== "number" ||
+        typeof g.team1Score !== "number" ||
+        typeof g.team2Score !== "number"
+      ) {
+        return NextResponse.json(
+          { error: "Each game must have gameOrder, team1Score, team2Score (numbers)" },
+          { status: 400 },
+        );
+      }
     }
   }
 
@@ -78,18 +83,27 @@ export async function PATCH(
       );
     }
 
-    // Update game scores in a transaction (delete old games, insert new ones)
-    const updated = await prisma.$transaction(async (tx) => {
-      await tx.game.deleteMany({ where: { matchId: id } });
+    // Sanitize tag
+    const tagValue = hasTag ? (body.tag!.trim() || null) : undefined;
 
-      await tx.game.createMany({
-        data: body.games.map((g) => ({
-          matchId: id,
-          gameOrder: g.gameOrder,
-          team1Score: g.team1Score,
-          team2Score: g.team2Score,
-        })),
-      });
+    // Update games and/or tag in a transaction
+    const updated = await prisma.$transaction(async (tx) => {
+      if (hasGames) {
+        await tx.game.deleteMany({ where: { matchId: id } });
+        await tx.game.createMany({
+          data: body.games!.map((g) => ({
+            matchId: id,
+            gameOrder: g.gameOrder,
+            team1Score: g.team1Score,
+            team2Score: g.team2Score,
+          })),
+        });
+      }
+
+      // Update tag only if explicitly provided (tagValue === null clears it)
+      if (hasTag) {
+        await tx.match.update({ where: { id }, data: { tag: tagValue } });
+      }
 
       return tx.match.findUnique({
         where: { id },

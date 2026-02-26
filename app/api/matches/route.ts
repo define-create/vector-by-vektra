@@ -26,6 +26,7 @@ interface CreateMatchBody {
   opponent2Name?: string;
   outcome: "win" | "loss"; // from the user's perspective — used for client UX
   games: GameInput[];
+  tag?: string; // optional event/league label
 }
 
 // ---------------------------------------------------------------------------
@@ -181,12 +182,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Sanitize tag
+    const tag = typeof body.tag === "string" ? body.tag.trim() || null : null;
+
     // Create match + participants + games in a transaction
     const match = await prisma.$transaction(async (tx) => {
       const created = await tx.match.create({
         data: {
           enteredByUserId: session.user.id,
           matchDate,
+          tag,
           dataSource: "manual",
         },
       });

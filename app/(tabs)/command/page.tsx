@@ -6,7 +6,8 @@ import { MetricInfoSheet } from "@/components/command/MetricInfoSheet";
 import { RatingContext } from "@/components/command/RatingContext";
 import { MatchHistoryList } from "@/components/command/MatchHistoryList";
 import { ClaimProfilePrompt } from "@/components/command/ClaimProfilePrompt";
-import { getCommandData } from "@/lib/services/command";
+import { FilterChip } from "@/components/command/FilterChip";
+import { getCommandData, type CommandFilter } from "@/lib/services/command";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +21,8 @@ const METRIC_INFO = {
     body: "Your rating is a number that represents your current skill level, calculated from every match you've played. Players start at 1000. Winning against stronger opponents raises it more; losing to weaker opponents drops it more. The higher your rating, the stronger the system considers you.",
   },
   winPct: {
-    label: "Win % (90d)",
-    body: "The percentage of matches you won in the last 90 days. A 50% win rate means you're winning and losing about equally. Above 50% means you're outperforming expectations across the season.",
+    label: "Win %",
+    body: "The percentage of matches you won. A 50% win rate means you're winning and losing about equally. Above 50% means you're outperforming expectations. Use the filter chip to scope this to a specific period or event.",
   },
   ci: {
     label: "Compounding Index",
@@ -52,11 +53,26 @@ function signedFixed(value: number | null, decimals = 1): string {
 // CommandPage — Server Component
 // ---------------------------------------------------------------------------
 
-export default async function CommandPage() {
+export default async function CommandPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string; tag?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/sign-in");
 
-  const data = await getCommandData(session.user.id);
+  const params = await searchParams;
+
+  const filter: CommandFilter | undefined =
+    params.from || params.to || params.tag
+      ? {
+          from: params.from ? new Date(params.from) : undefined,
+          to: params.to ? new Date(params.to) : undefined,
+          tag: params.tag,
+        }
+      : undefined;
+
+  const data = await getCommandData(session.user.id, filter);
 
   if (!data.hasPlayer) {
     return (
@@ -68,7 +84,7 @@ export default async function CommandPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden p-5 gap-4">
-      {/* Rating */}
+      {/* Rating — always all-time */}
       <div className="flex flex-col items-center py-4">
         <div className="flex items-center gap-1">
           <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Rating</p>
@@ -83,11 +99,14 @@ export default async function CommandPage() {
         )}
       </div>
 
+      {/* Filter chip — below rating, above metrics */}
+      <FilterChip filter={filter} />
+
       {/* Key metrics row */}
       <div className="grid grid-cols-3 gap-3">
         <MetricCard
-          label="Win % (90d)"
-          value={pct(data.winPct90d, 0)}
+          label="Win %"
+          value={pct(data.winPct, 0)}
           info={METRIC_INFO.winPct}
         />
         <MetricCard

@@ -59,11 +59,25 @@ export default function EnterPage() {
   const [recentPartners, setRecentPartners] = useState<Player[]>([]);
   const [recentOpponents, setRecentOpponents] = useState<Player[]>([]);
 
+  // Tag state (optional event label)
+  const [tag, setTag] = useState("");
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+
   // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [submittedMatchId, setSubmittedMatchId] = useState<string | null>(null);
+
+  // Load tag suggestions when reaching review step
+  useEffect(() => {
+    if (step === "review" && tagSuggestions.length === 0) {
+      fetch("/api/tags")
+        .then((r) => r.json())
+        .then((data: { tags: string[] }) => setTagSuggestions(data.tags ?? []))
+        .catch(() => {});
+    }
+  }, [step, tagSuggestions.length]);
 
   // Load recent players on mount
   useEffect(() => {
@@ -137,6 +151,7 @@ export default function EnterPage() {
         team1Score: Number(g.team1Score),
         team2Score: Number(g.team2Score),
       })),
+      ...(tag.trim() ? { tag: tag.trim() } : {}),
     };
 
     try {
@@ -188,6 +203,7 @@ export default function EnterPage() {
             setOpponent2(null);
             setOutcome(null);
             setGames([{ gameOrder: 1, team1Score: "", team2Score: "" }]);
+            setTag("");
             setStep("partner");
           }}
           className="rounded-xl bg-zinc-700 px-6 py-3 text-zinc-200 hover:bg-zinc-600"
@@ -311,6 +327,32 @@ export default function EnterPage() {
                   </span>
                 </div>
               ))}
+            </div>
+
+            {/* Optional event tag */}
+            <div className="rounded-xl bg-zinc-800 p-4 flex flex-col gap-3">
+              <p className="text-xs font-medium text-zinc-500">Add to Event (optional)</p>
+              <input
+                type="text"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                placeholder="e.g. Winter League, Club Night…"
+                className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+              />
+              {tagSuggestions.length > 0 && !tag && (
+                <div className="flex flex-wrap gap-2">
+                  {tagSuggestions.slice(0, 5).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTag(t)}
+                      className="rounded-full border border-zinc-600 px-3 py-1 text-xs text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {submitError && (
