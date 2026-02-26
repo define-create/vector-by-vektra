@@ -42,39 +42,51 @@ export default function PlayerSelector({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const skipNextSearchRef = useRef(value?.id != null);
+  const isSelectedRef = useRef(value?.id != null);
+  const searchGenRef = useRef(0);
 
   const debouncedInput = useDebounce(inputValue, 250);
 
   // Fetch search results when input changes
   useEffect(() => {
     if (!debouncedInput || debouncedInput.length < 1) {
+      skipNextSearchRef.current = false;
       setResults([]);
       setOpen(false);
       return;
     }
 
-    let cancelled = false;
+    // Slot already has a confirmed player — don't re-search on excludeIds changes
+    if (isSelectedRef.current) return;
+
+    // Skip re-search triggered by selectPlayer setting inputValue
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
+    }
+
+    searchGenRef.current += 1;
+    const myGen = searchGenRef.current;
     setLoading(true);
 
     fetch(`/api/players/search?q=${encodeURIComponent(debouncedInput)}`)
       .then((r) => r.json())
       .then((data: { players: Player[] }) => {
-        if (cancelled) return;
+        if (myGen !== searchGenRef.current) return;
         setResults(
           (data.players ?? []).filter((p) => !excludeIds.includes(p.id)),
         );
         setOpen(true);
       })
       .catch(() => {
-        if (!cancelled) setResults([]);
+        if (myGen !== searchGenRef.current) return;
+        setResults([]);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (myGen !== searchGenRef.current) return;
+        setLoading(false);
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [debouncedInput, excludeIds]);
 
   // Close dropdown on outside click
@@ -90,6 +102,10 @@ export default function PlayerSelector({
 
   const selectPlayer = useCallback(
     (player: Player) => {
+      searchGenRef.current += 1;        // invalidate any in-flight fetch
+      skipNextSearchRef.current = true; // block next debounce-triggered search
+      isSelectedRef.current = true;     // block excludeIds-triggered re-searches
+      setResults([]);                   // clear stale results immediately
       setInputValue(player.displayName);
       onChange({ id: player.id, name: player.displayName });
       setOpen(false);
@@ -98,6 +114,7 @@ export default function PlayerSelector({
   );
 
   const clearSelection = useCallback(() => {
+    isSelectedRef.current = false;
     setInputValue("");
     onChange(null);
     setResults([]);
@@ -105,6 +122,7 @@ export default function PlayerSelector({
   }, [onChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    isSelectedRef.current = false;
     const v = e.target.value;
     setInputValue(v);
     // If the user types, clear any previously resolved ID (now it's a name-only entry)

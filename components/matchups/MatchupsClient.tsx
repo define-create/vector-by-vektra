@@ -98,6 +98,11 @@ export default function MatchupsClient({
 
   const allSelected = partner !== null && opp1 !== null && opp2 !== null;
 
+  // Auto-collapse once all 4 players are selected
+  useEffect(() => {
+    if (allSelected) setIsCollapsed(true);
+  }, [allSelected]);
+
   // Summary line shown in the collapsed header
   const selectionSummary = allSelected
     ? `You / ${partner.name}  vs  ${opp1.name} / ${opp2.name}`
@@ -168,9 +173,9 @@ export default function MatchupsClient({
           <div className="px-5 pb-5">
             <PlayerPairSelector
               recentPlayers={recentOpponents}
-              initialPartner={initialPartner}
-              initialOpp1={initialOpp1}
-              initialOpp2={initialOpp2}
+              initialPartner={partner}
+              initialOpp1={opp1}
+              initialOpp2={opp2}
               onChange={({ partner: p, opp1: o1, opp2: o2 }) => {
                 setPartner(p);
                 setOpp1(o1);
