@@ -61,7 +61,7 @@ export default function TrajectoryPage() {
             type="button"
             onClick={() => setHorizon(h.value)}
             className={[
-              "flex-1 rounded-lg py-2 text-sm font-medium transition-colors",
+              "flex-1 rounded-lg py-2 text-base font-medium transition-colors",
               horizon === h.value
                 ? "bg-zinc-200 text-zinc-900"
                 : "text-zinc-400 hover:text-zinc-200",
@@ -111,8 +111,8 @@ export default function TrajectoryPage() {
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col items-center rounded-xl bg-zinc-800/60 px-3 py-4 gap-1">
-      <span className="text-xs text-zinc-500">{label}</span>
-      <span className="text-lg font-bold tabular-nums text-zinc-100">{value}</span>
+      <span className="text-sm text-zinc-500">{label}</span>
+      <span className="text-xl font-bold tabular-nums text-zinc-100">{value}</span>
     </div>
   );
 }

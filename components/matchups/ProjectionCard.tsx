@@ -105,11 +105,11 @@ function MetricCell({ label, value, info, dimmed }: MetricCellProps) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-1">
-        <span className="text-xs text-zinc-500 leading-none">{label}</span>
+        <span className="text-sm text-zinc-500 leading-none">{label}</span>
         <MetricInfoSheet metric={info} />
       </div>
       <span
-        className={`text-sm font-medium tabular-nums leading-none ${dimmed ? "text-zinc-500" : "text-zinc-50"}`}
+        className={`text-base font-medium tabular-nums leading-none ${dimmed ? "text-zinc-500" : "text-zinc-50"}`}
       >
         {value}
       </span>
@@ -145,8 +145,8 @@ export default function ProjectionCard({
     <div className="rounded-xl border border-[#374155] p-5 flex flex-col gap-4">
       {/* Teams Block */}
       <div>
-        <p className="text-sm font-medium text-zinc-50 leading-snug">{primaryPair}</p>
-        <p className="text-sm text-zinc-500 leading-snug">vs {oppPair}</p>
+        <p className="text-base font-medium text-zinc-50 leading-snug">{primaryPair}</p>
+        <p className="text-base text-zinc-500 leading-snug">vs {oppPair}</p>
       </div>
 
       {/* Forecast Block (left) + Metrics column (right) — side by side */}
@@ -159,7 +159,7 @@ export default function ProjectionCard({
           <span className="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
             {formatMoneyline(moneyline)}
           </span>
-          <span className="text-xs text-zinc-500 mt-2">Model Line</span>
+          <span className="text-sm text-zinc-500 mt-2">Model Line</span>
         </div>
 
         {/* Structural Metrics — single column */}

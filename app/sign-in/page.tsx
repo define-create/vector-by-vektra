@@ -49,7 +49,7 @@ function SignInForm() {
   }
 
   const inputClass =
-    "w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm outline-none focus:border-zinc-600 placeholder:text-zinc-600";
+    "w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-base outline-none focus:border-zinc-600 placeholder:text-zinc-600";
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -57,19 +57,19 @@ function SignInForm() {
         <h1 className="text-2xl font-semibold mb-8">Sign in</h1>
 
         {registered && (
-          <div className="mb-4 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-300">
+          <div className="mb-4 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-base text-zinc-300">
             Account created. Check your email to verify your address.
           </div>
         )}
 
         {verified && (
-          <div className="mb-4 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-green-400">
+          <div className="mb-4 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-base text-green-400">
             Email verified. You can now sign in.
           </div>
         )}
 
         {(errorParam === "InvalidToken" || errorParam === "InvalidOrExpiredToken") && (
-          <div className="mb-4 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-red-400">
+          <div className="mb-4 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-base text-red-400">
             Verification link is invalid or expired. Please register again.
           </div>
         )}
@@ -99,7 +99,7 @@ function SignInForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-zinc-100 text-zinc-900 rounded-lg px-4 py-3 text-sm font-medium disabled:opacity-50 mt-1"
+            className="w-full bg-zinc-100 text-zinc-900 rounded-lg px-4 py-3 text-base font-medium disabled:opacity-50 mt-1"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>

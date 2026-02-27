@@ -59,13 +59,13 @@ export default function RegisterPage() {
   }
 
   const inputClass =
-    "w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm outline-none focus:border-zinc-600 placeholder:text-zinc-600";
+    "w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-base outline-none focus:border-zinc-600 placeholder:text-zinc-600";
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold mb-1">Create account</h1>
-        <p className="text-sm text-zinc-500 mb-8">Track your pickleball rating over time.</p>
+        <p className="text-base text-zinc-500 mb-8">Track your pickleball rating over time.</p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -120,7 +120,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-zinc-100 text-zinc-900 rounded-lg px-4 py-3 text-sm font-medium disabled:opacity-50 mt-1"
+            className="w-full bg-zinc-100 text-zinc-900 rounded-lg px-4 py-3 text-base font-medium disabled:opacity-50 mt-1"
           >
             {loading ? "Creating account…" : "Create account"}
           </button>

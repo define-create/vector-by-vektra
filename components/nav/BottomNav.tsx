@@ -29,7 +29,7 @@ export default function BottomNav() {
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              <span className="text-[10px] uppercase tracking-widest">
+              <span className="text-xs uppercase tracking-widest">
                 {tab.label}
               </span>
             </Link>

@@ -92,7 +92,7 @@ export default function PlayerPairSelector({
 
       <div className="h-px bg-zinc-700" />
 
-      <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">
+      <p className="text-sm font-medium uppercase tracking-widest text-zinc-500">
         Opponents
       </p>
 

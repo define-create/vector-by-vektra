@@ -43,7 +43,7 @@ export function RatingContext({ rating, communityStats }: Props) {
       </div>
 
       {/* Relative text */}
-      <p className="mt-1.5 text-xs text-zinc-500 text-center">{relativeText}</p>
+      <p className="mt-1.5 text-sm text-zinc-500 text-center">{relativeText}</p>
     </div>
   );
 }

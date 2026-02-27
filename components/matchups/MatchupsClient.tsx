@@ -158,11 +158,11 @@ export default function MatchupsClient({
           className="w-full flex items-center justify-between px-5 py-4"
         >
           <div className="flex flex-col items-start gap-0.5">
-            <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
+            <span className="text-sm font-medium uppercase tracking-widest text-zinc-500">
               Select Players
             </span>
             {isCollapsed && (
-              <span className="text-sm text-zinc-300">{selectionSummary}</span>
+              <span className="text-base text-zinc-300">{selectionSummary}</span>
             )}
           </div>
           <Chevron open={!isCollapsed} />

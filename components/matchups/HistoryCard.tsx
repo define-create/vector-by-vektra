@@ -4,7 +4,7 @@
 // Styled to match the "Recent Matches" list on the Command screen:
 //   - Small-caps section label + meta line
 //   - rounded-xl bg-zinc-800 container (no card border)
-//   - Two-line rows: date + result / score, then rating delta
+//   - Single-line rows: date · WIN/LOSS (colored) · score
 // ---------------------------------------------------------------------------
 
 interface HistoryRow {
@@ -20,10 +20,6 @@ interface HistoryCardProps {
   avgMargin: number;
 }
 
-function signedDelta(n: number): string {
-  return n >= 0 ? `+${n.toFixed(1)}` : `${n.toFixed(1)}`;
-}
-
 function formatDate(iso: string): string {
   const d = new Date(iso + "T00:00:00Z");
   return d.toLocaleDateString("en-US", {
@@ -37,39 +33,34 @@ export default function HistoryCard({ history, record, avgMargin }: HistoryCardP
   return (
     <div>
       {/* Section label — matches "Recent Matches" style */}
-      <p className="text-xs uppercase tracking-widest text-zinc-500 mb-1">
+      <p className="text-sm uppercase tracking-widest text-zinc-500 mb-1">
         Head-to-Head History
       </p>
-      <p className="text-xs text-zinc-500 mb-2">
-        Record: {record} · Avg Margin: {signedDelta(avgMargin)}
+      <p className="text-sm text-zinc-500 mb-2">
+        Record: {record} · Avg Margin: {avgMargin >= 0 ? `+${avgMargin.toFixed(1)}` : `${avgMargin.toFixed(1)}`}
       </p>
 
       <div className="rounded-xl bg-zinc-800">
         {history.length === 0 ? (
-          <p className="px-4 py-3 text-xs text-zinc-500">No head-to-head history found.</p>
+          <p className="px-4 py-3 text-sm text-zinc-500">No head-to-head history found.</p>
         ) : (
           history.map((row, i) => (
             <div
               key={i}
-              className={`px-4 py-2${i > 0 ? " border-t border-zinc-700/50" : ""}`}
+              className={`flex items-center gap-2 px-4 py-2${i > 0 ? " border-t border-zinc-700/50" : ""}`}
             >
-              {/* Row 1: date + result (left) · score (right) */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500 tabular-nums">
-                    {formatDate(row.date)}
-                  </span>
-                  <span className="text-xs font-semibold text-zinc-200 tabular-nums">
-                    {row.result === "W" ? "WIN" : "LOSS"}
-                  </span>
-                </div>
-                <span className="text-xs text-zinc-500 tabular-nums">{row.score}</span>
-              </div>
-
-              {/* Row 2: rating delta */}
-              <p className="text-xs text-zinc-400 mt-0.5 tabular-nums">
-                Rating Δ {signedDelta(row.delta)}
-              </p>
+              <span className="text-sm text-zinc-500 tabular-nums shrink-0">
+                {formatDate(row.date)}
+              </span>
+              <span
+                className={`text-sm font-semibold tabular-nums shrink-0 ${
+                  row.result === "W" ? "text-emerald-400" : "text-rose-400"
+                }`}
+              >
+                {row.result === "W" ? "WIN" : "LOSS"}
+              </span>
+              <span className="flex-1" />
+              <span className="text-sm text-zinc-500 tabular-nums shrink-0">{row.score}</span>
             </div>
           ))
         )}

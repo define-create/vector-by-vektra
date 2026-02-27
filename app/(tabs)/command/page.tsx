@@ -83,11 +83,11 @@ export default async function CommandPage({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden p-5 gap-4">
-      {/* Rating — always all-time */}
-      <div className="flex flex-col items-center py-4">
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Rating — always all-time — pinned */}
+      <div className="flex flex-col items-center py-4 px-5">
         <div className="flex items-center gap-1">
-          <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Rating</p>
+          <p className="text-sm font-medium uppercase tracking-widest text-zinc-500">Rating</p>
           <MetricInfoSheet metric={METRIC_INFO.rating} />
         </div>
         <p className="text-7xl font-bold tabular-nums text-zinc-50 leading-none mt-1">
@@ -99,6 +99,8 @@ export default async function CommandPage({
         )}
       </div>
 
+      {/* Scrollable section — Filter chip and everything below */}
+      <div className="flex-1 overflow-y-auto px-5 pb-5 flex flex-col gap-4">
       {/* Filter chip — below rating, above metrics */}
       <FilterChip filter={filter} />
 
@@ -141,6 +143,7 @@ export default async function CommandPage({
 
       {/* Match history list — long-press a row to navigate to matchup projection */}
       <MatchHistoryList matches={data.recentMatchHistory} myPlayerId={data.myPlayerId} />
+      </div>
     </div>
   );
 }
@@ -164,8 +167,8 @@ function MetricCard({
       <div className="absolute top-2 right-2">
         <MetricInfoSheet metric={info} />
       </div>
-      <span className="text-xs text-zinc-500">{label}</span>
-      <span className="text-xl font-bold tabular-nums text-zinc-100">{value}</span>
+      <span className="text-sm text-zinc-500">{label}</span>
+      <span className="text-2xl font-bold tabular-nums text-zinc-100">{value}</span>
     </div>
   );
 }

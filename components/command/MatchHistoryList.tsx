@@ -15,9 +15,14 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function signedInt(n: number): string {
+  const r = Math.round(n);
+  return r >= 0 ? `+${r}` : `${r}`;
+}
+
 /**
  * Compact scrollable list of recent matches — two-row layout per entry.
- * Row 1: date + outcome badge (left) · score (right)
+ * Row 1: date · WIN/LOSS (fixed width) · Rating Δ (flex) · score
  * Row 2: "with Partner · vs. Opp1 & Opp2" — wraps naturally, no truncation.
  *
  * Long-press on a row navigates to /matchups with all 4 player IDs pre-populated.
@@ -48,11 +53,11 @@ export function MatchHistoryList({ matches, myPlayerId }: Props) {
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Recent Matches</p>
+      <p className="text-sm uppercase tracking-widest text-zinc-500 mb-2">Recent Matches</p>
 
-      <div className="max-h-64 overflow-y-auto rounded-xl bg-zinc-800">
+      <div className="rounded-xl bg-zinc-800">
         {matches.length === 0 ? (
-          <p className="px-4 py-3 text-xs text-zinc-500">No matches yet.</p>
+          <p className="px-4 py-3 text-sm text-zinc-500">No matches yet.</p>
         ) : (
           matches.map((m, i) => (
             <div
@@ -76,23 +81,28 @@ export function MatchHistoryList({ matches, myPlayerId }: Props) {
                 router.push(`/matchups?${params.toString()}`);
               }}
             >
-              {/* Row 1: date + outcome · score */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">{formatDate(m.matchDate)}</span>
-                  <span
-                    className={`text-xs font-semibold ${
-                      m.outcome === "win" ? "text-emerald-400" : "text-rose-400"
-                    }`}
-                  >
-                    {m.outcome === "win" ? "WIN" : "LOSS"}
+              {/* Row 1: date · WIN/LOSS (fixed width) · Rating Δ (flex) · score */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-zinc-500 shrink-0">{formatDate(m.matchDate)}</span>
+                <span
+                  className={`text-sm font-semibold w-12 shrink-0 ${
+                    m.outcome === "win" ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {m.outcome === "win" ? "WIN" : "LOSS"}
+                </span>
+                {m.ratingDelta != null ? (
+                  <span className="text-sm text-zinc-500 tabular-nums flex-1">
+                    Rating Δ {signedInt(m.ratingDelta)}
                   </span>
-                </div>
-                <span className="text-xs text-zinc-500">{m.score}</span>
+                ) : (
+                  <span className="flex-1" />
+                )}
+                <span className="text-sm text-zinc-500 shrink-0">{m.score}</span>
               </div>
 
               {/* Row 2: partner + opponents */}
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-sm text-zinc-400 mt-0.5">
                 with {m.partnerName} · vs. {m.opponentNames.join(" & ")}
               </p>
             </div>

@@ -58,7 +58,7 @@ export default function GameScoreInput({ games, onChange }: GameScoreInputProps)
       <label className="text-sm font-medium text-zinc-400">Game Scores</label>
 
       {/* Column headers */}
-      <div className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-3 text-xs font-medium text-zinc-500">
+      <div className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-3 text-sm font-medium text-zinc-500">
         <span className="w-8" />
         <span className="text-center">Your team</span>
         <span className="text-center">Opponents</span>

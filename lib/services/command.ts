@@ -18,6 +18,7 @@ export interface LastMatch {
   opponentIds: string[];
   score: string;
   tag: string | null;
+  ratingDelta: number | null;
 }
 
 export interface CommunityStats {
@@ -180,6 +181,7 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
           include: {
             participants: { include: { player: { select: { id: true, displayName: true } } } },
             games: true,
+            ratingSnapshots: { where: { playerId: myPlayer.id }, take: 1 },
           },
         },
       },
@@ -207,6 +209,28 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
 
   const totalGames = wins + losses;
   const winPct = totalGames > 0 ? wins / totalGames : null;
+
+  // Rating delta per match — diff between consecutive snapshot ratings (chronological order)
+  const snapshotRatingByMatchId = new Map<string, number>();
+  for (const p of historyParticipants) {
+    const snap = p.match.ratingSnapshots[0];
+    if (snap) snapshotRatingByMatchId.set(p.match.id, snap.rating);
+  }
+  const histAsc = [...historyParticipants].sort(
+    (a, b) => a.match.matchDate.getTime() - b.match.matchDate.getTime(),
+  );
+  const ratingDeltaByMatchId = new Map<string, number | null>();
+  for (let i = 0; i < histAsc.length; i++) {
+    const matchId = histAsc[i]!.match.id;
+    const curr = snapshotRatingByMatchId.get(matchId);
+    if (curr == null) { ratingDeltaByMatchId.set(matchId, null); continue; }
+    let prev: number | null = null;
+    for (let j = i - 1; j >= 0; j--) {
+      const s = snapshotRatingByMatchId.get(histAsc[j]!.match.id);
+      if (s != null) { prev = s; break; }
+    }
+    ratingDeltaByMatchId.set(matchId, prev != null ? curr - prev : null);
+  }
 
   // Match history — filtered window, last 20
   const recentMatchHistory: LastMatch[] = historyParticipants.map((participation) => {
@@ -245,6 +269,7 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
       opponentIds,
       score: gameScores,
       tag: match.tag ?? null,
+      ratingDelta: ratingDeltaByMatchId.get(match.id) ?? null,
     };
   });
 

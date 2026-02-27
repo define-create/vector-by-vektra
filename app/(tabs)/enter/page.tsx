@@ -239,7 +239,7 @@ export default function EnterPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <h2 className="mb-6 text-lg font-semibold text-zinc-50">
+        <h2 className="mb-6 text-xl font-semibold text-zinc-50">
           {STEP_LABELS[step]}
         </h2>
 
@@ -318,7 +318,7 @@ export default function EnterPage() {
             </div>
 
             <div className="rounded-xl bg-zinc-800 p-4 space-y-2">
-              <p className="text-xs font-medium text-zinc-500 mb-3">Games</p>
+              <p className="text-sm font-medium text-zinc-500 mb-3">Games</p>
               {games.map((g, i) => (
                 <div key={i} className="flex justify-between">
                   <span className="text-zinc-400">Game {i + 1}</span>
@@ -331,7 +331,7 @@ export default function EnterPage() {
 
             {/* Optional event tag */}
             <div className="rounded-xl bg-zinc-800 p-4 flex flex-col gap-3">
-              <p className="text-xs font-medium text-zinc-500">Add to Event (optional)</p>
+              <p className="text-sm font-medium text-zinc-500">Add to Event (optional)</p>
               <input
                 type="text"
                 value={tag}
@@ -346,7 +346,7 @@ export default function EnterPage() {
                       key={t}
                       type="button"
                       onClick={() => setTag(t)}
-                      className="rounded-full border border-zinc-600 px-3 py-1 text-xs text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
+                      className="rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
                     >
                       {t}
                     </button>
@@ -437,7 +437,7 @@ function ReviewRow({
       <span className="text-zinc-500">{label}</span>
       <div className="text-right">
         <span className={valueColor}>{value}</span>
-        {subtext && <p className="text-xs text-amber-400">{subtext}</p>}
+        {subtext && <p className="text-sm text-amber-400">{subtext}</p>}
       </div>
     </div>
   );

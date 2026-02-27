@@ -141,7 +141,7 @@ export default function PlayerSelector({
 
   return (
     <div ref={containerRef} className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-zinc-400">{label}</label>
+      <label className="text-base font-medium text-zinc-400">{label}</label>
 
       {/* Recent player chips */}
       {visibleRecent.length > 0 && !value && (
@@ -151,7 +151,7 @@ export default function PlayerSelector({
               key={p.id}
               type="button"
               onClick={() => selectPlayer(p)}
-              className="rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500"
+              className="rounded-full bg-zinc-700 px-3 py-1 text-base text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500"
             >
               {p.displayName}
             </button>
@@ -201,10 +201,10 @@ export default function PlayerSelector({
                   <button
                     type="button"
                     onClick={() => selectPlayer(p)}
-                    className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-700"
+                    className="flex w-full items-center justify-between px-4 py-2 text-left text-base text-zinc-200 hover:bg-zinc-700"
                   >
                     <span>{p.displayName}</span>
-                    <span className="text-xs text-zinc-500">{Math.round(p.rating)}</span>
+                    <span className="text-sm text-zinc-500">{Math.round(p.rating)}</span>
                   </button>
                 </li>
               ))}
@@ -214,10 +214,10 @@ export default function PlayerSelector({
 
       {/* Selected player indicator */}
       {value?.id && (
-        <p className="text-xs text-emerald-400">✓ Player selected</p>
+        <p className="text-sm text-emerald-400">✓ Player selected</p>
       )}
       {value && !value.id && value.name && (
-        <p className="text-xs text-amber-400">New player — shadow profile will be created</p>
+        <p className="text-sm text-amber-400">New player — shadow profile will be created</p>
       )}
     </div>
   );
