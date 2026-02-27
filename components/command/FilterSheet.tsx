@@ -14,7 +14,10 @@ type Tab = "date" | "tag";
 
 function toDateInput(d: Date | undefined): string {
   if (!d) return "";
-  return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function FilterSheet({ open, onClose, currentFilter }: Props) {
@@ -56,8 +59,8 @@ export function FilterSheet({ open, onClose, currentFilter }: Props) {
   function applyFilter() {
     const params = new URLSearchParams();
     if (tab === "date") {
-      if (from) params.set("from", from);
-      if (to) params.set("to", to);
+      if (from) params.set("from", new Date(from + "T00:00:00").toISOString());
+      if (to)   params.set("to",   new Date(to   + "T23:59:59.999").toISOString());
     } else {
       if (selectedTag) params.set("tag", selectedTag);
     }
