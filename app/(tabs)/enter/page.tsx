@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import PlayerSelector from "@/components/enter/PlayerSelector";
 import OutcomeToggle from "@/components/enter/OutcomeToggle";
 import GameScoreInput, { type GameScore } from "@/components/enter/GameScoreInput";
@@ -43,10 +44,15 @@ const STEP_LABELS: Record<Step, string> = {
 
 export default function EnterPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+
   const [step, setStep] = useState<Step>("partner");
+  const [adminMode, setAdminMode] = useState(false);
 
   // Form state
   const [matchDate] = useState(() => new Date().toISOString());
+  const [team1Player1, setTeam1Player1] = useState<PlayerValue | null>(null); // admin mode only
   const [partner, setPartner] = useState<PlayerValue | null>(null);
   const [opponent1, setOpponent1] = useState<PlayerValue | null>(null);
   const [opponent2, setOpponent2] = useState<PlayerValue | null>(null);
@@ -91,16 +97,38 @@ export default function EnterPage() {
   }, []);
 
   // ---------------------------------------------------------------------------
+  // Toggle admin mode — resets form state
+  // ---------------------------------------------------------------------------
+
+  function toggleAdminMode() {
+    const next = !adminMode;
+    setAdminMode(next);
+    setTeam1Player1(null);
+    setPartner(null);
+    setOpponent1(null);
+    setOpponent2(null);
+    setOutcome(null);
+    setGames([{ gameOrder: 1, team1Score: "", team2Score: "" }]);
+    setStep("partner");
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 
-  const selectedIds = [partner?.id, opponent1?.id, opponent2?.id].filter(
-    Boolean,
-  ) as string[];
+  const selectedIds = [
+    ...(adminMode && team1Player1?.id ? [team1Player1.id] : []),
+    partner?.id,
+    opponent1?.id,
+    opponent2?.id,
+  ].filter(Boolean) as string[];
 
   function canProceed(): boolean {
     switch (step) {
       case "partner":
+        if (adminMode) {
+          return !!(team1Player1?.id || team1Player1?.name) && !!(partner?.id || partner?.name);
+        }
         return !!(partner?.id || partner?.name);
       case "opponents":
         return !!(opponent1?.id || opponent1?.name) && !!(opponent2?.id || opponent2?.name);
@@ -131,6 +159,13 @@ export default function EnterPage() {
     }
   }
 
+  // Derive the heading for the current step
+  function stepHeading(): string {
+    if (adminMode && step === "partner") return "Team 1";
+    if (adminMode && step === "opponents") return "Team 2";
+    return STEP_LABELS[step];
+  }
+
   // ---------------------------------------------------------------------------
   // Submit
   // ---------------------------------------------------------------------------
@@ -140,19 +175,37 @@ export default function EnterPage() {
     setSubmitting(true);
     setSubmitError(null);
 
-    const body = {
-      matchDate,
-      ...(partner?.id ? { partnerId: partner.id } : { partnerName: partner?.name }),
-      ...(opponent1?.id ? { opponent1Id: opponent1.id } : { opponent1Name: opponent1?.name }),
-      ...(opponent2?.id ? { opponent2Id: opponent2.id } : { opponent2Name: opponent2?.name }),
-      outcome,
-      games: games.map((g) => ({
-        gameOrder: g.gameOrder,
-        team1Score: Number(g.team1Score),
-        team2Score: Number(g.team2Score),
-      })),
-      ...(tag.trim() ? { tag: tag.trim() } : {}),
-    };
+    const body = adminMode
+      ? {
+          matchDate,
+          adminMode: true,
+          ...(team1Player1?.id
+            ? { team1Player1Id: team1Player1.id }
+            : { team1Player1Name: team1Player1?.name }),
+          ...(partner?.id ? { partnerId: partner.id } : { partnerName: partner?.name }),
+          ...(opponent1?.id ? { opponent1Id: opponent1.id } : { opponent1Name: opponent1?.name }),
+          ...(opponent2?.id ? { opponent2Id: opponent2.id } : { opponent2Name: opponent2?.name }),
+          outcome,
+          games: games.map((g) => ({
+            gameOrder: g.gameOrder,
+            team1Score: Number(g.team1Score),
+            team2Score: Number(g.team2Score),
+          })),
+          ...(tag.trim() ? { tag: tag.trim() } : {}),
+        }
+      : {
+          matchDate,
+          ...(partner?.id ? { partnerId: partner.id } : { partnerName: partner?.name }),
+          ...(opponent1?.id ? { opponent1Id: opponent1.id } : { opponent1Name: opponent1?.name }),
+          ...(opponent2?.id ? { opponent2Id: opponent2.id } : { opponent2Name: opponent2?.name }),
+          outcome,
+          games: games.map((g) => ({
+            gameOrder: g.gameOrder,
+            team1Score: Number(g.team1Score),
+            team2Score: Number(g.team2Score),
+          })),
+          ...(tag.trim() ? { tag: tag.trim() } : {}),
+        };
 
     try {
       const res = await fetch("/api/matches", {
@@ -191,13 +244,14 @@ export default function EnterPage() {
         <div className="text-5xl">✓</div>
         <h2 className="text-2xl font-bold text-zinc-50">Match Recorded</h2>
         <p className="text-zinc-400">
-          Match saved. Your rating has been updated.
+          Match saved. Ratings have been updated.
         </p>
         <button
           type="button"
           onClick={() => {
             setSuccess(false);
             setSubmittedMatchId(null);
+            setTeam1Player1(null);
             setPartner(null);
             setOpponent1(null);
             setOpponent2(null);
@@ -239,33 +293,68 @@ export default function EnterPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <h2 className="mb-6 text-xl font-semibold text-zinc-50">
-          {STEP_LABELS[step]}
-        </h2>
-
-        {/* Step: Partner */}
-        {step === "partner" && (
-          <PlayerSelector
-            label="Your partner"
-            value={partner}
-            onChange={setPartner}
-            recentPlayers={recentPartners}
-            excludeIds={selectedIds}
-          />
+        {/* Admin "on behalf of" toggle — visible only to admins */}
+        {isAdmin && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl bg-zinc-800/60 px-4 py-3">
+            <span className="flex-1 text-sm text-zinc-300">Entering on behalf of players</span>
+            <button
+              type="button"
+              onClick={toggleAdminMode}
+              className={[
+                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+                adminMode ? "bg-emerald-500" : "bg-zinc-600",
+              ].join(" ")}
+              role="switch"
+              aria-checked={adminMode}
+            >
+              <span
+                className={[
+                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200",
+                  adminMode ? "translate-x-5" : "translate-x-0",
+                ].join(" ")}
+              />
+            </button>
+          </div>
         )}
 
-        {/* Step: Opponents */}
+        <h2 className="mb-6 text-xl font-semibold text-zinc-50">
+          {stepHeading()}
+        </h2>
+
+        {/* Step: Partner (Team 1 in admin mode) */}
+        {step === "partner" && (
+          <div className="flex flex-col gap-6">
+            {adminMode && (
+              <PlayerSelector
+                label="Team 1 Player 1"
+                value={team1Player1}
+                onChange={setTeam1Player1}
+                recentPlayers={recentPartners}
+                excludeIds={selectedIds}
+              />
+            )}
+            <PlayerSelector
+              label={adminMode ? "Team 1 Player 2" : "Your partner"}
+              value={partner}
+              onChange={setPartner}
+              recentPlayers={recentPartners}
+              excludeIds={selectedIds}
+            />
+          </div>
+        )}
+
+        {/* Step: Opponents (Team 2 in admin mode) */}
         {step === "opponents" && (
           <div className="flex flex-col gap-6">
             <PlayerSelector
-              label="Opponent 1"
+              label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
               value={opponent1}
               onChange={setOpponent1}
               recentPlayers={recentOpponents}
               excludeIds={selectedIds}
             />
             <PlayerSelector
-              label="Opponent 2"
+              label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
               value={opponent2}
               onChange={setOpponent2}
               recentPlayers={recentOpponents}
@@ -295,23 +384,30 @@ export default function EnterPage() {
                   hour: "numeric", minute: "2-digit",
                 })}
               />
+              {adminMode && (
+                <ReviewRow
+                  label="Team 1 Player 1"
+                  value={team1Player1?.name ?? "—"}
+                  subtext={team1Player1?.id ? undefined : "Shadow profile"}
+                />
+              )}
               <ReviewRow
-                label="Partner"
+                label={adminMode ? "Team 1 Player 2" : "Partner"}
                 value={partner?.name ?? "—"}
                 subtext={partner?.id ? undefined : "Shadow profile"}
               />
               <ReviewRow
-                label="Opponent 1"
+                label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
                 value={opponent1?.name ?? "—"}
                 subtext={opponent1?.id ? undefined : "Shadow profile"}
               />
               <ReviewRow
-                label="Opponent 2"
+                label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
                 value={opponent2?.name ?? "—"}
                 subtext={opponent2?.id ? undefined : "Shadow profile"}
               />
               <ReviewRow
-                label="Outcome"
+                label={adminMode ? "Team 1 Result" : "Outcome"}
                 value={outcome === "win" ? "WIN" : "LOSS"}
                 highlight={outcome === "win" ? "emerald" : "rose"}
               />

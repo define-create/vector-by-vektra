@@ -18,13 +18,16 @@ interface GameInput {
 
 interface CreateMatchBody {
   matchDate: string; // ISO datetime string
+  adminMode?: boolean; // when true, admin is entering on behalf of all players
+  team1Player1Id?: string; // admin mode: explicit team 1 player 1
+  team1Player1Name?: string; // admin mode: explicit team 1 player 1 (shadow)
   partnerId?: string;
   partnerName?: string;
   opponent1Id?: string;
   opponent1Name?: string;
   opponent2Id?: string;
   opponent2Name?: string;
-  outcome: "win" | "loss"; // from the user's perspective — used for client UX
+  outcome: "win" | "loss"; // team 1's perspective
   games: GameInput[];
   tag?: string; // optional event/league label
 }
@@ -50,6 +53,14 @@ export async function POST(req: NextRequest) {
   const matchDate = new Date(body.matchDate);
   if (isNaN(matchDate.getTime())) {
     return NextResponse.json({ error: "Invalid matchDate" }, { status: 400 });
+  }
+
+  // Admin mode: validate team1Player1
+  if (body.adminMode && !body.team1Player1Id && !body.team1Player1Name) {
+    return NextResponse.json(
+      { error: "team1Player1Id or team1Player1Name is required in admin mode" },
+      { status: 400 },
+    );
   }
 
   // Validate partner
@@ -103,30 +114,47 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Resolve the entering user's own Player record (auto-create if needed)
-    const userRecord = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { player: true },
-    });
-    if (!userRecord) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    // ---------------------------------------------------------------------------
+    // Resolve Team 1 Player 1
+    // ---------------------------------------------------------------------------
+    let team1P1;
 
-    let myPlayer = userRecord.player;
-    if (!myPlayer) {
-      myPlayer = await prisma.player.create({
-        data: {
-          userId: session.user.id,
-          displayName: userRecord.displayName,
-          claimed: true,
-          claimedAt: new Date(),
-          trustTier: userRecord.emailVerifiedAt ? "verified_email" : "unverified",
-          rating: 1000,
-        },
+    if (body.adminMode) {
+      // Admin mode: explicit player provided — skip session user resolution
+      if (body.team1Player1Id) {
+        team1P1 = await prisma.player.findUnique({ where: { id: body.team1Player1Id } });
+        if (!team1P1) {
+          return NextResponse.json({ error: "Team 1 Player 1 not found" }, { status: 404 });
+        }
+      } else {
+        team1P1 = await findOrCreateShadowPlayer(body.team1Player1Name!, prisma);
+      }
+    } else {
+      // Normal mode: session user is team 1 player 1 (auto-created if no player record)
+      const userRecord = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        include: { player: true },
       });
+      if (!userRecord) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+      let myPlayer = userRecord.player;
+      if (!myPlayer) {
+        myPlayer = await prisma.player.create({
+          data: {
+            userId: session.user.id,
+            displayName: userRecord.displayName,
+            claimed: true,
+            claimedAt: new Date(),
+            trustTier: userRecord.emailVerifiedAt ? "verified_email" : "unverified",
+            rating: 1000,
+          },
+        });
+      }
+      team1P1 = myPlayer;
     }
 
-    // Resolve partner
+    // Resolve partner (team 1 player 2)
     let partnerPlayer;
     if (body.partnerId) {
       partnerPlayer = await prisma.player.findUnique({
@@ -174,7 +202,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Guard: all four players must be distinct
-    const playerIds = [myPlayer.id, partnerPlayer.id, opp1Player.id, opp2Player.id];
+    const playerIds = [team1P1.id, partnerPlayer.id, opp1Player.id, opp2Player.id];
     if (new Set(playerIds).size !== 4) {
       return NextResponse.json(
         { error: "All four players in a match must be distinct" },
@@ -196,10 +224,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Team 1: entering user + partner
+      // Team 1: player 1 + partner
       await tx.matchParticipant.createMany({
         data: [
-          { matchId: created.id, playerId: myPlayer!.id, team: 1 },
+          { matchId: created.id, playerId: team1P1.id, team: 1 },
           { matchId: created.id, playerId: partnerPlayer.id, team: 1 },
         ],
       });

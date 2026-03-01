@@ -5,11 +5,7 @@ import { authOptions } from "@/lib/auth";
 
 const NAV_LINKS = [
   { href: "/admin", label: "Dashboard" },
-  { href: "/admin/matches", label: "Matches" },
-  { href: "/admin/players", label: "Players" },
-  { href: "/admin/recompute", label: "Recompute" },
-  { href: "/admin/tags", label: "Tags" },
-  { href: "/admin/audit", label: "Audit Log" },
+  { href: "/command", label: "Home" },
 ];
 
 export default async function AdminLayout({
