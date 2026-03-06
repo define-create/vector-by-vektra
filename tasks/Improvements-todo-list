@@ -1,0 +1,66 @@
+
+
+Potential Issues
+High Priority
+1. Email verification is broken in production
+RESEND_API_KEY is empty in .env.local — and likely also empty in Vercel env vars. New user registrations will never receive a verification email in production. The console-log fallback only works in local dev. Any real users trying to register are silently stuck.
+
+2. No rate limiting on API routes
+/api/matches (match entry), /api/auth, /api/admin/* — all unprotected. A bad actor could flood match entries or hammer the auth endpoint. Vercel's built-in DDoS protection helps, but there's no app-level throttle.
+
+3. JWT role changes aren't immediate
+Auth.js uses JWT-only sessions (no DB sessions). If you change a user's role from user to admin (or revoke admin), the change won't take effect until their JWT expires. Depending on session maxAge, that could be hours or days.
+
+4. Rating ELO is global, not per-tournament
+Tournament wins/losses affect the player's global ELO rating. A player who plays a casual tournament will have their global rating changed by those results. Whether this is intentional or a design gap is worth confirming.
+
+
+
+
+Medium Priority
+5. Recompute scales linearly with all-time match history
+replay.ts replays every match ever, in chronological order, to recompute ratings. Fine at 100 matches; starts to feel it at 10,000+. No incremental recompute exists.
+
+6. connection_limit=1 in DATABASE_URL
+This is the Supabase pgbouncer workaround. Under concurrent load (multiple users submitting matches simultaneously), connections queue. For a small group this is fine, but it's a hard ceiling.
+
+7. No match dispute mechanism for players
+Regular players can't flag an incorrect match — they have to contact an admin to void it. If the person entering matches (especially in admin mode) makes an error, there's no self-service remedy.
+
+8. Shadow profile name collisions
+If two admins enter "John Smith" and "John  Smith" (extra space), two separate shadow profiles are created. The admin merge tool resolves this but it's manual, not preventative.
+
+9. Tournament match list has no upper bound
+getTournamentData fetches ALL matches for a tag with no pagination. A tag with 500 matches sends all 500 to the client in one response.
+
+
+
+
+Lower Priority / Design Considerations
+10. No draft/recovery on match entry
+The multi-step Enter form uses local React state. Navigating away mid-entry loses everything. No draft saved to localStorage or DB.
+
+11. publish/vercel branch is stale
+From the git graph, publish/vercel diverged from an older commit (before tasks 9–12). If Vercel is deploying from that branch, the live app is missing the last 4 features. Worth verifying which branch Vercel is tracking.
+
+12. Tag matching is case-sensitive and exact
+where: { tag } is an exact Prisma match. "Tag1" vs "tag1" are separate tags. Nothing prevents this at entry time — the admin Tags rename tool fixes it after the fact, but the UX could make this easy to get wrong.
+
+13. No soft-delete for players
+Matches have voidedAt. Players don't — a "deleted" player would need to be manually handled. The merge tool is the closest thing.
+
+14. No end-to-end tests
+All 104 tests are unit tests. No integration tests cover the API routes or the full auth flow.
+
+
+
+
+Quick Wins
+The easiest things to fix right now:
+
+Set RESEND_API_KEY in Vercel env vars (or create a free Resend account)
+Verify which branch Vercel is auto-deploying from
+Add a simple note to the Enter page ("entered matches can only be corrected by an admin")
+
+
+
