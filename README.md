@@ -21,11 +21,53 @@ Infrastructure
 
 Identity Model
 
-    Unique identifiable players  
+    Unique identifiable players
     Shadow profiles allowed
     Claim attaches historical matches automatically
     Admin merge allowed (audited)
     Identity edits allowed (audited)
+
+Identity Model — Detail
+
+  Two records per person (max):
+
+    User  — account layer: email, handle, displayName, passwordHash, role, plan
+            Created at registration. No Player created automatically.
+            Email must be verified before claiming or creating a Player.
+
+    Player — stats layer: displayName, rating, match history, trustTier (unverified | verified_email)
+            Created either:
+              a) by admin entering a match (shadow profile: userId = null, claimed = false)
+              b) by user claiming an existing shadow (userId linked, claimed = true)
+              c) by user creating a fresh profile (userId linked, claimed = true, rating = 1000)
+
+  Shadow profiles:
+    - Created by findOrCreateShadowPlayer() on match entry
+    - Case-insensitive, trimmed name lookup — reuses existing shadow if found
+    - Accumulate match history and ratings before any user claims them
+    - No database-level uniqueness constraint on displayName (code-level deduplication only)
+
+  displayName — two independent fields:
+    User.displayName   set at registration, no user-facing edit endpoint
+    Player.displayName set at shadow/profile creation, admin-editable only (audited)
+    When claiming a shadow: Player.displayName is NOT overwritten by User.displayName
+    When creating fresh:    Player.displayName pre-filled from User.displayName (user can change at creation time)
+
+  Claim flow (post-login, /command screen):
+    1. User verifies email
+    2. User searches unclaimed shadows by name
+    3. "This is me" → POST /api/players/{id}/claim
+       Player.userId set, claimed = true, trustTier = verified_email
+       All historical matches and ratings carry over automatically
+    OR
+    3. User creates fresh profile → POST /api/players
+       New Player created and linked immediately
+
+  Edge cases:
+    - Two real people sharing the same name: both resolve to the same shadow profile
+      (code cannot distinguish them — admin merge + manual coordination required)
+    - No unclaim mechanism exists (admin DB intervention required)
+    - No user-facing name change after claiming
 
 Match Governance
 

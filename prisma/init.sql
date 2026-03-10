@@ -8,7 +8,7 @@ CREATE TYPE "UserRole" AS ENUM ('user', 'admin');
 CREATE TYPE "UserPlan" AS ENUM ('free', 'pro');
 
 -- CreateEnum
-CREATE TYPE "TrustTier" AS ENUM ('unverified', 'verified_email', 'established');
+CREATE TYPE "TrustTier" AS ENUM ('unverified', 'verified_email');
 
 -- CreateEnum
 CREATE TYPE "DataSource" AS ENUM ('manual', 'future_scraped');
@@ -20,7 +20,7 @@ CREATE TYPE "RatingRunType" AS ENUM ('nightly', 'admin');
 CREATE TYPE "RatingRunStatus" AS ENUM ('running', 'succeeded', 'failed');
 
 -- CreateEnum
-CREATE TYPE "AuditActionType" AS ENUM ('void_match', 'merge_player', 'edit_player_identity', 'claim_profile', 'trigger_recompute');
+CREATE TYPE "AuditActionType" AS ENUM ('void_match', 'merge_player', 'edit_player_identity', 'claim_profile', 'trigger_recompute', 'rename_tag', 'delete_player', 'unclaim_profile');
 
 -- CreateEnum
 CREATE TYPE "AuditEntityType" AS ENUM ('Match', 'Player', 'RatingRun');
@@ -138,6 +138,11 @@ CREATE UNIQUE INDEX "User_handle_key" ON "User"("handle");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Player_userId_key" ON "Player"("userId");
+
+-- Partial unique index: prevent duplicate unclaimed shadow profiles with the same displayName (case-insensitive)
+CREATE UNIQUE INDEX "Player_shadow_displayname_unique"
+ON "Player" (lower("displayName"))
+WHERE "userId" IS NULL AND "claimed" = false AND "deletedAt" IS NULL;
 
 -- AddForeignKey
 ALTER TABLE "Player" ADD CONSTRAINT "Player_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

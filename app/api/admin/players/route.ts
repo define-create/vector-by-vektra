@@ -12,6 +12,36 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const q = searchParams.get("q")?.trim() ?? "";
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const filter = searchParams.get("filter");
+
+  // Orphaned filter: unclaimed shadows with zero match history
+  if (filter === "orphaned") {
+    const players = await prisma.player.findMany({
+      where: {
+        userId: null,
+        claimed: false,
+        deletedAt: null,
+        matchParticipants: { none: {} },
+      },
+      select: {
+        id: true,
+        displayName: true,
+        rating: true,
+        ratingConfidence: true,
+        claimed: true,
+        trustTier: true,
+        userId: true,
+        deletedAt: true,
+        createdAt: true,
+        _count: { select: { matchParticipants: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    return NextResponse.json({
+      players: players.map((p) => ({ ...p, matchCount: p._count.matchParticipants })),
+      pagination: { page: 1, pageSize: players.length, total: players.length },
+    });
+  }
 
   const where = q
     ? { displayName: { contains: q, mode: "insensitive" as const }, deletedAt: null }

@@ -7,6 +7,9 @@ interface Player {
   id: string;
   displayName: string;
   rating: number;
+  matchCount?: number;
+  lastMatchDate?: string | null;
+  winPct?: number | null;
 }
 
 interface Props {
@@ -52,6 +55,12 @@ function UnverifiedState() {
   );
 }
 
+function formatLastPlayed(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return `Last played ${d.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
+}
+
 // ---------------------------------------------------------------------------
 // State B — email verified
 // ---------------------------------------------------------------------------
@@ -72,6 +81,9 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
   const [displayName, setDisplayName] = useState(userDisplayName);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [warningProfiles, setWarningProfiles] = useState<Player[]>([]);
+  const [warningDismissed, setWarningDismissed] = useState(false);
+  const debouncedDisplayName = useDebounce(displayName, 400);
 
   useEffect(() => {
     if (!debouncedQuery.trim()) {
@@ -81,7 +93,7 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
     searchGenRef.current += 1;
     const myGen = searchGenRef.current;
     setSearching(true);
-    fetch(`/api/players/search?q=${encodeURIComponent(debouncedQuery)}&unclaimed=true`)
+    fetch(`/api/players/search?q=${encodeURIComponent(debouncedQuery)}&unclaimed=true&includeStats=true`)
       .then((r) => r.json())
       .then((data: { players: Player[] }) => {
         if (myGen !== searchGenRef.current) return;
@@ -96,6 +108,20 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
         setSearching(false);
       });
   }, [debouncedQuery]);
+
+  // Warning: watch Card 3 display name for similar unclaimed profiles
+  useEffect(() => {
+    if (!debouncedDisplayName.trim()) {
+      setWarningProfiles([]);
+      return;
+    }
+    fetch(
+      `/api/players/search?q=${encodeURIComponent(debouncedDisplayName)}&unclaimed=true&includeStats=true`,
+    )
+      .then((r) => r.json())
+      .then((data: { players: Player[] }) => setWarningProfiles(data.players ?? []))
+      .catch(() => setWarningProfiles([]));
+  }, [debouncedDisplayName]);
 
   async function handleClaim(playerId: string) {
     setClaimingId(playerId);
@@ -167,7 +193,15 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
               <li key={p.id} className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900/60 px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-zinc-100">{p.displayName}</p>
-                  <p className="text-xs text-zinc-500">{Math.round(p.rating)} rating</p>
+                  <p className="text-xs text-zinc-500">
+                    {p.matchCount != null
+                      ? p.matchCount === 0
+                        ? "No matches yet"
+                        : `${p.matchCount} match${p.matchCount === 1 ? "" : "es"}`
+                      : `${Math.round(p.rating)} rating`}
+                    {p.lastMatchDate ? ` · ${formatLastPlayed(p.lastMatchDate)}` : ""}
+                    {p.winPct != null ? ` · ${Math.round(p.winPct * 100)}% wins` : ""}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -193,18 +227,69 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
         <input
           type="text"
           value={displayName}
-          onChange={(e) => { setDisplayName(e.target.value); setCreateError(null); }}
+          onChange={(e) => {
+            setDisplayName(e.target.value);
+            setCreateError(null);
+            setWarningDismissed(false);
+          }}
           placeholder="Display name…"
           className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
         />
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={creating || !displayName.trim()}
-          className="w-full rounded-lg bg-zinc-700 px-4 py-3 text-sm font-medium text-zinc-100 hover:bg-zinc-600 active:bg-zinc-500 disabled:opacity-50"
-        >
-          {creating ? "Creating…" : "Create Profile"}
-        </button>
+
+        {/* Warning — similar unclaimed profiles found */}
+        {warningProfiles.length > 0 && !warningDismissed && (
+          <div className="rounded-xl border border-amber-800/60 bg-amber-900/10 p-4 flex flex-col gap-3">
+            <p className="text-sm text-amber-300">
+              We found profiles with similar names. Are you sure none of these are you?
+            </p>
+            <ul className="flex flex-col gap-2">
+              {warningProfiles.map((p) => (
+                <li key={p.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-zinc-200">{p.displayName}</p>
+                    <p className="text-xs text-zinc-500">
+                      {p.matchCount != null
+                        ? p.matchCount === 0
+                          ? "No matches yet"
+                          : `${p.matchCount} match${p.matchCount === 1 ? "" : "es"}`
+                        : ""}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleClaim(p.id)}
+                    disabled={claimingId === p.id}
+                    className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 disabled:opacity-50"
+                  >
+                    {claimingId === p.id ? "Claiming…" : "This is me"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {claimError && (
+              <p className="text-sm text-amber-400">{claimError}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => setWarningDismissed(true)}
+              className="self-start text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+            >
+              None of these are me — create fresh profile
+            </button>
+          </div>
+        )}
+
+        {/* Show create button only when no warning or warning dismissed */}
+        {(warningProfiles.length === 0 || warningDismissed) && (
+          <button
+            type="button"
+            onClick={handleCreate}
+            disabled={creating || !displayName.trim()}
+            className="w-full rounded-lg bg-zinc-700 px-4 py-3 text-sm font-medium text-zinc-100 hover:bg-zinc-600 active:bg-zinc-500 disabled:opacity-50"
+          >
+            {creating ? "Creating…" : "Create Profile"}
+          </button>
+        )}
         {createError && <p className="text-sm text-amber-400">{createError}</p>}
       </div>
     </div>

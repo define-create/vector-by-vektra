@@ -38,6 +38,7 @@ export interface CommandData {
   emailVerified: boolean;
   userDisplayName: string;
   myPlayerId: string | null;
+  myPlayerDisplayName: string | null;
   rating: number | null;
   winPct: number | null;
   compoundingIndex: number | null;
@@ -51,6 +52,7 @@ export interface CommandData {
 export async function getCommandData(userId: string, filter?: CommandFilter): Promise<CommandData> {
   const empty: Omit<CommandData, "hasPlayer" | "emailVerified" | "userDisplayName"> = {
     myPlayerId: null,
+    myPlayerDisplayName: null,
     rating: null,
     winPct: null,
     compoundingIndex: null,
@@ -332,6 +334,7 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     emailVerified,
     userDisplayName,
     myPlayerId: myPlayer.id,
+    myPlayerDisplayName: myPlayer.displayName,
     rating: myPlayer.rating,
     winPct,
     compoundingIndex,

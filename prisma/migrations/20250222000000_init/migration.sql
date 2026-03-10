@@ -8,7 +8,7 @@ CREATE TYPE "UserRole" AS ENUM ('user', 'admin');
 CREATE TYPE "UserPlan" AS ENUM ('free', 'pro');
 
 -- CreateEnum
-CREATE TYPE "TrustTier" AS ENUM ('unverified', 'verified_email', 'established');
+CREATE TYPE "TrustTier" AS ENUM ('unverified', 'verified_email');
 
 -- CreateEnum
 CREATE TYPE "DataSource" AS ENUM ('manual', 'future_scraped');
@@ -20,7 +20,7 @@ CREATE TYPE "RatingRunType" AS ENUM ('nightly', 'admin');
 CREATE TYPE "RatingRunStatus" AS ENUM ('running', 'succeeded', 'failed');
 
 -- CreateEnum
-CREATE TYPE "AuditActionType" AS ENUM ('void_match', 'merge_player', 'edit_player_identity', 'claim_profile', 'trigger_recompute');
+CREATE TYPE "AuditActionType" AS ENUM ('void_match', 'merge_player', 'edit_player_identity', 'claim_profile', 'trigger_recompute', 'rename_tag', 'delete_player', 'unclaim_profile');
 
 -- CreateEnum
 CREATE TYPE "AuditEntityType" AS ENUM ('Match', 'Player', 'RatingRun');

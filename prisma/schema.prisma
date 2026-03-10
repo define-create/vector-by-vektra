@@ -28,7 +28,6 @@ enum UserPlan {
 enum TrustTier {
   unverified
   verified_email
-  established
 }
 
 enum DataSource {
@@ -54,6 +53,8 @@ enum AuditActionType {
   claim_profile
   trigger_recompute
   rename_tag
+  delete_player
+  unclaim_profile
 }
 
 enum AuditEntityType {

@@ -7,6 +7,7 @@ interface Player {
   displayName: string;
   rating: number;
   claimed: boolean;
+  matchCount: number;
 }
 
 interface PlayerSelectorProps {
@@ -203,7 +204,12 @@ export default function PlayerSelector({
                     onClick={() => selectPlayer(p)}
                     className="flex w-full items-center justify-between px-4 py-2 text-left text-base text-zinc-200 hover:bg-zinc-700"
                   >
-                    <span>{p.displayName}</span>
+                    <span className="flex flex-col">
+                      <span>{p.displayName}</span>
+                      <span className="text-xs text-zinc-500">
+                        {p.matchCount > 0 ? `${p.matchCount} matches` : "No matches yet"}
+                      </span>
+                    </span>
                     <span className="text-sm text-zinc-500">{Math.round(p.rating)}</span>
                   </button>
                 </li>
@@ -213,9 +219,15 @@ export default function PlayerSelector({
       </div>
 
       {/* Selected player indicator */}
-      {value?.id && (
-        <p className="text-sm text-emerald-400">✓ Player selected</p>
-      )}
+      {value?.id && (() => {
+        const sel = results.find((p) => p.id === value.id) ?? recentPlayers.find((p) => p.id === value.id);
+        return (
+          <p className="text-sm text-emerald-400">
+            ✓ {value.name}
+            {sel ? ` · Rating ${Math.round(sel.rating)} · ${sel.matchCount > 0 ? `${sel.matchCount} matches` : "No matches yet"}` : ""}
+          </p>
+        );
+      })()}
       {value && !value.id && value.name && (
         <p className="text-sm text-amber-400">New player — shadow profile will be created</p>
       )}

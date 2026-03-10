@@ -12,6 +12,9 @@ interface AdminPlayer {
   rating: number;
   claimed: boolean;
   trustTier: string;
+  userId: string | null;
+  matchCount?: number;
+  createdAt?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,9 +50,130 @@ export default function AdminPlayersPage() {
   return (
     <div className="flex flex-col gap-10">
       <h1 className="text-2xl font-bold text-zinc-50">Merge / Edit Players</h1>
+      <OrphanedShadowsPanel />
       <MergePanel />
       <IdentityEditPanel />
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Panel 0: Orphaned Shadows
+// ---------------------------------------------------------------------------
+
+function OrphanedShadowsPanel() {
+  const [players, setPlayers] = useState<AdminPlayer[]>([]);
+  const [confirming, setConfirming] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const fetchOrphaned = useCallback(() => {
+    fetch("/api/admin/players?filter=orphaned")
+      .then((r) => r.json())
+      .then((d: { players: AdminPlayer[] }) => setPlayers(d.players ?? []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { fetchOrphaned(); }, [fetchOrphaned]);
+
+  async function doBulkDelete() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/players/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: players.map((p) => p.id) }),
+      });
+      const data = (await res.json()) as { error?: string; deleted?: number };
+      if (!res.ok) {
+        setError(data.error ?? "Delete failed");
+      } else {
+        setSuccess(`Deleted ${data.deleted ?? players.length} orphaned shadow profiles.`);
+        setConfirming(false);
+        fetchOrphaned();
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (players.length === 0 && !success) return null;
+
+  return (
+    <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 flex flex-col gap-5">
+      <h2 className="text-lg font-semibold text-zinc-100">
+        Orphaned Shadows{" "}
+        {players.length > 0 && (
+          <span className="ml-2 rounded-full bg-zinc-700 px-2 py-0.5 text-sm text-zinc-300">
+            {players.length}
+          </span>
+        )}
+      </h2>
+      <p className="text-sm text-zinc-400">
+        Unclaimed shadow profiles with no match history. Safe to delete — these are typically
+        typos or test entries.
+      </p>
+
+      {players.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {players.map((p) => (
+            <li key={p.id} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800/40 px-4 py-2 text-sm">
+              <span className="text-zinc-200">{p.displayName}</span>
+              <span className="text-zinc-500">
+                Created {new Date(p.createdAt as unknown as string).toLocaleDateString()}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {error && (
+        <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-sm text-rose-400">{error}</p>
+      )}
+      {success && (
+        <p className="rounded-lg bg-emerald-900/30 px-4 py-3 text-sm text-emerald-400">{success}</p>
+      )}
+
+      {players.length > 0 && !confirming && (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="self-start rounded-xl bg-zinc-700 px-5 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-600"
+        >
+          Soft-delete all ({players.length})
+        </button>
+      )}
+
+      {confirming && (
+        <div className="rounded-xl border border-amber-800/50 bg-amber-900/10 p-4 flex flex-col gap-3">
+          <p className="text-sm text-amber-300">
+            This will soft-delete <strong>{players.length}</strong> shadow profile
+            {players.length !== 1 ? "s" : ""} with no match history. This cannot be undone from the UI.
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              className="rounded-xl border border-zinc-600 px-4 py-2 text-sm text-zinc-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={doBulkDelete}
+              className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
+            >
+              {loading ? "Deleting…" : "Confirm Delete"}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -187,8 +311,60 @@ function IdentityEditPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingUnclaim, setConfirmingUnclaim] = useState(false);
 
   const { results } = usePlayerSearch(selected ? "" : q);
+
+  async function doUnclaim() {
+    if (!selected) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/players/${selected.id}/unclaim`, { method: "POST" });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Unclaim failed");
+      } else {
+        setSuccess(`Profile unclaimed successfully`);
+        setSelected(null);
+        setQ("");
+        setNewName("");
+        setConfirmingUnclaim(false);
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteOrphaned() {
+    if (!selected) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/players/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [selected.id] }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Delete failed");
+      } else {
+        setSuccess(`Deleted "${selected.displayName}"`);
+        setSelected(null);
+        setQ("");
+        setNewName("");
+        setConfirmingDelete(false);
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function saveIdentity() {
     if (!selected || !newName.trim()) return;
@@ -248,6 +424,83 @@ function IdentityEditPanel() {
           >
             {loading ? "Saving…" : "Save"}
           </button>
+
+          {selected.claimed && (
+            <>
+              {!confirmingUnclaim ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingUnclaim(true)}
+                  className="self-start rounded-xl bg-amber-800 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+                >
+                  Unclaim
+                </button>
+              ) : (
+                <div className="rounded-xl border border-amber-800/50 bg-amber-900/10 p-4 flex flex-col gap-3">
+                  <p className="text-sm text-amber-300">
+                    Remove <strong>{selected.displayName}</strong> from its linked user account?
+                    The profile will revert to unclaimed and the user will lose access to their stats
+                    until they re-claim it.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingUnclaim(false)}
+                      className="rounded-xl border border-zinc-600 px-4 py-2 text-sm text-zinc-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={doUnclaim}
+                      className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
+                    >
+                      {loading ? "Unclaiming…" : "Confirm Unclaim"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {!selected.claimed && (selected.matchCount === 0 || selected.matchCount === undefined) && (
+            <>
+              {!confirmingDelete ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingDelete(true)}
+                  className="self-start rounded-xl bg-amber-800 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+                >
+                  Delete
+                </button>
+              ) : (
+                <div className="rounded-xl border border-amber-800/50 bg-amber-900/10 p-4 flex flex-col gap-3">
+                  <p className="text-sm text-amber-300">
+                    Soft-delete <strong>{selected.displayName}</strong>? This profile has no match history.
+                    This cannot be undone from the UI.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(false)}
+                      className="rounded-xl border border-zinc-600 px-4 py-2 text-sm text-zinc-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={deleteOrphaned}
+                      className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
+                    >
+                      {loading ? "Deleting…" : "Confirm Delete"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 

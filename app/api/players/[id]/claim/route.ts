@@ -37,8 +37,8 @@ export async function POST(
       );
     }
 
-    // User must not already have a player profile
-    if (user.player) {
+    // User must not already have an active (non-deleted) player profile
+    if (user.player && !user.player.deletedAt) {
       return NextResponse.json(
         { error: "You already have a player profile" },
         { status: 409 },

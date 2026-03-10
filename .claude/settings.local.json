@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/lib/auth*)",
+      "Bash(npx jest lib/services/players.test.ts app/api/players/search/route.test.ts app/api/admin/players/bulk-delete/route.test.ts --no-coverage)",
+      "Bash(npx jest app/api/players/search/route.test.ts app/api/admin/players/\\\\[id\\\\]/unclaim/route.test.ts app/api/players/me/display-name/route.test.ts --no-coverage)",
+      "Bash(npx jest \"app/api/admin/players\" --no-coverage)",
+      "Bash(npx jest --no-coverage)"
+    ]
+  }
+}

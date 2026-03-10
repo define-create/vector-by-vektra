@@ -8,6 +8,7 @@ import { MatchHistoryList } from "@/components/command/MatchHistoryList";
 import { ClaimProfilePrompt } from "@/components/command/ClaimProfilePrompt";
 import { FilterChip } from "@/components/command/FilterChip";
 import { getCommandData, type CommandFilter } from "@/lib/services/command";
+import { DisplayNameEdit } from "@/components/command/DisplayNameEdit";
 
 export const dynamic = "force-dynamic";
 
@@ -138,6 +139,14 @@ export default async function CommandPage({
           <span className="text-sm font-semibold text-zinc-200">
             {pct(data.upcomingProbability, 0)}
           </span>
+        </div>
+      )}
+
+      {/* Display name edit */}
+      {data.myPlayerDisplayName && (
+        <div className="rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-zinc-400">Display name</span>
+          <DisplayNameEdit displayName={data.myPlayerDisplayName} />
         </div>
       )}
 
