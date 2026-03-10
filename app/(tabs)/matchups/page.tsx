@@ -14,6 +14,7 @@ interface RecentPlayer {
   displayName: string;
   rating: number;
   claimed: boolean;
+  matchCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -29,7 +30,13 @@ async function getRecentOpponents(myPlayerId: string): Promise<RecentPlayer[]> {
           participants: {
             include: {
               player: {
-                select: { id: true, displayName: true, rating: true, claimed: true },
+                select: {
+                  id: true,
+                  displayName: true,
+                  rating: true,
+                  claimed: true,
+                  _count: { select: { matchParticipants: true } },
+                },
               },
             },
           },
@@ -48,7 +55,13 @@ async function getRecentOpponents(myPlayerId: string): Promise<RecentPlayer[]> {
       if (p.playerId === myPlayerId) continue;
       if (!seen.has(p.player.id) && opponents.length < 8) {
         seen.add(p.player.id);
-        opponents.push(p.player);
+        opponents.push({
+          id: p.player.id,
+          displayName: p.player.displayName,
+          rating: p.player.rating,
+          claimed: p.player.claimed,
+          matchCount: p.player._count.matchParticipants,
+        });
       }
     }
     if (opponents.length >= 8) break;

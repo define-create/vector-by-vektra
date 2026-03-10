@@ -14,6 +14,7 @@ interface RecentPlayer {
   displayName: string;
   rating: number;
   claimed: boolean;
+  matchCount: number;
 }
 
 interface MatchupResponse {

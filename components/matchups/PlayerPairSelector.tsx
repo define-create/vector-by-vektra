@@ -8,6 +8,7 @@ interface RecentPlayer {
   displayName: string;
   rating: number;
   claimed: boolean;
+  matchCount: number;
 }
 
 export interface SlotPlayer {

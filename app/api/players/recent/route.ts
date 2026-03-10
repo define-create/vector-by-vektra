@@ -31,7 +31,17 @@ export async function GET() {
       match: {
         include: {
           participants: {
-            include: { player: { select: { id: true, displayName: true, rating: true, claimed: true } } },
+            include: {
+              player: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  rating: true,
+                  claimed: true,
+                  _count: { select: { matchParticipants: true } },
+                },
+              },
+            },
           },
         },
       },
@@ -42,8 +52,8 @@ export async function GET() {
 
   const seenPartnerIds = new Set<string>();
   const seenOpponentIds = new Set<string>();
-  const partners: { id: string; displayName: string; rating: number; claimed: boolean }[] = [];
-  const opponents: { id: string; displayName: string; rating: number; claimed: boolean }[] = [];
+  const partners: { id: string; displayName: string; rating: number; claimed: boolean; matchCount: number }[] = [];
+  const opponents: { id: string; displayName: string; rating: number; claimed: boolean; matchCount: number }[] = [];
 
   for (const participation of myParticipations) {
     const myTeam = participation.team;
@@ -51,17 +61,24 @@ export async function GET() {
       if (p.playerId === myPlayer.id) continue;
 
       const player = p.player;
+      const playerEntry = {
+        id: player.id,
+        displayName: player.displayName,
+        rating: player.rating,
+        claimed: player.claimed,
+        matchCount: player._count.matchParticipants,
+      };
       if (p.team === myTeam) {
         // Same team = partner
         if (!seenPartnerIds.has(player.id) && partners.length < 5) {
           seenPartnerIds.add(player.id);
-          partners.push(player);
+          partners.push(playerEntry);
         }
       } else {
         // Opposing team = opponent
         if (!seenOpponentIds.has(player.id) && opponents.length < 5) {
           seenOpponentIds.add(player.id);
-          opponents.push(player);
+          opponents.push(playerEntry);
         }
       }
     }
