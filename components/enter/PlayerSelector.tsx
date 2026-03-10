@@ -14,11 +14,15 @@ interface PlayerSelectorProps {
   label: string;
   value: { id?: string; name?: string } | null;
   onChange: (value: { id?: string; name?: string } | null) => void;
+  /** Called when disambiguation state changes — true means "ok to proceed" */
+  onDisambiguated?: (confirmed: boolean) => void;
   /** Players to show as chips before user types anything */
   recentPlayers?: Player[];
   /** IDs of players already selected elsewhere (excluded from results) */
   excludeIds?: string[];
 }
+
+const EMPTY_IDS: string[] = [];
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -33,8 +37,9 @@ export default function PlayerSelector({
   label,
   value,
   onChange,
+  onDisambiguated,
   recentPlayers = [],
-  excludeIds = [],
+  excludeIds = EMPTY_IDS,
 }: PlayerSelectorProps) {
   const [inputValue, setInputValue] = useState(
     value?.name ?? "",
@@ -42,6 +47,8 @@ export default function PlayerSelector({
   const [results, setResults] = useState<Player[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [matchWarning, setMatchWarning] = useState<Player[]>([]);
+  const [confirmedNew, setConfirmedNew] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const skipNextSearchRef = useRef(value?.id != null);
   const isSelectedRef = useRef(value?.id != null);
@@ -54,6 +61,7 @@ export default function PlayerSelector({
     if (!debouncedInput || debouncedInput.length < 1) {
       skipNextSearchRef.current = false;
       setResults([]);
+      setMatchWarning([]);
       setOpen(false);
       return;
     }
@@ -75,14 +83,18 @@ export default function PlayerSelector({
       .then((r) => r.json())
       .then((data: { players: Player[] }) => {
         if (myGen !== searchGenRef.current) return;
-        setResults(
-          (data.players ?? []).filter((p) => !excludeIds.includes(p.id)),
-        );
+        const filtered = (data.players ?? []).filter((p) => !excludeIds.includes(p.id));
+        setResults(filtered);
+        // Store warning candidates only for name-only entries
+        if (!isSelectedRef.current) {
+          setMatchWarning(filtered);
+        }
         setOpen(true);
       })
       .catch(() => {
         if (myGen !== searchGenRef.current) return;
         setResults([]);
+        setMatchWarning([]);
       })
       .finally(() => {
         if (myGen !== searchGenRef.current) return;
@@ -107,11 +119,14 @@ export default function PlayerSelector({
       skipNextSearchRef.current = true; // block next debounce-triggered search
       isSelectedRef.current = true;     // block excludeIds-triggered re-searches
       setResults([]);                   // clear stale results immediately
+      setMatchWarning([]);
+      setConfirmedNew(false);
       setInputValue(player.displayName);
       onChange({ id: player.id, name: player.displayName });
       setOpen(false);
+      onDisambiguated?.(true);
     },
-    [onChange],
+    [onChange, onDisambiguated],
   );
 
   const clearSelection = useCallback(() => {
@@ -119,13 +134,18 @@ export default function PlayerSelector({
     setInputValue("");
     onChange(null);
     setResults([]);
+    setMatchWarning([]);
+    setConfirmedNew(false);
     setOpen(false);
-  }, [onChange]);
+    onDisambiguated?.(true);
+  }, [onChange, onDisambiguated]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     isSelectedRef.current = false;
     const v = e.target.value;
     setInputValue(v);
+    setMatchWarning([]);
+    setConfirmedNew(false);
     // If the user types, clear any previously resolved ID (now it's a name-only entry)
     onChange(v.trim() ? { name: v.trim() } : null);
   };
@@ -136,9 +156,20 @@ export default function PlayerSelector({
     }
   };
 
+  const handleConfirmNew = () => {
+    setConfirmedNew(true);
+    setOpen(false);
+    onDisambiguated?.(true);
+  };
+
   const visibleRecent = recentPlayers.filter(
     (p) => !excludeIds.includes(p.id) && p.id !== value?.id,
   );
+
+  // Show warning when: name-only value, results exist, user hasn't confirmed new
+  const showWarning = !!(value && !value.id && value.name && matchWarning.length > 0 && !confirmedNew);
+  // Suppress dropdown while warning is shown
+  const showDropdown = open && !showWarning;
 
   return (
     <div ref={containerRef} className="flex flex-col gap-2">
@@ -168,7 +199,7 @@ export default function PlayerSelector({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (results.length > 0) setOpen(true);
+            if (results.length > 0 && !showWarning) setOpen(true);
           }}
           placeholder="Search or type a name…"
           className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none"
@@ -186,7 +217,7 @@ export default function PlayerSelector({
         )}
 
         {/* Search results dropdown */}
-        {open && (
+        {showDropdown && (
           <ul className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-600 bg-zinc-800 py-1 shadow-lg">
             {loading && (
               <li className="px-4 py-2 text-sm text-zinc-400">Searching…</li>
@@ -228,7 +259,45 @@ export default function PlayerSelector({
           </p>
         );
       })()}
-      {value && !value.id && value.name && (
+
+      {/* Disambiguation warning — existing players with same name */}
+      {showWarning && (
+        <div className="rounded-xl border border-amber-800/60 bg-amber-900/10 p-4 flex flex-col gap-3">
+          <p className="text-sm text-amber-300">
+            Players with this name already exist — is one of them the person you mean?
+          </p>
+          <ul className="flex flex-col gap-2">
+            {matchWarning.map((p) => (
+              <li key={p.id} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-zinc-200">{p.displayName}</p>
+                  <p className="text-xs text-zinc-500">
+                    {p.matchCount > 0 ? `${p.matchCount} matches` : "No matches yet"}
+                    {" · "}Rating {Math.round(p.rating)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => selectPlayer(p)}
+                  className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 active:bg-zinc-500"
+                >
+                  Select
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={handleConfirmNew}
+            className="self-start text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+          >
+            No, this is a new player
+          </button>
+        </div>
+      )}
+
+      {/* New player indicator — shown only after warning dismissed or when no conflict */}
+      {value && !value.id && value.name && !showWarning && (
         <p className="text-sm text-amber-400">New player — shadow profile will be created</p>
       )}
     </div>

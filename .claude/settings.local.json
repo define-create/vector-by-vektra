@@ -5,7 +5,11 @@
       "Bash(npx jest lib/services/players.test.ts app/api/players/search/route.test.ts app/api/admin/players/bulk-delete/route.test.ts --no-coverage)",
       "Bash(npx jest app/api/players/search/route.test.ts app/api/admin/players/\\\\[id\\\\]/unclaim/route.test.ts app/api/players/me/display-name/route.test.ts --no-coverage)",
       "Bash(npx jest \"app/api/admin/players\" --no-coverage)",
-      "Bash(npx jest --no-coverage)"
+      "Bash(npx jest --no-coverage)",
+      "Bash(npx jest components/enter/PlayerSelector --no-coverage)",
+      "Bash(npm ls jest-environment-jsdom @testing-library/react)",
+      "Bash(npm install --save-dev @testing-library/react @testing-library/jest-dom jest-environment-jsdom)",
+      "Bash(npm ls @testing-library/react jest-environment-jsdom)"
     ]
   }
 }

@@ -69,6 +69,12 @@ export default function EnterPage() {
   const [tag, setTag] = useState("");
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
 
+  // Disambiguation — tracks whether each player slot is "ok to proceed"
+  const [partnerOk, setPartnerOk] = useState(true);
+  const [team1Player1Ok, setTeam1Player1Ok] = useState(true);
+  const [opponent1Ok, setOpponent1Ok] = useState(true);
+  const [opponent2Ok, setOpponent2Ok] = useState(true);
+
   // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -109,6 +115,10 @@ export default function EnterPage() {
     setOpponent2(null);
     setOutcome(null);
     setGames([{ gameOrder: 1, team1Score: "", team2Score: "" }]);
+    setTeam1Player1Ok(true);
+    setPartnerOk(true);
+    setOpponent1Ok(true);
+    setOpponent2Ok(true);
     setStep("partner");
   }
 
@@ -127,11 +137,13 @@ export default function EnterPage() {
     switch (step) {
       case "partner":
         if (adminMode) {
-          return !!(team1Player1?.id || team1Player1?.name) && !!(partner?.id || partner?.name);
+          return !!(team1Player1?.id || team1Player1?.name) && team1Player1Ok &&
+                 !!(partner?.id || partner?.name) && partnerOk;
         }
-        return !!(partner?.id || partner?.name);
+        return !!(partner?.id || partner?.name) && partnerOk;
       case "opponents":
-        return !!(opponent1?.id || opponent1?.name) && !!(opponent2?.id || opponent2?.name);
+        return !!(opponent1?.id || opponent1?.name) && opponent1Ok &&
+               !!(opponent2?.id || opponent2?.name) && opponent2Ok;
       case "outcome":
         return outcome !== null;
       case "scores":
@@ -258,6 +270,10 @@ export default function EnterPage() {
             setOutcome(null);
             setGames([{ gameOrder: 1, team1Score: "", team2Score: "" }]);
             setTag("");
+            setTeam1Player1Ok(true);
+            setPartnerOk(true);
+            setOpponent1Ok(true);
+            setOpponent2Ok(true);
             setStep("partner");
           }}
           className="rounded-xl bg-zinc-700 px-6 py-3 text-zinc-200 hover:bg-zinc-600"
@@ -328,7 +344,8 @@ export default function EnterPage() {
               <PlayerSelector
                 label="Team 1 Player 1"
                 value={team1Player1}
-                onChange={setTeam1Player1}
+                onChange={(v) => { setTeam1Player1(v); if (!v) setTeam1Player1Ok(true); }}
+                onDisambiguated={setTeam1Player1Ok}
                 recentPlayers={recentPartners}
                 excludeIds={selectedIds}
               />
@@ -336,7 +353,8 @@ export default function EnterPage() {
             <PlayerSelector
               label={adminMode ? "Team 1 Player 2" : "Your partner"}
               value={partner}
-              onChange={setPartner}
+              onChange={(v) => { setPartner(v); if (!v) setPartnerOk(true); }}
+              onDisambiguated={setPartnerOk}
               recentPlayers={recentPartners}
               excludeIds={selectedIds}
             />
@@ -349,14 +367,16 @@ export default function EnterPage() {
             <PlayerSelector
               label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
               value={opponent1}
-              onChange={setOpponent1}
+              onChange={(v) => { setOpponent1(v); if (!v) setOpponent1Ok(true); }}
+              onDisambiguated={setOpponent1Ok}
               recentPlayers={recentOpponents}
               excludeIds={selectedIds}
             />
             <PlayerSelector
               label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
               value={opponent2}
-              onChange={setOpponent2}
+              onChange={(v) => { setOpponent2(v); if (!v) setOpponent2Ok(true); }}
+              onDisambiguated={setOpponent2Ok}
               recentPlayers={recentOpponents}
               excludeIds={selectedIds}
             />
