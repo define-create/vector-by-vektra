@@ -9,7 +9,9 @@
       "Bash(npx jest components/enter/PlayerSelector --no-coverage)",
       "Bash(npm ls jest-environment-jsdom @testing-library/react)",
       "Bash(npm install --save-dev @testing-library/react @testing-library/jest-dom jest-environment-jsdom)",
-      "Bash(npm ls @testing-library/react jest-environment-jsdom)"
+      "Bash(npm ls @testing-library/react jest-environment-jsdom)",
+      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/command/)",
+      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/api/players/[id] -type f -name \"*.ts\")"
     ]
   }
 }

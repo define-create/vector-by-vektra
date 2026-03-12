@@ -78,7 +78,7 @@ export default async function CommandPage({
   if (!data.hasPlayer) {
     return (
       <div className="flex h-full flex-col overflow-y-auto p-5">
-        <ClaimProfilePrompt emailVerified={data.emailVerified} userDisplayName={data.userDisplayName} />
+        <ClaimProfilePrompt emailVerified={data.emailVerified} userDisplayName={data.userDisplayName} userEmail={session.user.email ?? undefined} />
       </div>
     );
   }

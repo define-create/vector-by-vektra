@@ -15,6 +15,7 @@ interface Player {
 interface Props {
   emailVerified: boolean;
   userDisplayName: string;
+  userEmail?: string;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -34,7 +35,35 @@ const body = "text-sm text-zinc-400 leading-relaxed";
 // State A — email not verified
 // ---------------------------------------------------------------------------
 
-function UnverifiedState() {
+function UnverifiedState({ userEmail }: { userEmail?: string }) {
+  const [email, setEmail] = useState(userEmail ?? "");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [resendError, setResendError] = useState<string | null>(null);
+
+  async function handleResend(e: React.FormEvent) {
+    e.preventDefault();
+    setResendError(null);
+    setSending(true);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        setResendError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      setSent(true);
+    } catch {
+      setResendError("Something went wrong. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5 pt-12">
       <div className={card}>
@@ -50,6 +79,29 @@ function UnverifiedState() {
           We sent a verification link when you registered. Check your inbox and
           click the link, then return here to set up your profile.
         </p>
+
+        {sent ? (
+          <p className="text-sm text-zinc-300">Check your inbox for a new verification link.</p>
+        ) : (
+          <form onSubmit={handleResend} className="flex flex-col gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setResendError(null); }}
+              placeholder="Your email…"
+              required
+              className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+            />
+            {resendError && <p className="text-sm text-red-400">{resendError}</p>}
+            <button
+              type="submit"
+              disabled={sending}
+              className="w-full rounded-lg bg-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 disabled:opacity-50"
+            >
+              {sending ? "Sending…" : "Resend verification email"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
@@ -65,7 +117,7 @@ function formatLastPlayed(dateStr: string | null | undefined): string | null {
 // State B — email verified
 // ---------------------------------------------------------------------------
 
-export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
+export function ClaimProfilePrompt({ emailVerified, userDisplayName, userEmail }: Props) {
   const router = useRouter();
 
   // Card 2 — search / claim
@@ -159,22 +211,24 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
     }
   }
 
-  if (!emailVerified) return <UnverifiedState />;
+  if (!emailVerified) return <UnverifiedState userEmail={userEmail} />;
 
   return (
-    <div className="flex flex-col gap-5 pt-12">
-      {/* Card 1 — welcome */}
-      <div className={card}>
-        <p className="text-sm text-zinc-300 leading-relaxed">
-          Your stats will appear here once your profile is set up.
+    <div className="flex flex-col gap-5 pt-10">
+      {/* Page header — outside any card */}
+      <div className="pb-1">
+        <h2 className="text-lg font-semibold text-zinc-100">Set up your player profile</h2>
+        <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
+          If you&apos;ve played in any tracked matches, your stats are already recorded.
+          Find your name below to connect them to this account.
         </p>
       </div>
 
-      {/* Card 2 — find your profile */}
+      {/* Card 1 — find your stats (primary) */}
       <div className={card}>
-        <p className={label}>Find Your Profile</p>
+        <p className={label}>Find Your Stats</p>
         <p className={body}>
-          Already been playing? Search your name to claim your match history.
+          Search your name as it appears in match results.
         </p>
         <input
           type="text"
@@ -218,11 +272,18 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
         {claimError && <p className="text-sm text-amber-400">{claimError}</p>}
       </div>
 
-      {/* Card 3 — first time here */}
-      <div className={card}>
-        <p className={label}>First Time Here?</p>
-        <p className={body}>
-          Create a new profile to start tracking your results.
+      {/* Divider */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 border-t border-zinc-800" />
+        <span className="text-xs text-zinc-600 shrink-0">or</span>
+        <div className="flex-1 border-t border-zinc-800" />
+      </div>
+
+      {/* Card 2 — new here (secondary, visually subdued) */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-5 flex flex-col gap-3">
+        <p className="text-xs font-medium uppercase tracking-widest text-zinc-600">New Here?</p>
+        <p className="text-sm text-zinc-500 leading-relaxed">
+          Haven&apos;t played in any tracked matches yet? Start fresh.
         </p>
         <input
           type="text"
@@ -233,7 +294,7 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName }: Props) {
             setWarningDismissed(false);
           }}
           placeholder="Display name…"
-          className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none text-sm"
         />
 
         {/* Warning — similar unclaimed profiles found */}

@@ -3,6 +3,9 @@ export async function sendVerificationEmail(email: string, rawToken: string): Pr
   const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${rawToken}`;
 
   if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("RESEND_API_KEY is not configured.");
+    }
     // Development fallback: log to console so the developer can verify manually
     console.log(`[email] Verification URL for ${email}:\n  ${verifyUrl}`);
     return;

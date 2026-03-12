@@ -56,10 +56,20 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await sendVerificationEmail(email, rawToken);
+  let emailSent = true;
+  try {
+    await sendVerificationEmail(email, rawToken);
+  } catch (err) {
+    emailSent = false;
+    console.error("[register] Failed to send verification email:", err);
+  }
 
   return NextResponse.json(
-    { message: "Account created. Check your email to verify your address." },
+    {
+      message: emailSent
+        ? "Account created. Check your email to verify your address."
+        : "Account created, but we couldn't send the verification email. Visit /resend-verification to request a new link.",
+    },
     { status: 201 },
   );
 }

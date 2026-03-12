@@ -111,6 +111,13 @@ function SignInForm() {
             Create one
           </Link>
         </p>
+
+        <p className="mt-3 text-sm text-zinc-600 text-center">
+          Didn&apos;t get the verification email?{" "}
+          <Link href="/resend-verification" className="text-zinc-500 hover:text-zinc-300">
+            Resend it
+          </Link>
+        </p>
       </div>
     </div>
   );

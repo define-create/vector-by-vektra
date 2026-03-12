@@ -17,9 +17,39 @@ interface AdminPlayer {
   createdAt?: string;
 }
 
+interface UserResult {
+  id: string;
+  email: string;
+  handle: string;
+  displayName: string;
+  emailVerified: boolean;
+  hasActivePlayer: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Player search hook
 // ---------------------------------------------------------------------------
+
+function useUserSearch(q: string) {
+  const [results, setResults] = useState<UserResult[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!q.trim()) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    const params = new URLSearchParams({ q });
+    fetch(`/api/admin/users?${params}`)
+      .then((r) => r.json())
+      .then((d: { users: UserResult[] }) => setResults(d.users ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [q]);
+
+  return { results, loading };
+}
 
 function usePlayerSearch(q: string) {
   const [results, setResults] = useState<AdminPlayer[]>([]);
@@ -314,7 +344,18 @@ function IdentityEditPanel() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingUnclaim, setConfirmingUnclaim] = useState(false);
 
+  // Link to user state
+  const [userQuery, setUserQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
+  const [linkConfirming, setLinkConfirming] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkSuccess, setLinkSuccess] = useState<string | null>(null);
+
   const { results } = usePlayerSearch(selected ? "" : q);
+  const { results: userResults, loading: userSearchLoading } = useUserSearch(
+    selected && !selected.claimed && !selectedUser ? userQuery : "",
+  );
 
   async function doUnclaim() {
     if (!selected) return;
@@ -363,6 +404,35 @@ function IdentityEditPanel() {
       setError("Network error");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function doLink() {
+    if (!selected || !selectedUser) return;
+    setLinkLoading(true);
+    setLinkError(null);
+    try {
+      const res = await fetch(`/api/admin/players/${selected.id}/link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedUser.id }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setLinkError(data.error ?? "Link failed");
+      } else {
+        setLinkSuccess(`Linked "${selected.displayName}" to ${selectedUser.email}`);
+        setSelected(null);
+        setQ("");
+        setNewName("");
+        setSelectedUser(null);
+        setUserQuery("");
+        setLinkConfirming(false);
+      }
+    } catch {
+      setLinkError("Network error");
+    } finally {
+      setLinkLoading(false);
     }
   }
 
@@ -500,6 +570,108 @@ function IdentityEditPanel() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Link to user account — only for unclaimed profiles */}
+          {!selected.claimed && (
+            <div className="flex flex-col gap-3 pt-2 border-t border-zinc-800">
+              <label className="text-sm font-medium text-zinc-400">Link to user account</label>
+
+              {linkSuccess ? (
+                <p className="rounded-lg bg-emerald-900/30 px-4 py-3 text-sm text-emerald-400">{linkSuccess}</p>
+              ) : selectedUser ? (
+                <>
+                  <div className="flex items-center justify-between rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-2 max-w-sm">
+                    <div>
+                      <p className="text-sm text-zinc-200">{selectedUser.email}</p>
+                      <p className="text-xs text-zinc-500">@{selectedUser.handle}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedUser(null); setLinkConfirming(false); setLinkError(null); }}
+                      className="text-zinc-500 hover:text-zinc-300 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {!linkConfirming ? (
+                    <button
+                      type="button"
+                      onClick={() => setLinkConfirming(true)}
+                      className="self-start rounded-xl bg-zinc-700 px-5 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-600"
+                    >
+                      Link profile →
+                    </button>
+                  ) : (
+                    <div className="rounded-xl border border-amber-800/50 bg-amber-900/10 p-4 flex flex-col gap-3 max-w-sm">
+                      <p className="text-sm text-amber-300">
+                        Link <strong>{selected.displayName}</strong> to{" "}
+                        <strong>{selectedUser.email}</strong>? The profile will be marked as claimed
+                        and the user will gain access to this match history.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setLinkConfirming(false)}
+                          className="rounded-xl border border-zinc-600 px-4 py-2 text-sm text-zinc-300"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={linkLoading}
+                          onClick={doLink}
+                          className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
+                        >
+                          {linkLoading ? "Linking…" : "Confirm Link"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {linkError && (
+                    <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-sm text-rose-400">{linkError}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={userQuery}
+                    onChange={(e) => setUserQuery(e.target.value)}
+                    placeholder="Search user by email…"
+                    className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none"
+                  />
+                  {userSearchLoading && <p className="text-xs text-zinc-500">Searching…</p>}
+                  {!userSearchLoading && userQuery.trim() && userResults.length === 0 && (
+                    <p className="text-xs text-zinc-500">No users found.</p>
+                  )}
+                  {userResults.length > 0 && (
+                    <ul className="flex flex-col gap-1 max-w-sm">
+                      {userResults.map((u) => (
+                        <li key={u.id}>
+                          <button
+                            type="button"
+                            disabled={u.hasActivePlayer}
+                            onClick={() => { setSelectedUser(u); setUserQuery(""); }}
+                            className="flex w-full items-start justify-between rounded-lg border border-zinc-700 bg-zinc-800/60 px-4 py-2 text-left hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <div>
+                              <p className="text-sm text-zinc-200">{u.email}</p>
+                              <p className="text-xs text-zinc-500">@{u.handle}</p>
+                            </div>
+                            {u.hasActivePlayer && (
+                              <span className="text-xs text-zinc-500 ml-2 shrink-0">(has profile)</span>
+                            )}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </div>
           )}
         </div>
       )}
