@@ -87,9 +87,7 @@ export default async function CommandPage({
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Pinned above the fold */}
-      {data.situationState && (
-        <SituationBanner state={data.situationState} detail={data.situationDetail} />
-      )}
+      <SituationBanner state={data.situationState ?? null} detail={data.situationDetail ?? ""} />
 
       <div className="flex flex-col items-center pt-3 pb-1 px-5">
         <div className="flex items-center gap-1">

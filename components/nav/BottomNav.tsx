@@ -3,22 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const TrajectoryIcon = (
-  <svg width="16" height="10" viewBox="0 0 16 10">
-    <path
-      d="M0 5 Q2 1 4 5 Q6 9 8 5 Q10 1 12 5 Q14 9 16 5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
+const StatsIcon = (
+  <svg width="16" height="14" viewBox="0 0 16 14">
+    <rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5" />
+    <rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5" />
+    <rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5" />
   </svg>
 );
 
 const tabs = [
   { label: "Command", href: "/command", icon: "⌘" as React.ReactNode },
   { label: "Enter", href: "/enter", icon: "⊕" as React.ReactNode },
-  { label: "Matchups", href: "/matchups", icon: "⚔" as React.ReactNode },
-  { label: "Trajectory", href: "/trajectory", icon: TrajectoryIcon },
+  { label: "Stats", href: "/stats", icon: StatsIcon },
 ] satisfies { label: string; href: string; icon: React.ReactNode }[];
 
 export default function BottomNav() {
