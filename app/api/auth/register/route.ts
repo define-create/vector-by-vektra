@@ -4,6 +4,21 @@ import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import { sendVerificationEmail } from "@/lib/email";
 
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 30) || "user";
+}
+
+async function generateUniqueHandle(displayName: string): Promise<string> {
+  const base = slugify(displayName);
+  if (!(await prisma.user.findUnique({ where: { handle: base } }))) return base;
+  let n = 2;
+  while (true) {
+    const candidate = `${base}${n}`;
+    if (!(await prisma.user.findUnique({ where: { handle: candidate } }))) return candidate;
+    n++;
+  }
+}
+
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -12,9 +27,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { email, handle, displayName, password } = body as Record<string, string>;
+  const { email, displayName, password } = body as Record<string, string>;
 
-  if (!email || !handle || !displayName || !password) {
+  if (!email || !displayName || !password) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
   }
 
@@ -22,22 +37,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
   }
 
-  // Normalise handle — strip leading @ if present
-  const normalisedHandle = handle.startsWith("@") ? handle.slice(1) : handle;
-
-  // Check uniqueness
-  const [existingEmail, existingHandle] = await Promise.all([
-    prisma.user.findUnique({ where: { email } }),
-    prisma.user.findUnique({ where: { handle: normalisedHandle } }),
-  ]);
-
+  const existingEmail = await prisma.user.findUnique({ where: { email } });
   if (existingEmail) {
     return NextResponse.json({ error: "Email already registered" }, { status: 409 });
   }
-  if (existingHandle) {
-    return NextResponse.json({ error: "Handle already taken" }, { status: 409 });
-  }
 
+  const handle = await generateUniqueHandle(displayName);
   const passwordHash = await bcrypt.hash(password, 12);
 
   // Generate verification token (raw = sent in email, hashed = stored in DB)
@@ -48,7 +53,7 @@ export async function POST(req: NextRequest) {
   await prisma.user.create({
     data: {
       email,
-      handle: normalisedHandle,
+      handle,
       displayName,
       passwordHash,
       emailVerificationToken: tokenHash,

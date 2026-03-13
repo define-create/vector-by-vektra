@@ -33,7 +33,7 @@ interface Props {
 }
 
 export function TrajectoryGraph({ history }: Props) {
-  const slice = history.slice(-10);
+  const slice = history.slice(-15);
   if (slice.length < 2) return null;
 
   const ratings = slice.map((h) => h.rating);
@@ -56,22 +56,12 @@ export function TrajectoryGraph({ history }: Props) {
   const labelY2 = Math.max(12, Math.min(65, lastPt.y));
 
   return (
-    <svg viewBox="0 0 220 70" width="100%" height="70">
-      <defs>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
+    <svg viewBox="0 0 220 70" width="100%">
       <path
         d={smoothPath(pts)}
         fill="none"
         stroke="#78716c"
         strokeWidth="2"
-        filter="url(#glow)"
       />
       {slice.map((h, i) => {
         const pt = pts[i]!;
@@ -87,7 +77,6 @@ export function TrajectoryGraph({ history }: Props) {
             cy={pt.y}
             r={isLast ? 5.5 : 4}
             fill={fill}
-            filter="url(#glow)"
           />
         );
       })}

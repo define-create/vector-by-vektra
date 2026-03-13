@@ -13,7 +13,15 @@
       "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/command/)",
       "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/api/players/[id] -type f -name \"*.ts\")",
       "Bash(npx tsc --noEmit)",
-      "Bash(npx jest --passWithNoTests)"
+      "Bash(npx jest --passWithNoTests)",
+      "Bash(ls -la \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra/app/\\(tabs\\)\")",
+      "Bash(cat \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra/app/\\(tabs\\)/trajectory/page.tsx\")",
+      "Bash(cat \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra/app/\\(tabs\\)/command/page.tsx\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/command/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/enter/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/matchups/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/trajectory/\")"
     ]
   }
 }

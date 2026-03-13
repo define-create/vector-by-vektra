@@ -5,7 +5,7 @@ interface Props {
 }
 
 export function RecentPerformanceDots({ matches }: Props) {
-  const slice = matches.slice(0, 7);
+  const slice = matches.slice(0, 7).reverse();
   if (slice.length === 0) return null;
 
   const xs = slice.map((_, i) =>
