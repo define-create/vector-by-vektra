@@ -21,7 +21,9 @@
       "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/command/\")",
       "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/enter/\")",
       "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/matchups/\")",
-      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/trajectory/\")"
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/trajectory/\")",
+      "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/\")",
+      "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/enter/\")"
     ]
   }
 }

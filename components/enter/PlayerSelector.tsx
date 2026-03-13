@@ -177,13 +177,13 @@ export default function PlayerSelector({
 
       {/* Recent player chips */}
       {visibleRecent.length > 0 && !value && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {visibleRecent.map((p) => (
             <button
               key={p.id}
               type="button"
               onClick={() => selectPlayer(p)}
-              className="rounded-full bg-zinc-700 px-3 py-1 text-base text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500"
+              className="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-base text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500"
             >
               {p.displayName}
             </button>
