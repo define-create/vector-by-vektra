@@ -59,7 +59,7 @@
   - [x] 3.6 Add a profile icon button on the right side — use an inline SVG person icon (a circle head + body arc, similar to standard user icons). Link to `/profile`. Add `aria-label="Profile"`.
   - [x] 3.7 Open `app/(tabs)/command/page.tsx` and remove the `{data.situationState && (` conditional wrapping
   - [x] 3.8 Replace with an unconditional render: `<SituationBanner state={data.situationState ?? null} detail={data.situationDetail ?? ""} />`
-  - [ ] 3.9 Verify the Command screen shows the banner (with profile icon) even when no momentum situation is active
+  - [x] 3.9 Verify the Command screen shows the banner (with profile icon) even when no momentum situation is active
 
 - [x] 4.0 Create the Change Password API endpoint
   - [x] 4.1 Create `app/api/auth/change-password/route.ts`
