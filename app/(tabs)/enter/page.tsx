@@ -24,9 +24,6 @@ interface PlayerValue {
   name?: string;
 }
 
-type Mode = "steps" | "quick";
-type WizardStep = "players" | "result";
-
 // ---------------------------------------------------------------------------
 // EnterPage
 // ---------------------------------------------------------------------------
@@ -35,10 +32,6 @@ export default function EnterPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
-
-  // Mode and wizard step
-  const [mode, setMode] = useState<Mode>("steps");
-  const [wizardStep, setWizardStep] = useState<WizardStep>("players");
 
   // Admin mode
   const [adminMode, setAdminMode] = useState(false);
@@ -75,13 +68,8 @@ export default function EnterPage() {
   const [submittedMatchId, setSubmittedMatchId] = useState<string | null>(null);
 
   // ---------------------------------------------------------------------------
-  // Load localStorage preference + recent players + tags on mount
+  // Load recent players + tags on mount
   // ---------------------------------------------------------------------------
-
-  useEffect(() => {
-    const saved = localStorage.getItem("enter-mode") as Mode | null;
-    if (saved === "quick" || saved === "steps") setMode(saved);
-  }, []);
 
   useEffect(() => {
     fetch("/api/players/recent")
@@ -103,15 +91,6 @@ export default function EnterPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------------------------------------------------------------------------
-  // Mode toggle
-  // ---------------------------------------------------------------------------
-
-  function changeMode(next: Mode) {
-    localStorage.setItem("enter-mode", next);
-    setMode(next);
-  }
-
-  // ---------------------------------------------------------------------------
   // Admin mode toggle — resets all form state
   // ---------------------------------------------------------------------------
 
@@ -128,7 +107,6 @@ export default function EnterPage() {
     setPartnerOk(true);
     setOpponent1Ok(true);
     setOpponent2Ok(true);
-    setWizardStep("players");
   }
 
   // ---------------------------------------------------------------------------
@@ -163,20 +141,6 @@ export default function EnterPage() {
   function canSubmit(): boolean {
     return playersComplete() && opponentsComplete() && resultComplete();
   }
-
-  // ---------------------------------------------------------------------------
-  // Auto-advance: Steps mode Step 1 → Step 2 when all players confirmed
-  // ---------------------------------------------------------------------------
-
-  useEffect(() => {
-    if (mode === "steps" && wizardStep === "players") {
-      if (playersComplete() && opponentsComplete()) {
-        setWizardStep("result");
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partner, opponent1, opponent2, partnerOk, opponent1Ok, opponent2Ok,
-      team1Player1, team1Player1Ok, adminMode, mode]);
 
   // ---------------------------------------------------------------------------
   // Submit
@@ -272,7 +236,6 @@ export default function EnterPage() {
             setPartnerOk(true);
             setOpponent1Ok(true);
             setOpponent2Ok(true);
-            setWizardStep("players");
           }}
           className="rounded-xl bg-zinc-700 px-6 py-3 text-zinc-200 hover:bg-zinc-600"
         >
@@ -286,106 +249,11 @@ export default function EnterPage() {
   }
 
   // ---------------------------------------------------------------------------
-  // Shared sub-sections (used in both modes)
-  // ---------------------------------------------------------------------------
-
-  const playerSelectors = (
-    <div className="flex flex-col gap-6">
-      {adminMode && (
-        <PlayerSelector
-          label="Team 1 Player 1"
-          value={team1Player1}
-          onChange={(v) => { setTeam1Player1(v); if (!v) setTeam1Player1Ok(true); }}
-          onDisambiguated={setTeam1Player1Ok}
-          recentPlayers={recentPartners}
-          excludeIds={selectedIds}
-        />
-      )}
-      <PlayerSelector
-        label={adminMode ? "Team 1 Player 2" : "Your partner"}
-        value={partner}
-        onChange={(v) => { setPartner(v); if (!v) setPartnerOk(true); }}
-        onDisambiguated={setPartnerOk}
-        recentPlayers={recentPartners}
-        excludeIds={selectedIds}
-      />
-      <PlayerSelector
-        label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
-        value={opponent1}
-        onChange={(v) => { setOpponent1(v); if (!v) setOpponent1Ok(true); }}
-        onDisambiguated={setOpponent1Ok}
-        recentPlayers={recentOpponents}
-        excludeIds={selectedIds}
-      />
-      <PlayerSelector
-        label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
-        value={opponent2}
-        onChange={(v) => { setOpponent2(v); if (!v) setOpponent2Ok(true); }}
-        onDisambiguated={setOpponent2Ok}
-        recentPlayers={recentOpponents}
-        excludeIds={selectedIds}
-      />
-    </div>
-  );
-
-  const tagSection = (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm font-medium text-zinc-500">Add to Event (optional)</p>
-      <input
-        type="text"
-        value={tag}
-        onChange={(e) => setTag(e.target.value)}
-        placeholder="e.g. Winter League, Club Night…"
-        className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
-      />
-      {tagSuggestions.length > 0 && !tag && (
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {tagSuggestions.slice(0, 5).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTag(t)}
-              className="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  // Shadow profile summary shown above Submit in Steps Result screen
-  const shadowWarnings = [
-    adminMode ? { label: "Team 1 Player 1", v: team1Player1 } : null,
-    { label: adminMode ? "Team 1 Player 2" : "Partner", v: partner },
-    { label: adminMode ? "Team 2 Player 1" : "Opponent 1", v: opponent1 },
-    { label: adminMode ? "Team 2 Player 2" : "Opponent 2", v: opponent2 },
-  ]
-    .filter((x): x is { label: string; v: PlayerValue | null } => x !== null)
-    .filter(({ v }) => v && !v.id && v.name);
-
-  // ---------------------------------------------------------------------------
   // Main render
   // ---------------------------------------------------------------------------
 
   return (
     <div className="flex h-full flex-col">
-      {/* Progress bar — Steps mode only */}
-      {mode === "steps" && (
-        <div className="flex gap-1 px-4 pt-4">
-          {(["players", "result"] as WizardStep[]).map((s, i) => (
-            <div
-              key={s}
-              className={[
-                "h-1 flex-1 rounded-full transition-colors",
-                (wizardStep === "players" ? 0 : 1) >= i ? "bg-zinc-300" : "bg-zinc-700",
-              ].join(" ")}
-            />
-          ))}
-        </div>
-      )}
-
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {/* Admin "on behalf of" toggle */}
         {isAdmin && (
@@ -411,152 +279,90 @@ export default function EnterPage() {
           </div>
         )}
 
-        {/* Mode toggle */}
-        <div className="mb-5">
-          <ModeToggle mode={mode} onChange={changeMode} />
-        </div>
-
-        {/* ── STEPS MODE ── */}
-        {mode === "steps" && (
-          <>
-            <h2 className="mb-6 text-xl font-semibold text-zinc-50">
-              {wizardStep === "players"
-                ? (adminMode ? "Teams" : "Players")
-                : "Result"}
-            </h2>
-
-            {wizardStep === "players" && playerSelectors}
-
-            {wizardStep === "result" && (
-              <div className="flex flex-col gap-6">
-                <OutcomeToggle value={outcome} onChange={setOutcome} />
-                <GameScoreInput games={games} onChange={setGames} />
-                {tagSection}
-                {shadowWarnings.map(({ label, v }) => (
-                  <p key={label} className="text-sm text-amber-400">
-                    {label} ({v!.name}) — shadow profile will be created
-                  </p>
+        <div className="flex flex-col gap-8">
+          {adminMode && (
+            <PlayerSelector
+              label="Team 1 Player 1"
+              value={team1Player1}
+              onChange={(v) => { setTeam1Player1(v); if (!v) setTeam1Player1Ok(true); }}
+              onDisambiguated={setTeam1Player1Ok}
+              recentPlayers={recentPartners}
+              excludeIds={selectedIds}
+            />
+          )}
+          <PlayerSelector
+            label={adminMode ? "Team 1 Player 2" : "Your partner"}
+            value={partner}
+            onChange={(v) => { setPartner(v); if (!v) setPartnerOk(true); }}
+            onDisambiguated={setPartnerOk}
+            recentPlayers={recentPartners}
+            excludeIds={selectedIds}
+          />
+          <PlayerSelector
+            label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
+            value={opponent1}
+            onChange={(v) => { setOpponent1(v); if (!v) setOpponent1Ok(true); }}
+            onDisambiguated={setOpponent1Ok}
+            recentPlayers={recentOpponents}
+            excludeIds={selectedIds}
+          />
+          <PlayerSelector
+            label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
+            value={opponent2}
+            onChange={(v) => { setOpponent2(v); if (!v) setOpponent2Ok(true); }}
+            onDisambiguated={setOpponent2Ok}
+            recentPlayers={recentOpponents}
+            excludeIds={selectedIds}
+          />
+          <OutcomeToggle value={outcome} onChange={setOutcome} />
+          <GameScoreInput games={games} onChange={setGames} />
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-medium text-zinc-500">Add to Event (optional)</p>
+            <input
+              type="text"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              placeholder="e.g. Winter League, Club Night…"
+              className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+            />
+            {tagSuggestions.length > 0 && !tag && (
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {tagSuggestions.slice(0, 5).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTag(t)}
+                    className="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
+                  >
+                    {t}
+                  </button>
                 ))}
-                {submitError && (
-                  <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">
-                    {submitError}
-                  </p>
-                )}
               </div>
             )}
-          </>
-        )}
-
-        {/* ── QUICK MODE ── */}
-        {mode === "quick" && (
-          <div className="flex flex-col gap-8">
-            {playerSelectors}
-            <OutcomeToggle value={outcome} onChange={setOutcome} />
-            <GameScoreInput games={games} onChange={setGames} />
-            {tagSection}
-            {submitError && (
-              <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">
-                {submitError}
-              </p>
-            )}
           </div>
-        )}
+          {submitError && (
+            <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">
+              {submitError}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* ── STEPS MODE bottom nav ── */}
-      {mode === "steps" && (
-        <div className="flex gap-3 border-t border-zinc-800 px-4 py-4">
-          {wizardStep === "result" && (
-            <button
-              type="button"
-              onClick={() => setWizardStep("players")}
-              className="flex-1 rounded-xl border border-zinc-600 py-3 text-zinc-300 hover:bg-zinc-800"
-            >
-              Back
-            </button>
-          )}
-          {wizardStep === "players" ? (
-            <button
-              type="button"
-              onClick={() => setWizardStep("result")}
-              disabled={!(playersComplete() && opponentsComplete())}
-              className={[
-                "flex-1 rounded-xl py-3 font-semibold transition-colors",
-                playersComplete() && opponentsComplete()
-                  ? "bg-zinc-100 text-zinc-900 hover:bg-white"
-                  : "bg-zinc-800 text-zinc-600 cursor-not-allowed",
-              ].join(" ")}
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={submit}
-              disabled={submitting || !canSubmit()}
-              className={[
-                "flex-1 rounded-xl py-3 font-semibold transition-colors",
-                submitting || !canSubmit()
-                  ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-                  : "bg-emerald-500 text-white hover:bg-emerald-400",
-              ].join(" ")}
-            >
-              {submitting ? "Saving…" : "Submit Match"}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* ── QUICK MODE bottom nav ── */}
-      {mode === "quick" && (
-        <div className="border-t border-zinc-800 px-4 py-4">
-          <button
-            type="button"
-            onClick={submit}
-            disabled={submitting || !canSubmit()}
-            className={[
-              "w-full rounded-xl py-3 font-semibold transition-colors",
-              submitting || !canSubmit()
-                ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-                : "bg-emerald-500 text-white hover:bg-emerald-400",
-            ].join(" ")}
-          >
-            {submitting ? "Saving…" : "Submit Match"}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ModeToggle — file-local component
-// ---------------------------------------------------------------------------
-
-function ModeToggle({
-  mode,
-  onChange,
-}: {
-  mode: Mode;
-  onChange: (m: Mode) => void;
-}) {
-  return (
-    <div className="flex items-center gap-1 rounded-lg bg-zinc-800 p-1">
-      {(["steps", "quick"] as Mode[]).map((m) => (
+      <div className="border-t border-zinc-800 px-4 py-4">
         <button
-          key={m}
           type="button"
-          onClick={() => onChange(m)}
+          onClick={submit}
+          disabled={submitting || !canSubmit()}
           className={[
-            "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-            mode === m
-              ? "bg-zinc-600 text-zinc-100"
-              : "text-zinc-500 hover:text-zinc-300",
+            "w-full rounded-xl py-3 font-semibold transition-colors",
+            submitting || !canSubmit()
+              ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+              : "bg-emerald-500 text-white hover:bg-emerald-400",
           ].join(" ")}
         >
-          {m === "steps" ? "Steps" : "Quick"}
+          {submitting ? "Saving…" : "Submit Match"}
         </button>
-      ))}
+      </div>
     </div>
   );
 }

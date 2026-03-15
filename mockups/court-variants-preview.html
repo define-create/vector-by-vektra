@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enter Screen — Court Variants</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #09090b;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      min-height: 100vh;
+    }
+    .page-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #52525b; }
+    .variants-row { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; }
+    .variant-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .variant-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #3f3f46; }
+
+    /* Phone shell */
+    .phone { width: 375px; background: #09090b; border: 1px solid #27272a; border-radius: 32px; overflow: hidden; box-shadow: 0 0 0 8px #18181b, 0 24px 80px rgba(0,0,0,0.6); }
+    .phone-scroll { padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 18px; max-height: 780px; overflow-y: auto; }
+    .phone-scroll::-webkit-scrollbar { display: none; }
+
+    /* Mode Toggle */
+    .mode-toggle { display: flex; background: #18181b; border: 1px solid #27272a; border-radius: 10px; padding: 3px; gap: 2px; }
+    .mode-btn { flex: 1; padding: 8px; border: none; border-radius: 7px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; color: #52525b; background: transparent; }
+    .mode-btn.active { background: #f4f4f5; color: #09090b; }
+
+    /* === COURT (Variant A) === */
+    .court {
+      position: relative; width: 100%; height: 220px;
+      background: #15803d; border-radius: 10px; border: 2px solid #166534;
+      overflow: hidden; user-select: none;
+    }
+    .court-lines { position: absolute; inset: 0; pointer-events: none; }
+    .court-lines svg { width: 100%; height: 100%; }
+
+    /* Clickable team halves */
+    .court-half { position: absolute; left: 0; right: 0; height: 50%; cursor: pointer; transition: background 0.25s; z-index: 1; }
+    .court-half.half-top { top: 0; }
+    .court-half.half-bottom { bottom: 0; }
+    .court-half.half-winner { background: rgba(16,185,129,0.2); }
+    .court-half.half-loser { background: rgba(0,0,0,0.3); }
+
+    .half-winner-badge {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      background: #10b981; color: white; font-size: 9px; font-weight: 900;
+      text-transform: uppercase; letter-spacing: 0.12em; padding: 2px 10px;
+      border-radius: 999px; white-space: nowrap; pointer-events: none;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .half-top .half-winner-badge { bottom: 5px; }
+    .half-bottom .half-winner-badge { top: 5px; }
+    .court-half.half-winner .half-winner-badge { opacity: 1; }
+
+    /* Team labels */
+    .court-team-label { position: absolute; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); pointer-events: none; z-index: 5; }
+    .ctl-top { top: 6px; right: 10px; }
+    .ctl-bottom { bottom: 6px; right: 10px; }
+
+    /* Player circles */
+    .pc {
+      position: absolute; width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(0,0,0,0.25); border: 1.5px dashed rgba(255,255,255,0.35);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; z-index: 10; transform: translate(-50%,-50%);
+    }
+    .pc:hover { background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.6); }
+    .pc.filled { background: rgba(0,0,0,0.3); border: 1.5px solid rgba(255,255,255,0.7); }
+    .pc.t1.filled { background: rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.7); }
+    .pc.active-slot { border-color: #60a5fa; background: rgba(96,165,250,0.15); }
+    .pc-plus { font-size: 20px; color: rgba(255,255,255,0.4); line-height: 1; }
+    .pc-name { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.9); text-align: center; max-width: 44px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.2; }
+    .pc-role { font-size: 7px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.45); margin-top: 1px; }
+
+    /* Slot positions */
+    .pc-opp1  { left: 28%; top: 22%; }
+    .pc-opp2  { left: 72%; top: 22%; }
+    .pc-you   { left: 28%; top: 78%; }
+    .pc-ptr   { left: 72%; top: 78%; }
+
+    .court-hint { font-size: 9px; text-align: center; color: #3f3f46; margin-top: 4px; }
+
+    /* === PICKER PANEL === */
+    .picker-panel { display: none; flex-direction: column; gap: 12px; background: #18181b; border: 1px solid #27272a; border-radius: 14px; padding: 14px; }
+    .picker-panel.open { display: flex; }
+    .picker-header { display: flex; align-items: center; justify-content: space-between; }
+    .picker-slot-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #71717a; }
+    .picker-close-btn { background: none; border: none; color: #52525b; cursor: pointer; font-size: 15px; line-height: 1; }
+    .picker-close-btn:hover { color: #a1a1aa; }
+    .picker-search { display: flex; align-items: center; gap: 8px; background: #27272a; border: 1px solid #3f3f46; border-radius: 10px; padding: 10px 12px; }
+    .picker-search-icon { color: #52525b; font-size: 14px; }
+    .picker-search input { background: none; border: none; outline: none; color: #f4f4f5; font-size: 15px; width: 100%; }
+    .picker-search input::placeholder { color: #52525b; }
+    .picker-section-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #52525b; margin-bottom: 6px; }
+    .chips-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    .chips-row::-webkit-scrollbar { display: none; }
+    .player-chip { flex-shrink: 0; background: #27272a; border: 1px solid #3f3f46; border-radius: 999px; padding: 6px 14px; font-size: 13px; color: #d4d4d8; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .player-chip:hover { background: #3f3f46; }
+    .results-list { display: flex; flex-direction: column; }
+    .result-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+    .result-row:hover { background: #27272a; }
+    .result-name { font-size: 15px; color: #f4f4f5; }
+    .result-meta { font-size: 11px; color: #71717a; margin-top: 1px; }
+    .result-rating { font-size: 13px; font-weight: 700; color: #52525b; }
+
+    /* === MINI COURT (Variant B decoration) === */
+    .mini-court { width: 100%; height: 56px; border-radius: 8px; border: 1.5px solid #166534; overflow: hidden; }
+    .mini-court svg { width: 100%; height: 100%; }
+
+    /* === TEAM CARDS (Variant B) === */
+    .team-card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .team-card-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #3f3f46; }
+    .player-row { display: flex; align-items: center; gap: 10px; background: #27272a; border: 1px solid #3f3f46; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.15s; }
+    .player-row:hover { border-color: #52525b; }
+    .player-row.pr-filled { background: #1c1c1e; }
+    .pr-dot { width: 8px; height: 8px; border-radius: 50%; background: #3f3f46; flex-shrink: 0; transition: background 0.2s; }
+    .player-row.pr-filled .pr-dot { background: #10b981; }
+    .pr-name { flex: 1; font-size: 14px; color: #71717a; }
+    .player-row.pr-filled .pr-name { color: #f4f4f5; }
+    .pr-role { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #3f3f46; }
+
+    .vs-row { display: flex; align-items: center; gap: 10px; }
+    .vs-line { flex: 1; height: 1px; background: #27272a; }
+    .vs-circle { width: 28px; height: 28px; border-radius: 50%; background: #18181b; border: 1px solid #27272a; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; color: #52525b; }
+
+    /* === OUTCOME BUTTONS === */
+    .outcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .outcome-btn { padding: 20px 16px; border-radius: 14px; font-size: 20px; font-weight: 800; letter-spacing: 0.12em; cursor: pointer; transition: all 0.2s; border: 1.5px solid; }
+    .ob-off { background: #18181b; border-color: #3f3f46; color: #3f3f46; }
+    .ob-win { background: #10b981; border-color: #10b981; color: white; box-shadow: 0 6px 20px rgba(16,185,129,0.35); }
+    .ob-loss { background: #f43f5e; border-color: #f43f5e; color: white; box-shadow: 0 6px 20px rgba(244,63,94,0.35); }
+
+    /* === SCORES === */
+    .section-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: #52525b; }
+    .score-section { display: flex; flex-direction: column; gap: 12px; }
+    .score-table { display: grid; grid-template-columns: 28px 1fr 1fr; gap: 8px; align-items: center; }
+    .sch { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; }
+    .sch-you { color: #34d399; }
+    .sch-them { color: #f87171; }
+    .game-num { font-size: 10px; font-family: ui-monospace, monospace; color: #52525b; text-align: center; }
+    .score-input { background: #27272a; border: 1px solid #3f3f46; border-radius: 10px; color: #f4f4f5; font-size: 28px; font-weight: 900; font-family: ui-monospace, "SF Mono", monospace; text-align: center; padding: 10px 8px; width: 100%; -moz-appearance: textfield; }
+    .score-input::-webkit-outer-spin-button, .score-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .score-input:focus { outline: none; border-color: #71717a; }
+    .add-game-btn { background: none; border: none; color: #52525b; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; padding: 0; }
+    .add-game-btn:hover { color: #a1a1aa; }
+
+    /* === SUBMIT === */
+    .submit-btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; }
+    .sb-off { background: #27272a; color: #52525b; cursor: not-allowed; }
+    .sb-on { background: #10b981; color: white; box-shadow: 0 4px 20px rgba(16,185,129,0.3); }
+  </style>
+</head>
+<body>
+
+<div class="page-title">Enter Screen — Court Layout Variants</div>
+
+<div class="variants-row">
+
+  <!-- ===== VARIANT A: COURT AS CENTERPIECE ===== -->
+  <div class="variant-wrapper">
+    <div class="variant-tag">Variant A — Court as Centerpiece</div>
+    <div class="phone">
+      <div class="phone-scroll">
+
+        <div class="mode-toggle">
+          <button class="mode-btn active">Quick</button>
+          <button class="mode-btn">Steps</button>
+        </div>
+
+        <!-- Court -->
+        <div>
+          <div class="court" id="courtA">
+            <div class="court-lines">
+              <svg viewBox="0 0 371 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="365" height="214" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+                <line x1="3" y1="110" x2="368" y2="110" stroke="white" stroke-width="2.5"/>
+                <line x1="3" y1="76" x2="368" y2="76" stroke="rgba(255,255,255,0.45)" stroke-width="1"/>
+                <line x1="3" y1="144" x2="368" y2="144" stroke="rgba(255,255,255,0.45)" stroke-width="1"/>
+                <line x1="185.5" y1="76" x2="185.5" y2="144" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+              </svg>
+            </div>
+
+            <!-- Clickable halves for winner -->
+            <div class="court-half half-top" id="halfTopA" onclick="setWinnerA('top')">
+              <span class="half-winner-badge">Winner ✓</span>
+            </div>
+            <div class="court-half half-bottom" id="halfBotA" onclick="setWinnerA('bottom')">
+              <span class="half-winner-badge">Winner ✓</span>
+            </div>
+
+            <div class="court-team-label ctl-top">TEAM 2</div>
+            <div class="court-team-label ctl-bottom">TEAM 1 — YOU</div>
+
+            <!-- Player slots -->
+            <div class="pc t2 pc-opp1" id="pcOpp1A" onclick="openPickerA('opp1',event)">
+              <span class="pc-plus">+</span>
+              <span class="pc-role">Opp 1</span>
+            </div>
+            <div class="pc t2 pc-opp2" id="pcOpp2A" onclick="openPickerA('opp2',event)">
+              <span class="pc-plus">+</span>
+              <span class="pc-role">Opp 2</span>
+            </div>
+            <div class="pc t1 filled pc-you" id="pcYouA" onclick="openPickerA('you',event)">
+              <span class="pc-name">You</span>
+              <span class="pc-role">You</span>
+            </div>
+            <div class="pc t1 pc-ptr" id="pcPtrA" onclick="openPickerA('partner',event)">
+              <span class="pc-plus">+</span>
+              <span class="pc-role">Partner</span>
+            </div>
+          </div>
+          <div class="court-hint">Tap a player slot to assign · Tap your court side to mark winner</div>
+        </div>
+
+        <!-- Picker (Variant A) -->
+        <div class="picker-panel" id="pickerA">
+          <div class="picker-header">
+            <span class="picker-slot-label" id="pickerLblA">Assign Player</span>
+            <button class="picker-close-btn" onclick="closePickerA()">✕</button>
+          </div>
+          <div class="picker-search">
+            <span class="picker-search-icon">⌕</span>
+            <input type="text" placeholder="Search players…" oninput="filterA(this.value)">
+          </div>
+          <div>
+            <div class="picker-section-lbl">Recent</div>
+            <div class="chips-row" style="margin-top:6px">
+              <div class="player-chip" onclick="assignA('Alice Chen')">Alice Chen</div>
+              <div class="player-chip" onclick="assignA('Bob Park')">Bob Park</div>
+              <div class="player-chip" onclick="assignA('Carol Liu')">Carol Liu</div>
+              <div class="player-chip" onclick="assignA('Dave Kim')">Dave Kim</div>
+              <div class="player-chip" onclick="assignA('Eve Ross')">Eve Ross</div>
+            </div>
+          </div>
+          <div class="results-list" id="resultsA">
+            <div class="result-row" onclick="assignA('Alice Chen')">
+              <div><div class="result-name">Alice Chen</div><div class="result-meta">32 matches</div></div>
+              <div class="result-rating">1420</div>
+            </div>
+            <div class="result-row" onclick="assignA('Alice Park')">
+              <div><div class="result-name">Alice Park</div><div class="result-meta">8 matches</div></div>
+              <div class="result-rating">1381</div>
+            </div>
+            <div class="result-row" onclick="assignA('Bob Park')">
+              <div><div class="result-name">Bob Park</div><div class="result-meta">19 matches</div></div>
+              <div class="result-rating">1395</div>
+            </div>
+            <div class="result-row" onclick="assignA('Carol Liu')">
+              <div><div class="result-name">Carol Liu</div><div class="result-meta">7 matches</div></div>
+              <div class="result-rating">1310</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scores -->
+        <div class="score-section">
+          <div class="section-lbl">Scores</div>
+          <div class="score-table">
+            <div></div>
+            <div class="sch sch-you">YOU</div>
+            <div class="sch sch-them">THEM</div>
+            <div class="game-num">G1</div>
+            <input class="score-input" type="number" min="0" max="99" placeholder="0">
+            <input class="score-input" type="number" min="0" max="99" placeholder="0">
+          </div>
+          <button class="add-game-btn">⊕ Add game</button>
+        </div>
+
+        <button class="submit-btn sb-off">Submit Match</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VARIANT B: TEAM CARDS + MINI COURT ===== -->
+  <div class="variant-wrapper">
+    <div class="variant-tag">Variant B — Team Cards + Court Decoration</div>
+    <div class="phone">
+      <div class="phone-scroll">
+
+        <div class="mode-toggle">
+          <button class="mode-btn active">Quick</button>
+          <button class="mode-btn">Steps</button>
+        </div>
+
+        <!-- Mini court decoration -->
+        <div class="mini-court">
+          <svg viewBox="0 0 343 56" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="343" height="56" fill="#15803d"/>
+            <rect x="6" y="3" width="331" height="50" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="6" y1="28" x2="337" y2="28" stroke="white" stroke-width="2"/>
+            <line x1="6" y1="19" x2="337" y2="19" stroke="rgba(255,255,255,0.35)" stroke-width="1"/>
+            <line x1="6" y1="37" x2="337" y2="37" stroke="rgba(255,255,255,0.35)" stroke-width="1"/>
+            <line x1="171.5" y1="19" x2="171.5" y2="37" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+          </svg>
+        </div>
+
+        <!-- Team 1 -->
+        <div class="team-card">
+          <div class="team-card-lbl">Team 1 — Your Side</div>
+          <div class="player-row pr-filled" id="rowYouB" onclick="openPickerB('you')">
+            <div class="pr-dot" style="background:#10b981"></div>
+            <span class="pr-name" style="color:#f4f4f5">You (pre-filled)</span>
+            <span class="pr-role">You</span>
+          </div>
+          <div class="player-row" id="rowPtrB" onclick="openPickerB('partner')">
+            <div class="pr-dot"></div>
+            <span class="pr-name">Add partner…</span>
+            <span class="pr-role">Partner</span>
+          </div>
+        </div>
+
+        <div class="vs-row">
+          <div class="vs-line"></div>
+          <div class="vs-circle">VS</div>
+          <div class="vs-line"></div>
+        </div>
+
+        <!-- Team 2 -->
+        <div class="team-card">
+          <div class="team-card-lbl">Team 2 — Opponents</div>
+          <div class="player-row" id="rowOpp1B" onclick="openPickerB('opp1')">
+            <div class="pr-dot"></div>
+            <span class="pr-name">Add opponent 1…</span>
+            <span class="pr-role">Opp 1</span>
+          </div>
+          <div class="player-row" id="rowOpp2B" onclick="openPickerB('opp2')">
+            <div class="pr-dot"></div>
+            <span class="pr-name">Add opponent 2…</span>
+            <span class="pr-role">Opp 2</span>
+          </div>
+        </div>
+
+        <!-- Outcome -->
+        <div class="score-section">
+          <div class="section-lbl">Outcome</div>
+          <div class="outcome-grid">
+            <button class="outcome-btn ob-off" id="winBtnB" onclick="setOutcomeB('win')">WIN</button>
+            <button class="outcome-btn ob-off" id="lossBtnB" onclick="setOutcomeB('loss')">LOSS</button>
+          </div>
+        </div>
+
+        <!-- Scores -->
+        <div class="score-section">
+          <div class="section-lbl">Scores</div>
+          <div class="score-table">
+            <div></div>
+            <div class="sch sch-you">YOU</div>
+            <div class="sch sch-them">THEM</div>
+            <div class="game-num">G1</div>
+            <input class="score-input" type="number" min="0" max="99" placeholder="0">
+            <input class="score-input" type="number" min="0" max="99" placeholder="0">
+          </div>
+          <button class="add-game-btn">⊕ Add game</button>
+        </div>
+
+        <button class="submit-btn sb-off">Submit Match</button>
+
+        <!-- Picker (Variant B) -->
+        <div class="picker-panel" id="pickerB">
+          <div class="picker-header">
+            <span class="picker-slot-label" id="pickerLblB">Assign Player</span>
+            <button class="picker-close-btn" onclick="closePickerB()">✕</button>
+          </div>
+          <div class="picker-search">
+            <span class="picker-search-icon">⌕</span>
+            <input type="text" placeholder="Search players…">
+          </div>
+          <div>
+            <div class="picker-section-lbl">Recent</div>
+            <div class="chips-row" style="margin-top:6px">
+              <div class="player-chip" onclick="assignB('Alice Chen')">Alice Chen</div>
+              <div class="player-chip" onclick="assignB('Bob Park')">Bob Park</div>
+              <div class="player-chip" onclick="assignB('Carol Liu')">Carol Liu</div>
+              <div class="player-chip" onclick="assignB('Dave Kim')">Dave Kim</div>
+            </div>
+          </div>
+          <div class="results-list">
+            <div class="result-row" onclick="assignB('Alice Chen')">
+              <div><div class="result-name">Alice Chen</div><div class="result-meta">32 matches</div></div>
+              <div class="result-rating">1420</div>
+            </div>
+            <div class="result-row" onclick="assignB('Bob Park')">
+              <div><div class="result-name">Bob Park</div><div class="result-meta">19 matches</div></div>
+              <div class="result-rating">1395</div>
+            </div>
+            <div class="result-row" onclick="assignB('Carol Liu')">
+              <div><div class="result-name">Carol Liu</div><div class="result-meta">7 matches</div></div>
+              <div class="result-rating">1310</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- end variants-row -->
+
+<script>
+  // ===== VARIANT A =====
+  let slotA = null;
+  const pcIds  = { you:'pcYouA', partner:'pcPtrA', opp1:'pcOpp1A', opp2:'pcOpp2A' };
+  const pcRole = { you:'You', partner:'Partner', opp1:'Opp 1', opp2:'Opp 2' };
+  const pcTitles = { you:'Assign: You', partner:'Assign: Partner', opp1:'Assign: Opponent 1', opp2:'Assign: Opponent 2' };
+  const t1Slots = ['you','partner'];
+
+  function openPickerA(slotId, ev) {
+    ev.stopPropagation();
+    slotA = slotId;
+    document.getElementById('pickerLblA').textContent = pcTitles[slotId];
+    document.querySelectorAll('#resultsA .result-row').forEach(r => r.style.display='flex');
+    Object.values(pcIds).forEach(id => document.getElementById(id).classList.remove('active-slot'));
+    document.getElementById(pcIds[slotId]).classList.add('active-slot');
+    const panel = document.getElementById('pickerA');
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  function closePickerA() {
+    document.getElementById('pickerA').classList.remove('open');
+    if (slotA) { document.getElementById(pcIds[slotA]).classList.remove('active-slot'); slotA = null; }
+  }
+
+  function filterA(val) {
+    document.querySelectorAll('#resultsA .result-row').forEach(r => {
+      r.style.display = r.querySelector('.result-name').textContent.toLowerCase().includes(val.toLowerCase()) ? 'flex' : 'none';
+    });
+  }
+
+  function assignA(name) {
+    if (!slotA) return;
+    const id = slotA;
+    const el = document.getElementById(pcIds[id]);
+    el.innerHTML = `<span class="pc-name">${name.split(' ')[0]}</span><span class="pc-role">${pcRole[id]}</span>`;
+    el.classList.remove('active-slot');
+    el.classList.add('filled');
+    if (t1Slots.includes(id)) el.classList.add('t1');
+    closePickerA();
+  }
+
+  function setWinnerA(half) {
+    const top = document.getElementById('halfTopA');
+    const bot = document.getElementById('halfBotA');
+    top.classList.remove('half-winner','half-loser');
+    bot.classList.remove('half-winner','half-loser');
+    if (half === 'top') { top.classList.add('half-winner'); bot.classList.add('half-loser'); }
+    else                { bot.classList.add('half-winner'); top.classList.add('half-loser'); }
+  }
+
+  // ===== VARIANT B =====
+  let slotB = null;
+  const rowIds   = { you:'rowYouB', partner:'rowPtrB', opp1:'rowOpp1B', opp2:'rowOpp2B' };
+  const rowTitles = { you:'Assign: You', partner:'Assign: Partner', opp1:'Assign: Opponent 1', opp2:'Assign: Opponent 2' };
+
+  function openPickerB(slotId) {
+    slotB = slotId;
+    document.getElementById('pickerLblB').textContent = rowTitles[slotId];
+    const panel = document.getElementById('pickerB');
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  function closePickerB() {
+    document.getElementById('pickerB').classList.remove('open');
+    slotB = null;
+  }
+
+  function assignB(name) {
+    if (!slotB) return;
+    const row = document.getElementById(rowIds[slotB]);
+    row.classList.add('pr-filled');
+    row.querySelector('.pr-dot').style.background = '#10b981';
+    row.querySelector('.pr-name').textContent = name;
+    row.querySelector('.pr-name').style.color = '#f4f4f5';
+    closePickerB();
+  }
+
+  function setOutcomeB(outcome) {
+    const w = document.getElementById('winBtnB');
+    const l = document.getElementById('lossBtnB');
+    w.className = 'outcome-btn ' + (outcome === 'win'  ? 'ob-win'  : 'ob-off');
+    l.className = 'outcome-btn ' + (outcome === 'loss' ? 'ob-loss' : 'ob-off');
+  }
+</script>
+</body>
+</html>
