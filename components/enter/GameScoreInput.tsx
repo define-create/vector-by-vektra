@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useImperativeHandle, forwardRef } from "react";
 
 export interface GameScore {
   gameOrder: number;
@@ -8,13 +8,26 @@ export interface GameScore {
   team2Score: number | "";
 }
 
+export interface GameScoreHandle {
+  focusScore: (gameIndex: number, field: "team1Score" | "team2Score") => void;
+}
+
 interface GameScoreInputProps {
   games: GameScore[];
   onChange: (games: GameScore[]) => void;
 }
 
-export default function GameScoreInput({ games, onChange }: GameScoreInputProps) {
+const GameScoreInput = forwardRef<GameScoreHandle, GameScoreInputProps>(
+function GameScoreInput({ games, onChange }, ref) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useImperativeHandle(ref, () => ({
+    focusScore(gameIndex: number, field: "team1Score" | "team2Score") {
+      const idx = gameIndex * 2 + (field === "team1Score" ? 0 : 1);
+      const el = inputRefs.current[idx];
+      if (el) { el.focus(); el.select(); }
+    },
+  }));
 
   const updateScore = (
     gameIndex: number,
@@ -120,4 +133,6 @@ export default function GameScoreInput({ games, onChange }: GameScoreInputProps)
       </button>
     </div>
   );
-}
+});
+
+export default GameScoreInput;

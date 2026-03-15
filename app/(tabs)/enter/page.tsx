@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import PlayerSelector from "@/components/enter/PlayerSelector";
-import OutcomeToggle from "@/components/enter/OutcomeToggle";
-import GameScoreInput, { type GameScore } from "@/components/enter/GameScoreInput";
+import GameScoreInput, { type GameScore, type GameScoreHandle } from "@/components/enter/GameScoreInput";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,6 +21,8 @@ interface Player {
 interface PlayerValue {
   id?: string;
   name?: string;
+  rating?: number;
+  matchCount?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,7 +48,7 @@ export default function EnterPage() {
     { gameOrder: 1, team1Score: "", team2Score: "" },
   ]);
 
-  // Recent players for chips
+  // Recent players for chip strip
   const [recentPartners, setRecentPartners] = useState<Player[]>([]);
   const [recentOpponents, setRecentOpponents] = useState<Player[]>([]);
 
@@ -66,6 +67,14 @@ export default function EnterPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [submittedMatchId, setSubmittedMatchId] = useState<string | null>(null);
+
+  // Flash slot for chip-tap feedback
+  const [flashSlot, setFlashSlot] = useState<"team1Player1" | "partner" | "opponent1" | "opponent2" | null>(null);
+  // Currently focused player slot — chip taps target this field first
+  const [focusedSlot, setFocusedSlot] = useState<"team1Player1" | "partner" | "opponent1" | "opponent2" | null>(null);
+
+  // Ref to GameScoreInput for imperative focus on win selection
+  const gameScoreRef = useRef<GameScoreHandle>(null);
 
   // ---------------------------------------------------------------------------
   // Load recent players + tags on mount
@@ -90,6 +99,13 @@ export default function EnterPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Clear flash slot after animation duration
+  useEffect(() => {
+    if (!flashSlot) return;
+    const t = setTimeout(() => setFlashSlot(null), 650);
+    return () => clearTimeout(t);
+  }, [flashSlot]);
+
   // ---------------------------------------------------------------------------
   // Admin mode toggle — resets all form state
   // ---------------------------------------------------------------------------
@@ -107,7 +123,24 @@ export default function EnterPage() {
     setPartnerOk(true);
     setOpponent1Ok(true);
     setOpponent2Ok(true);
+    setFocusedSlot(null);
   }
+
+  // ---------------------------------------------------------------------------
+  // Derived values for chip strip
+  // ---------------------------------------------------------------------------
+
+  const recentAll = useMemo(() => {
+    const seen = new Set<string>();
+    const merged: Player[] = [];
+    for (const p of [...recentPartners, ...recentOpponents]) {
+      if (!seen.has(p.id)) {
+        seen.add(p.id);
+        merged.push(p);
+      }
+    }
+    return merged.slice(0, 10);
+  }, [recentPartners, recentOpponents]);
 
   // ---------------------------------------------------------------------------
   // Validators
@@ -119,6 +152,14 @@ export default function EnterPage() {
     opponent1?.id,
     opponent2?.id,
   ].filter(Boolean) as string[];
+
+  const availableChips = recentAll.filter((p) => !selectedIds.includes(p.id));
+
+  const allSlotsFilled = adminMode
+    ? !!(team1Player1?.id || team1Player1?.name) && !!(partner?.id || partner?.name) &&
+      !!(opponent1?.id || opponent1?.name) && !!(opponent2?.id || opponent2?.name)
+    : !!(partner?.id || partner?.name) &&
+      !!(opponent1?.id || opponent1?.name) && !!(opponent2?.id || opponent2?.name);
 
   function playersComplete(): boolean {
     const partnerReady = !!(partner?.id || partner?.name) && partnerOk;
@@ -140,6 +181,55 @@ export default function EnterPage() {
 
   function canSubmit(): boolean {
     return playersComplete() && opponentsComplete() && resultComplete();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Chip-tap assignment — fills the next empty slot in order
+  // ---------------------------------------------------------------------------
+
+  function assignChip(player: Player) {
+    const val = { id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount };
+
+    // If a field is focused AND empty, target it directly
+    if (focusedSlot) {
+      const slotValue =
+        focusedSlot === "team1Player1" ? team1Player1 :
+        focusedSlot === "partner"      ? partner :
+        focusedSlot === "opponent1"    ? opponent1 : opponent2;
+
+      if (!slotValue?.id && !slotValue?.name) {
+        switch (focusedSlot) {
+          case "team1Player1": setTeam1Player1(val); setTeam1Player1Ok(true); break;
+          case "partner":      setPartner(val);      setPartnerOk(true);      break;
+          case "opponent1":    setOpponent1(val);    setOpponent1Ok(true);    break;
+          case "opponent2":    setOpponent2(val);    setOpponent2Ok(true);    break;
+        }
+        setFlashSlot(focusedSlot);
+        setFocusedSlot(null);
+        return;
+      }
+      // Focused slot is already filled — fall through to next-empty-slot logic
+    }
+
+    // Otherwise fill the next empty slot in order
+    if (adminMode) {
+      if (!team1Player1?.id && !team1Player1?.name) {
+        setTeam1Player1(val); setTeam1Player1Ok(true); setFlashSlot("team1Player1"); return;
+      }
+      if (!partner?.id && !partner?.name) {
+        setPartner(val); setPartnerOk(true); setFlashSlot("partner"); return;
+      }
+    } else {
+      if (!partner?.id && !partner?.name) {
+        setPartner(val); setPartnerOk(true); setFlashSlot("partner"); return;
+      }
+    }
+    if (!opponent1?.id && !opponent1?.name) {
+      setOpponent1(val); setOpponent1Ok(true); setFlashSlot("opponent1"); return;
+    }
+    if (!opponent2?.id && !opponent2?.name) {
+      setOpponent2(val); setOpponent2Ok(true); setFlashSlot("opponent2"); return;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -254,11 +344,11 @@ export default function EnterPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {/* Admin "on behalf of" toggle */}
         {isAdmin && (
           <div className="mb-5 flex items-center gap-3 rounded-xl bg-zinc-800/60 px-4 py-3">
-            <span className="flex-1 text-sm text-zinc-300">Entering on behalf of players</span>
+            <span className="flex-1 text-sm text-zinc-300">Enter on behalf of players</span>
             <button
               type="button"
               onClick={toggleAdminMode}
@@ -279,52 +369,156 @@ export default function EnterPage() {
           </div>
         )}
 
-        <div className="flex flex-col gap-8">
-          {adminMode && (
-            <PlayerSelector
-              label="Team 1 Player 1"
-              value={team1Player1}
-              onChange={(v) => { setTeam1Player1(v); if (!v) setTeam1Player1Ok(true); }}
-              onDisambiguated={setTeam1Player1Ok}
-              recentPlayers={recentPartners}
-              excludeIds={selectedIds}
-            />
+        <div className="flex flex-col gap-5">
+          {/* Shared recent-player chip strip */}
+          {!allSlotsFilled && availableChips.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {availableChips.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => assignChip(p)}
+                  className="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-base text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500"
+                >
+                  {p.displayName}
+                </button>
+              ))}
+            </div>
           )}
-          <PlayerSelector
-            label={adminMode ? "Team 1 Player 2" : "Your partner"}
-            value={partner}
-            onChange={(v) => { setPartner(v); if (!v) setPartnerOk(true); }}
-            onDisambiguated={setPartnerOk}
-            recentPlayers={recentPartners}
-            excludeIds={selectedIds}
-          />
-          <PlayerSelector
-            label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
-            value={opponent1}
-            onChange={(v) => { setOpponent1(v); if (!v) setOpponent1Ok(true); }}
-            onDisambiguated={setOpponent1Ok}
-            recentPlayers={recentOpponents}
-            excludeIds={selectedIds}
-          />
-          <PlayerSelector
-            label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
-            value={opponent2}
-            onChange={(v) => { setOpponent2(v); if (!v) setOpponent2Ok(true); }}
-            onDisambiguated={setOpponent2Ok}
-            recentPlayers={recentOpponents}
-            excludeIds={selectedIds}
-          />
-          <OutcomeToggle value={outcome} onChange={setOutcome} />
-          <GameScoreInput games={games} onChange={setGames} />
+
+          {/* Team 1 card */}
+          <div className={["rounded-2xl border bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 transition-colors duration-300",
+            outcome === "win"  ? "border-emerald-500/70" :
+            outcome === "loss" ? "border-zinc-700/30" :
+            "border-zinc-700/60"].join(" ")}>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+                {adminMode ? "Team 1" : "Your Partner"}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = outcome === "win" ? null : "win";
+                  setOutcome(next);
+                  if (next === "win") {
+                    setGames((gs) => gs.map((g, i) => i === 0 ? { ...g, team1Score: 11, team2Score: "" } : g));
+                    gameScoreRef.current?.focusScore(0, "team2Score");
+                  }
+                }}
+                className={[
+                  "rounded-full px-2 py-0.5 text-xs font-bold border transition-colors",
+                  outcome === "win"
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : outcome === "loss"
+                    ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                    : "bg-zinc-700/50 text-zinc-500 border-zinc-600/50 hover:text-zinc-300",
+                ].join(" ")}
+              >
+                {outcome === "win" ? "WIN" : outcome === "loss" ? "LOSS" : "WIN?"}
+              </button>
+            </div>
+            {adminMode && (
+              <PlayerSelector
+                key={`team1Player1-${adminMode}`}
+                value={team1Player1}
+                onChange={(v) => { setTeam1Player1(v); if (!v) setTeam1Player1Ok(true); }}
+                onDisambiguated={setTeam1Player1Ok}
+                excludeIds={selectedIds}
+                flashConfirm={flashSlot === "team1Player1"}
+                onSlotFocus={() => setFocusedSlot("team1Player1")}
+              />
+            )}
+            <PlayerSelector
+              key={`partner-${adminMode}`}
+              value={partner}
+              onChange={(v) => { setPartner(v); if (!v) setPartnerOk(true); }}
+              onDisambiguated={setPartnerOk}
+              excludeIds={selectedIds}
+              flashConfirm={flashSlot === "partner"}
+              onSlotFocus={() => setFocusedSlot("partner")}
+            />
+          </div>
+
+          {/* VS divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-zinc-700/60" />
+            <span className="text-xs font-bold tracking-widest text-zinc-600">VS</span>
+            <div className="flex-1 border-t border-zinc-700/60" />
+          </div>
+
+          {/* Team 2 card */}
+          <div className={["rounded-2xl border bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 transition-colors duration-300",
+            outcome === "loss" ? "border-emerald-500/70" :
+            outcome === "win"  ? "border-zinc-700/30" :
+            "border-zinc-700/60"].join(" ")}>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+                {adminMode ? "Team 2" : "Opponents"}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = outcome === "loss" ? null : "loss";
+                  setOutcome(next);
+                  if (next === "loss") {
+                    setGames((gs) => gs.map((g, i) => i === 0 ? { ...g, team2Score: 11, team1Score: "" } : g));
+                    gameScoreRef.current?.focusScore(0, "team1Score");
+                  }
+                }}
+                className={[
+                  "rounded-full px-2 py-0.5 text-xs font-bold border transition-colors",
+                  outcome === "loss"
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : outcome === "win"
+                    ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                    : "bg-zinc-700/50 text-zinc-500 border-zinc-600/50 hover:text-zinc-300",
+                ].join(" ")}
+              >
+                {outcome === "loss" ? "WIN" : outcome === "win" ? "LOSS" : "WIN?"}
+              </button>
+            </div>
+            <PlayerSelector
+              key={`opponent1-${adminMode}`}
+              value={opponent1}
+              onChange={(v) => { setOpponent1(v); if (!v) setOpponent1Ok(true); }}
+              onDisambiguated={setOpponent1Ok}
+              excludeIds={selectedIds}
+              flashConfirm={flashSlot === "opponent1"}
+              onSlotFocus={() => setFocusedSlot("opponent1")}
+            />
+            <PlayerSelector
+              key={`opponent2-${adminMode}`}
+              value={opponent2}
+              onChange={(v) => { setOpponent2(v); if (!v) setOpponent2Ok(true); }}
+              onDisambiguated={setOpponent2Ok}
+              excludeIds={selectedIds}
+              flashConfirm={flashSlot === "opponent2"}
+              onSlotFocus={() => setFocusedSlot("opponent2")}
+            />
+          </div>
+
+          <GameScoreInput ref={gameScoreRef} games={games} onChange={setGames} />
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium text-zinc-500">Add to Event (optional)</p>
-            <input
-              type="text"
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
-              placeholder="e.g. Winter League, Club Night…"
-              className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                placeholder="e.g. Winter League, Club Night…"
+                className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+              />
+              {tag && (
+                <button
+                  type="button"
+                  onClick={() => setTag("")}
+                  aria-label="Clear event"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             {tagSuggestions.length > 0 && !tag && (
               <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {tagSuggestions.slice(0, 5).map((t) => (

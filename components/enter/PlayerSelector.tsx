@@ -11,15 +11,17 @@ interface Player {
 }
 
 interface PlayerSelectorProps {
-  label: string;
-  value: { id?: string; name?: string } | null;
-  onChange: (value: { id?: string; name?: string } | null) => void;
+  label?: string;
+  value: { id?: string; name?: string; rating?: number; matchCount?: number } | null;
+  onChange: (value: { id?: string; name?: string; rating?: number; matchCount?: number } | null) => void;
   /** Called when disambiguation state changes — true means "ok to proceed" */
   onDisambiguated?: (confirmed: boolean) => void;
-  /** Players to show as chips before user types anything */
-  recentPlayers?: Player[];
   /** IDs of players already selected elsewhere (excluded from results) */
   excludeIds?: string[];
+  /** When true, briefly flashes an emerald ring on the input to signal it was just filled */
+  flashConfirm?: boolean;
+  /** Called when this input receives focus — lets parent know which slot is active */
+  onSlotFocus?: () => void;
 }
 
 const EMPTY_IDS: string[] = [];
@@ -38,8 +40,9 @@ export default function PlayerSelector({
   value,
   onChange,
   onDisambiguated,
-  recentPlayers = [],
   excludeIds = EMPTY_IDS,
+  flashConfirm = false,
+  onSlotFocus,
 }: PlayerSelectorProps) {
   const [inputValue, setInputValue] = useState(
     value?.name ?? "",
@@ -49,12 +52,45 @@ export default function PlayerSelector({
   const [loading, setLoading] = useState(false);
   const [matchWarning, setMatchWarning] = useState<Player[]>([]);
   const [confirmedNew, setConfirmedNew] = useState(false);
+  const [flashing, setFlashing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const skipNextSearchRef = useRef(value?.id != null);
   const isSelectedRef = useRef(value?.id != null);
   const searchGenRef = useRef(0);
 
   const debouncedInput = useDebounce(inputValue, 250);
+
+  // Sync inputValue when parent changes value externally (chip-tap assignment or mode reset)
+  useEffect(() => {
+    if (value?.id && value.name && value.name !== inputValue) {
+      // External assignment (e.g. chip-tap)
+      skipNextSearchRef.current = true;
+      isSelectedRef.current = true;
+      setInputValue(value.name);
+      setResults([]);
+      setOpen(false);
+    } else if (!value && inputValue !== "") {
+      // External clear (e.g. admin mode toggle resetting all slots)
+      isSelectedRef.current = false;
+      setInputValue("");
+      setResults([]);
+      setMatchWarning([]);
+      setConfirmedNew(false);
+      setOpen(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value?.id, value?.name]);
+
+  // Flash animation triggered by parent chip-tap assignment
+  useEffect(() => {
+    if (!flashConfirm) {
+      setFlashing(false); // cancel glow if flashSlot moved to another slot before timer fired
+      return;
+    }
+    setFlashing(true);
+    const t = setTimeout(() => setFlashing(false), 600);
+    return () => clearTimeout(t);
+  }, [flashConfirm]);
 
   // Fetch search results when input changes
   useEffect(() => {
@@ -122,7 +158,7 @@ export default function PlayerSelector({
       setMatchWarning([]);
       setConfirmedNew(false);
       setInputValue(player.displayName);
-      onChange({ id: player.id, name: player.displayName });
+      onChange({ id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount });
       setOpen(false);
       onDisambiguated?.(true);
     },
@@ -162,58 +198,59 @@ export default function PlayerSelector({
     onDisambiguated?.(true);
   };
 
-  const visibleRecent = recentPlayers.filter(
-    (p) => !excludeIds.includes(p.id) && p.id !== value?.id,
-  );
-
   // Show warning when: name-only value, results exist, user hasn't confirmed new
   const showWarning = !!(value && !value.id && value.name && matchWarning.length > 0 && !confirmedNew);
   // Suppress dropdown while warning is shown
   const showDropdown = open && !showWarning;
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-2">
-      <label className="text-base font-medium text-zinc-400">{label}</label>
+    <div ref={containerRef} className="flex flex-col gap-1">
+      {label && <label className="text-base font-medium text-zinc-400">{label}</label>}
 
-      {/* Recent player chips */}
-      {visibleRecent.length > 0 && !value && (
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {visibleRecent.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => selectPlayer(p)}
-              className="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-base text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500"
-            >
-              {p.displayName}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Text input */}
+      {/* Text input / selected display */}
       <div className="relative">
-        <input
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={() => {
-            if (results.length > 0 && !showWarning) setOpen(true);
-          }}
-          placeholder="Search or type a name…"
-          className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none"
-        />
-
-        {value?.id && (
-          <button
-            type="button"
-            onClick={clearSelection}
-            aria-label="Clear selection"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
-          >
-            ✕
-          </button>
+        {value?.id ? (() => {
+          const sel = results.find((p) => p.id === value.id);
+          const rating = sel?.rating ?? value.rating;
+          const matchCount = sel?.matchCount ?? value.matchCount;
+          const meta = rating !== undefined
+            ? ` · ${Math.round(rating)} · ${matchCount && matchCount > 0 ? `${matchCount} matches` : "No matches yet"}`
+            : "";
+          return (
+            <div className={[
+              "w-full rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-3 flex items-center justify-between transition",
+              flashing ? "ring-2 ring-emerald-400" : "",
+            ].join(" ").trim()}>
+              <div className="flex items-baseline min-w-0 flex-1">
+                <span className="text-base text-zinc-50 truncate">{value.name}</span>
+                {meta && <span className="text-sm text-emerald-400 shrink-0 ml-1.5">{meta}</span>}
+              </div>
+              <button
+                type="button"
+                onClick={clearSelection}
+                aria-label="Clear selection"
+                className="ml-2 shrink-0 text-zinc-400 hover:text-zinc-200"
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })() : (
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              if (results.length > 0 && !showWarning) setOpen(true);
+              onSlotFocus?.();
+            }}
+            placeholder="Search or type a name…"
+            className={[
+              "w-full rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none transition",
+              flashing ? "ring-2 ring-emerald-400" : "",
+            ].join(" ").trim()}
+          />
         )}
 
         {/* Search results dropdown */}
@@ -248,17 +285,6 @@ export default function PlayerSelector({
           </ul>
         )}
       </div>
-
-      {/* Selected player indicator */}
-      {value?.id && (() => {
-        const sel = results.find((p) => p.id === value.id) ?? recentPlayers.find((p) => p.id === value.id);
-        return (
-          <p className="text-sm text-emerald-400">
-            ✓ {value.name}
-            {sel ? ` · Rating ${Math.round(sel.rating)} · ${sel.matchCount > 0 ? `${sel.matchCount} matches` : "No matches yet"}` : ""}
-          </p>
-        );
-      })()}
 
       {/* Disambiguation warning — existing players with same name */}
       {showWarning && (

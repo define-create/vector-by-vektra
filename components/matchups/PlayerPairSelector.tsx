@@ -86,7 +86,6 @@ export default function PlayerPairSelector({
           label="Your Partner"
           value={partner}
           onChange={handlePartner}
-          recentPlayers={recentPlayers}
           excludeIds={excludePartner}
         />
       </div>
@@ -102,7 +101,6 @@ export default function PlayerPairSelector({
           label="Opponent 1"
           value={opp1}
           onChange={handleOpp1}
-          recentPlayers={recentPlayers}
           excludeIds={excludeOpp1}
         />
       </div>
@@ -111,7 +109,6 @@ export default function PlayerPairSelector({
           label="Opponent 2"
           value={opp2}
           onChange={handleOpp2}
-          recentPlayers={recentPlayers}
           excludeIds={excludeOpp2}
         />
       </div>
