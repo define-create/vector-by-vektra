@@ -24,7 +24,12 @@
       "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/trajectory/\")",
       "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/\")",
       "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/enter/\")",
-      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/)"
+      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/)",
+      "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components -type f -name *ottom* -o -name *Nav*)",
+      "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -type f -name *.css)",
+      "Bash(grep -r max-w- d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.tsx)",
+      "Bash(grep -r mx-auto d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.tsx)",
+      "Bash(ls -la d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/*.config.*)"
     ]
   }
 }

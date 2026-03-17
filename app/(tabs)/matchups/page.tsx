@@ -81,6 +81,7 @@ export default async function MatchupsPage({
 }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/sign-in");
+  const isAdmin = session.user.role === "admin";
 
   const myPlayer = await prisma.player.findFirst({
     where: { userId: session.user.id, deletedAt: null },
@@ -131,6 +132,7 @@ export default async function MatchupsPage({
       initialPartner={toSlot(p2Id)}
       initialOpp1={toSlot(p3Id)}
       initialOpp2={toSlot(p4Id)}
+      isAdmin={isAdmin}
     />
   );
 }
