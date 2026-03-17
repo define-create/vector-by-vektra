@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const SCREEN_NAMES: Record<string, string> = {
-  "/command": "Dashboard",
-  "/enter": "Log Match",
-  "/stats": "Statistics",
+  "/command": " ",
+  "/enter": " ",
+  "/stats": " ",
 };
 
 export default function TopHeader() {
