@@ -20,3 +20,8 @@ body {
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Top header safe area padding on iOS (notched devices) */
+.pt-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
