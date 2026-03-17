@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vector — Top Header Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --zinc-950: #09090b;
+      --zinc-900: #18181b;
+      --zinc-800: #27272a;
+      --zinc-700: #3f3f46;
+      --zinc-600: #52525b;
+      --zinc-500: #71717a;
+      --zinc-400: #a1a1aa;
+      --zinc-300: #d4d4d8;
+      --zinc-200: #e4e4e7;
+      --zinc-50:  #fafafa;
+      --emerald-500: #10b981;
+      --emerald-400: #34d399;
+    }
+
+    body {
+      background: var(--zinc-950);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 48px;
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-eyebrow {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--zinc-50);
+      margin-bottom: 6px;
+      text-align: center;
+      letter-spacing: -0.02em;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--zinc-500);
+      margin-bottom: 56px;
+      text-align: center;
+    }
+
+    /* ─── Phone row ──────────────────────────────────────────────────────── */
+    .phones-row {
+      display: flex;
+      gap: 36px;
+      align-items: flex-start;
+    }
+
+    .phone-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .phone-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+    }
+
+    /* ─── Phone frame ────────────────────────────────────────────────────── */
+    .phone {
+      width: 375px;
+      height: 780px;
+      background: var(--zinc-950);
+      border-radius: 48px;
+      border: 1.5px solid var(--zinc-800);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow:
+        0 0 0 1px var(--zinc-900),
+        0 48px 96px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        inset 0 -1px 0 rgba(0,0,0,0.4);
+    }
+
+    /* Subtle frame gradient */
+    .phone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 48px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.03) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Dynamic island */
+    .phone-notch {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .dynamic-island {
+      width: 114px;
+      height: 32px;
+      background: #000;
+      border-radius: 18px;
+    }
+
+    /* ─── Shared Top Header ──────────────────────────────────────────────── */
+    .top-header {
+      height: 56px;
+      border-bottom: 1px solid var(--zinc-800);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 80px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--emerald-500);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(16,185,129,0.5);
+    }
+
+    .wordmark {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--zinc-50);
+      letter-spacing: -0.02em;
+    }
+
+    .header-screen-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--zinc-500);
+      letter-spacing: 0.01em;
+    }
+
+    .header-right {
+      min-width: 80px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .gear-icon {
+      color: var(--zinc-500);
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ─── Content area ───────────────────────────────────────────────────── */
+    .screen-content {
+      flex: 1;
+      overflow: hidden;
+      padding: 22px;
+    }
+
+    /* ─── Bottom Nav ─────────────────────────────────────────────────────── */
+    .bottom-nav {
+      height: 80px;
+      border-top: 1px solid var(--zinc-800);
+      display: flex;
+      align-items: flex-start;
+      padding-top: 10px;
+      flex-shrink: 0;
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .nav-tab .nav-icon { color: var(--zinc-600); width: 22px; height: 22px; }
+    .nav-tab .nav-label { font-size: 10px; font-weight: 500; color: var(--zinc-600); letter-spacing: 0.02em; }
+
+    .nav-tab.active .nav-icon { color: var(--zinc-50); }
+    .nav-tab.active .nav-label { color: var(--zinc-50); }
+
+    .nav-tab.active::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 2px;
+      background: var(--emerald-500);
+      border-radius: 0 0 3px 3px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       DASHBOARD SCREEN
+    ═══════════════════════════════════════════════════════════════════════ */
+    .rating-area {
+      margin-bottom: 28px;
+    }
+
+    .rating-eyebrow {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+      margin-bottom: 2px;
+    }
+
+    .rating-number {
+      font-family: 'Fira Code', monospace;
+      font-size: 76px;
+      font-weight: 500;
+      color: var(--zinc-50);
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .rating-delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--emerald-500);
+      margin-top: 6px;
+      background: rgba(16,185,129,0.1);
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+
+    .section-head {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+      margin-bottom: 10px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--zinc-900);
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-row-label { font-size: 13px; color: var(--zinc-400); }
+
+    .stat-row-value {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--zinc-50);
+    }
+
+    .stat-row-value.up   { color: var(--emerald-500); }
+    .stat-row-value.down { color: #f87171; }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       LOG MATCH SCREEN
+    ═══════════════════════════════════════════════════════════════════════ */
+    .match-section-head {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+      margin-bottom: 10px;
+    }
+
+    .player-chips { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+
+    .player-chip {
+      background: var(--zinc-900);
+      border: 1px solid var(--zinc-800);
+      border-radius: 12px;
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chip-name { font-size: 14px; font-weight: 500; color: var(--zinc-50); }
+
+    .chip-meta {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--zinc-500);
+    }
+
+    .match-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .match-divider-line { flex: 1; height: 1px; background: var(--zinc-800); }
+
+    .match-divider-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--zinc-600);
+      text-transform: uppercase;
+    }
+
+    .record-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--emerald-500);
+      border: none;
+      border-radius: 14px;
+      color: #000;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: -0.01em;
+      margin-top: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       STATISTICS SCREEN
+    ═══════════════════════════════════════════════════════════════════════ */
+    .sub-tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--zinc-800);
+      margin: -22px -22px 22px;
+      padding: 0 22px;
+    }
+
+    .sub-tab {
+      flex: 1;
+      padding: 13px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--zinc-600);
+      text-align: center;
+      position: relative;
+      letter-spacing: 0.01em;
+    }
+
+    .sub-tab.active { color: var(--zinc-50); }
+
+    .sub-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 25%; right: 25%;
+      height: 2px;
+      background: var(--emerald-500);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .chart-area {
+      background: var(--zinc-900);
+      border: 1px solid var(--zinc-800);
+      border-radius: 14px;
+      height: 130px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-area svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .chart-label {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+    }
+
+    .stat-cards { display: flex; gap: 8px; }
+
+    .stat-card {
+      flex: 1;
+      background: var(--zinc-900);
+      border: 1px solid var(--zinc-800);
+      border-radius: 12px;
+      padding: 14px 12px;
+    }
+
+    .stat-card-label {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+      margin-bottom: 8px;
+    }
+
+    .stat-card-value {
+      font-family: 'Fira Code', monospace;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--zinc-50);
+      line-height: 1;
+    }
+
+    .stat-card-sub {
+      font-size: 10px;
+      color: var(--zinc-600);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <p class="page-eyebrow">UI Preview · Persistent Top Header</p>
+  <h1 class="page-title">Vector — App Header</h1>
+  <p class="page-sub">Fixed header with logo, screen name, and profile access — shown across all three tab screens</p>
+
+  <div class="phones-row">
+
+    <!-- ══════════════ PHONE 1: DASHBOARD ══════════════ -->
+    <div class="phone-wrapper">
+      <div class="phone">
+        <div class="phone-notch"><div class="dynamic-island"></div></div>
+
+        <!-- Top Header -->
+        <div class="top-header">
+          <div class="header-left">
+            <div class="logo-dot"></div>
+            <span class="wordmark">Vector</span>
+          </div>
+          <span class="header-screen-name">Dashboard</span>
+          <div class="header-right">
+            <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="screen-content">
+          <div class="rating-area">
+            <div class="rating-eyebrow">Rating</div>
+            <div class="rating-number">1&thinsp;842</div>
+            <div class="rating-delta">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+              +12.4 this month
+            </div>
+          </div>
+
+          <div class="section-head">Key Drivers</div>
+          <div class="stat-row">
+            <span class="stat-row-label">Win Rate</span>
+            <span class="stat-row-value up">68%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Avg Δ / Match</span>
+            <span class="stat-row-value up">+4.2</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Momentum</span>
+            <span class="stat-row-value up">↑ Rising</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Matches Played</span>
+            <span class="stat-row-value">47</span>
+          </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+          <div class="nav-tab active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="nav-label">Command</span>
+          </div>
+          <div class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
+            </svg>
+            <span class="nav-label">Enter</span>
+          </div>
+          <div class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18l4-8 4 4 3-5 4 9"/>
+            </svg>
+            <span class="nav-label">Stats</span>
+          </div>
+        </div>
+      </div>
+      <span class="phone-label">Dashboard</span>
+    </div>
+
+    <!-- ══════════════ PHONE 2: LOG MATCH ══════════════ -->
+    <div class="phone-wrapper">
+      <div class="phone">
+        <div class="phone-notch"><div class="dynamic-island"></div></div>
+
+        <div class="top-header">
+          <div class="header-left">
+            <div class="logo-dot"></div>
+            <span class="wordmark">Vector</span>
+          </div>
+          <span class="header-screen-name">Log Match</span>
+          <div class="header-right">
+            <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="screen-content">
+          <div class="match-section-head">Your Team</div>
+          <div class="player-chips">
+            <div class="player-chip">
+              <span class="chip-name">Alice Chen</span>
+              <span class="chip-meta">1&thinsp;420</span>
+            </div>
+            <div class="player-chip">
+              <span class="chip-name">Bob Smith</span>
+              <span class="chip-meta">1&thinsp;380</span>
+            </div>
+          </div>
+
+          <div class="match-divider">
+            <div class="match-divider-line"></div>
+            <span class="match-divider-label">vs</span>
+            <div class="match-divider-line"></div>
+          </div>
+
+          <div class="match-section-head">Opponents</div>
+          <div class="player-chips">
+            <div class="player-chip">
+              <span class="chip-name">Carol Lee</span>
+              <span class="chip-meta">1&thinsp;510</span>
+            </div>
+            <div class="player-chip">
+              <span class="chip-name">Dave Kim</span>
+              <span class="chip-meta">1&thinsp;350</span>
+            </div>
+          </div>
+
+          <button class="record-btn">Record Match</button>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="nav-label">Command</span>
+          </div>
+          <div class="nav-tab active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
+            </svg>
+            <span class="nav-label">Enter</span>
+          </div>
+          <div class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18l4-8 4 4 3-5 4 9"/>
+            </svg>
+            <span class="nav-label">Stats</span>
+          </div>
+        </div>
+      </div>
+      <span class="phone-label">Log Match</span>
+    </div>
+
+    <!-- ══════════════ PHONE 3: STATISTICS ══════════════ -->
+    <div class="phone-wrapper">
+      <div class="phone">
+        <div class="phone-notch"><div class="dynamic-island"></div></div>
+
+        <div class="top-header">
+          <div class="header-left">
+            <div class="logo-dot"></div>
+            <span class="wordmark">Vector</span>
+          </div>
+          <span class="header-screen-name">Statistics</span>
+          <div class="header-right">
+            <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="screen-content" style="padding-top: 0">
+          <!-- Sub-tab bar -->
+          <div class="sub-tab-bar">
+            <div class="sub-tab active">Match Stats</div>
+            <div class="sub-tab">Matchup</div>
+          </div>
+
+          <!-- Chart area -->
+          <div class="chart-area">
+            <span class="chart-label">Rating · Last 10 matches</span>
+            <svg viewBox="0 0 331 130" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Grid lines -->
+              <line x1="0" y1="32" x2="331" y2="32" stroke="#27272a" stroke-width="1"/>
+              <line x1="0" y1="65" x2="331" y2="65" stroke="#27272a" stroke-width="1"/>
+              <line x1="0" y1="98" x2="331" y2="98" stroke="#27272a" stroke-width="1"/>
+              <!-- Area fill -->
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.18"/>
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0 98 L33 90 L66 85 L99 88 L132 75 L165 68 L198 70 L231 55 L264 45 L297 38 L331 28 L331 130 L0 130 Z"
+                    fill="url(#chartGrad)"/>
+              <!-- Line -->
+              <polyline
+                points="0,98 33,90 66,85 99,88 132,75 165,68 198,70 231,55 264,45 297,38 331,28"
+                fill="none"
+                stroke="#10b981"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"/>
+              <!-- End dot -->
+              <circle cx="331" cy="28" r="4" fill="#34d399"/>
+            </svg>
+          </div>
+
+          <!-- Stat cards -->
+          <div class="stat-cards">
+            <div class="stat-card">
+              <div class="stat-card-label">Win Rate</div>
+              <div class="stat-card-value">68%</div>
+              <div class="stat-card-sub">last 10</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-label">Avg Δ</div>
+              <div class="stat-card-value" style="color: var(--emerald-500)">+4.2</div>
+              <div class="stat-card-sub">per match</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-label">Played</div>
+              <div class="stat-card-value">47</div>
+              <div class="stat-card-sub">total</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="nav-label">Command</span>
+          </div>
+          <div class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
+            </svg>
+            <span class="nav-label">Enter</span>
+          </div>
+          <div class="nav-tab active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18l4-8 4 4 3-5 4 9"/>
+            </svg>
+            <span class="nav-label">Stats</span>
+          </div>
+        </div>
+      </div>
+      <span class="phone-label">Statistics</span>
+    </div>
+
+  </div><!-- /phones-row -->
+
+</body>
+</html>

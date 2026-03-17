@@ -83,6 +83,8 @@ export default async function MatchupsPage({
   if (!session?.user?.id) redirect("/sign-in");
   const isAdmin = session.user.role === "admin";
 
+  const isAdmin = session.user.role === "admin";
+
   const myPlayer = await prisma.player.findFirst({
     where: { userId: session.user.id, deletedAt: null },
     select: { id: true, displayName: true },
