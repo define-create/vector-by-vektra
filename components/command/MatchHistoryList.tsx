@@ -35,12 +35,11 @@ export function MatchHistoryList({ matches, myPlayerId }: Props) {
     if (!myPlayerId || !match.partnerId || match.opponentIds.length < 2) return;
     timerRef.current = setTimeout(() => {
       const params = new URLSearchParams({
-        player1: myPlayerId,
         player2: match.partnerId,
         player3: match.opponentIds[0]!,
         player4: match.opponentIds[1]!,
       });
-      router.push(`/matchups?${params.toString()}`);
+      router.push(`/stats?${params.toString()}`);
     }, LONG_PRESS_MS);
   }
 
@@ -73,12 +72,11 @@ export function MatchHistoryList({ matches, myPlayerId }: Props) {
                 cancelLongPress();
                 if (!myPlayerId || !m.partnerId || m.opponentIds.length < 2) return;
                 const params = new URLSearchParams({
-                  player1: myPlayerId,
                   player2: m.partnerId,
                   player3: m.opponentIds[0]!,
                   player4: m.opponentIds[1]!,
                 });
-                router.push(`/matchups?${params.toString()}`);
+                router.push(`/stats?${params.toString()}`);
               }}
             >
               {/* Row 1: date · WIN/LOSS (fixed width) · Rating Δ (flex) · score */}

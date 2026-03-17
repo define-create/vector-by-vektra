@@ -2,8 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { TrajectorySection } from "@/components/trajectory/TrajectorySection";
-import MatchupsClient from "@/components/matchups/MatchupsClient";
+import StatsTabView from "@/components/stats/StatsTabView";
 import { type SlotPlayer } from "@/components/matchups/PlayerPairSelector";
 
 // ---------------------------------------------------------------------------
@@ -83,6 +82,8 @@ export default async function StatsPage({
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/sign-in");
 
+  const isAdmin = session.user.role === "admin";
+
   const myPlayer = await prisma.player.findFirst({
     where: { userId: session.user.id, deletedAt: null },
     select: { id: true },
@@ -124,28 +125,14 @@ export default async function StatsPage({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      {/* Top: Trajectory */}
-      <TrajectorySection />
-
-      {/* Divider */}
-      <div className="border-t border-zinc-800 mx-5 my-1" />
-
-      {/* Bottom: Matchups */}
-      {myPlayer ? (
-        <MatchupsClient
-          myPlayerId={myPlayer.id}
-          recentOpponents={recentOpponents}
-          initialPartner={initialPartner}
-          initialOpp1={initialOpp1}
-          initialOpp2={initialOpp2}
-        />
-      ) : (
-        <div className="flex flex-col p-5">
-          <h2 className="text-base font-semibold text-zinc-50 mb-2">Matchup Projection</h2>
-          <p className="text-sm text-zinc-500">No matches yet. Enter a match first.</p>
-        </div>
-      )}
-    </div>
+    <StatsTabView
+      myPlayerId={myPlayer?.id ?? null}
+      recentOpponents={recentOpponents}
+      initialPartner={initialPartner}
+      initialOpp1={initialOpp1}
+      initialOpp2={initialOpp2}
+      initialTab={p2Id || p3Id || p4Id ? "matchup" : "stats"}
+      isAdmin={isAdmin}
+    />
   );
 }

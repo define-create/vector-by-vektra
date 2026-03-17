@@ -66,6 +66,12 @@ export function TrajectorySection() {
 
   return (
     <div className="flex flex-col p-5 gap-5">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-zinc-50">Match Statistics</h1>
+        <p className="text-sm text-zinc-500 mt-0.5">Select a time range to see how your results have changed across recent matches.</p>
+      </div>
+
       {/* Segmented control */}
       <div className="flex rounded-xl bg-zinc-800 p-1 gap-1">
         {HORIZONS.map((h) => (

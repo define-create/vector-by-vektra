@@ -18,10 +18,13 @@ export interface SlotPlayer {
 
 interface PlayerPairSelectorProps {
   recentPlayers?: RecentPlayer[];
+  adminMode?: boolean;
+  initialPlayer1?: SlotPlayer | null;
   initialPartner?: SlotPlayer | null;
   initialOpp1?: SlotPlayer | null;
   initialOpp2?: SlotPlayer | null;
   onChange: (values: {
+    player1: SlotPlayer | null;
     partner: SlotPlayer | null;
     opp1: SlotPlayer | null;
     opp2: SlotPlayer | null;
@@ -35,11 +38,16 @@ function toSlot(v: { id?: string; name?: string } | null): SlotPlayer | null {
 
 export default function PlayerPairSelector({
   recentPlayers = [],
+  adminMode = false,
+  initialPlayer1 = null,
   initialPartner = null,
   initialOpp1 = null,
   initialOpp2 = null,
   onChange,
 }: PlayerPairSelectorProps) {
+  const [player1, setPlayer1] = useState<{ id?: string; name?: string } | null>(
+    initialPlayer1,
+  );
   const [partner, setPartner] = useState<{ id?: string; name?: string } | null>(
     initialPartner,
   );
@@ -51,39 +59,60 @@ export default function PlayerPairSelector({
   );
 
   function notify(
+    p1: typeof player1,
     p: typeof partner,
     o1: typeof opp1,
     o2: typeof opp2,
   ) {
     onChange({
+      player1: toSlot(p1),
       partner: toSlot(p),
       opp1: toSlot(o1),
       opp2: toSlot(o2),
     });
   }
 
+  function handlePlayer1(v: { id?: string; name?: string } | null) {
+    setPlayer1(v);
+    notify(v, partner, opp1, opp2);
+  }
   function handlePartner(v: { id?: string; name?: string } | null) {
     setPartner(v);
-    notify(v, opp1, opp2);
+    notify(player1, v, opp1, opp2);
   }
   function handleOpp1(v: { id?: string; name?: string } | null) {
     setOpp1(v);
-    notify(partner, v, opp2);
+    notify(player1, partner, v, opp2);
   }
   function handleOpp2(v: { id?: string; name?: string } | null) {
     setOpp2(v);
-    notify(partner, opp1, v);
+    notify(player1, partner, opp1, v);
   }
 
-  const excludePartner = [opp1?.id, opp2?.id].filter(Boolean) as string[];
-  const excludeOpp1 = [partner?.id, opp2?.id].filter(Boolean) as string[];
-  const excludeOpp2 = [partner?.id, opp1?.id].filter(Boolean) as string[];
+  const adminIds = adminMode ? [player1?.id] : [];
+  const excludePlayer1 = [partner?.id, opp1?.id, opp2?.id].filter(Boolean) as string[];
+  const excludePartner = [...adminIds, opp1?.id, opp2?.id].filter(Boolean) as string[];
+  const excludeOpp1 = [...adminIds, partner?.id, opp2?.id].filter(Boolean) as string[];
+  const excludeOpp2 = [...adminIds, partner?.id, opp1?.id].filter(Boolean) as string[];
 
   return (
     <div className="flex flex-col gap-5">
+      {adminMode && (
+        <div className="max-w-xs">
+          <PlayerSelector
+            key={`player1-${adminMode}`}
+            label="Player 1"
+            value={player1}
+            onChange={handlePlayer1}
+            excludeIds={excludePlayer1}
+          />
+        </div>
+      )}
+
       <div className="max-w-xs">
         <PlayerSelector
-          label="Your Partner"
+          key={`partner-${adminMode}`}
+          label={adminMode ? "Player 2" : "Your Partner"}
           value={partner}
           onChange={handlePartner}
           excludeIds={excludePartner}
@@ -98,6 +127,7 @@ export default function PlayerPairSelector({
 
       <div className="max-w-xs">
         <PlayerSelector
+          key={`opp1-${adminMode}`}
           label="Opponent 1"
           value={opp1}
           onChange={handleOpp1}
@@ -106,6 +136,7 @@ export default function PlayerPairSelector({
       </div>
       <div className="max-w-xs">
         <PlayerSelector
+          key={`opp2-${adminMode}`}
           label="Opponent 2"
           value={opp2}
           onChange={handleOpp2}
