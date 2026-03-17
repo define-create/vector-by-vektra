@@ -48,8 +48,6 @@ export interface CommandData {
   upcomingProbability: number | null;
   communityStats: CommunityStats | null;
   ratingHistory: { date: string; rating: number; outcome: "win" | "loss" }[];
-  situationState: "hot_streak" | "improving" | "stable" | "declining" | null;
-  situationDetail: string;
   driverHistory: {
     winRateHistory: number[];
     ciHistory: number[];
@@ -76,8 +74,6 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     upcomingProbability: null,
     communityStats: null,
     ratingHistory: [],
-    situationState: null,
-    situationDetail: "",
     driverHistory: { winRateHistory: [], ciHistory: [], driftHistory: [] },
     driverDeltas: { winRateDelta: null, ciDelta: null, driftDelta: null },
     dominantDriver: null,
@@ -311,32 +307,6 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     };
   });
 
-  // Situation state — computed from recentMatchHistory (most recent first)
-  let situationState: CommandData["situationState"] = null;
-  let situationDetail = "";
-  if (recentMatchHistory.length >= 3) {
-    const last5 = recentMatchHistory.slice(0, Math.min(5, recentMatchHistory.length));
-    const winsIn5 = last5.filter((m) => m.outcome === "win").length;
-    let consecutiveWins = 0;
-    for (const m of recentMatchHistory) {
-      if (m.outcome === "win") consecutiveWins++;
-      else break;
-    }
-    if (consecutiveWins >= 5) {
-      situationState = "hot_streak";
-      situationDetail = `${consecutiveWins} wins in a row`;
-    } else if (winsIn5 >= 4) {
-      situationState = "improving";
-      situationDetail = `${winsIn5} wins in last ${last5.length} matches`;
-    } else if (winsIn5 <= 1) {
-      situationState = "declining";
-      situationDetail = `${last5.length - winsIn5} losses in last ${last5.length} matches`;
-    } else {
-      situationState = "stable";
-      situationDetail = `${winsIn5} wins in last ${last5.length} matches`;
-    }
-  }
-
   // CI + Drift — computed from filtered snapshots
   const snapsAsc = [...filteredSnapshots].sort(
     (a, b) => a.matchDate.getTime() - b.matchDate.getTime(),
@@ -474,8 +444,6 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     upcomingProbability,
     communityStats,
     ratingHistory,
-    situationState,
-    situationDetail,
     driverHistory,
     driverDeltas,
     dominantDriver,

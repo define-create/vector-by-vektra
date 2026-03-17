@@ -52,7 +52,7 @@ export function MatchHistoryList({ matches, myPlayerId }: Props) {
 
   return (
     <div>
-      <p className="text-sm uppercase tracking-widest text-zinc-500 mb-2">Recent Matches</p>
+      <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Recent Matches</p>
 
       <div className="rounded-xl bg-zinc-800">
         {matches.length === 0 ? (

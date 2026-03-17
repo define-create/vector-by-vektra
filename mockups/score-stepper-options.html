@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Score Stepper — Hybrid Input Options</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --zinc-950: #09090b;
+    --zinc-900: #18181b;
+    --zinc-800: #27272a;
+    --zinc-700: #3f3f46;
+    --zinc-600: #52525b;
+    --zinc-500: #71717a;
+    --zinc-400: #a1a1aa;
+    --zinc-300: #d4d4d8;
+    --zinc-200: #e4e4e7;
+    --zinc-100: #f4f4f5;
+    --zinc-50:  #fafafa;
+    --emerald-500: #10b981;
+    --emerald-400: #34d399;
+    --rose-400: #fb7185;
+  }
+
+  body {
+    background: var(--zinc-950);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 64px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Page heading */
+  .page-heading {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--zinc-500);
+    margin-bottom: 6px;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--zinc-100);
+    letter-spacing: -0.02em;
+    margin-bottom: 48px;
+  }
+  .page-title span {
+    color: var(--emerald-500);
+  }
+
+  /* Layout */
+  .phones-row {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+  }
+
+  .phone-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* Phone frame */
+  .phone-frame {
+    width: 320px;
+    background: #0d0d0f;
+    border-radius: 44px;
+    border: 1.5px solid #2a2a2e;
+    padding: 14px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 40px 80px rgba(0,0,0,0.7),
+      0 8px 24px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  /* Notch */
+  .phone-notch {
+    width: 100px;
+    height: 28px;
+    background: #0d0d0f;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto 2px;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .notch-camera {
+    width: 10px; height: 10px;
+    background: #1a1a1f;
+    border-radius: 50%;
+    border: 1px solid #2a2a2f;
+  }
+  .notch-speaker {
+    width: 44px; height: 5px;
+    background: #1a1a1f;
+    border-radius: 3px;
+  }
+
+  /* Screen */
+  .phone-screen {
+    background: var(--zinc-950);
+    border-radius: 30px;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* App header */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .app-logo {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .logo-dot {
+    width: 6px; height: 6px;
+    background: var(--emerald-500);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--emerald-500);
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--zinc-100);
+    letter-spacing: 0.04em;
+  }
+  .gear-icon {
+    color: var(--zinc-600);
+    width: 16px; height: 16px;
+  }
+
+  /* Screen content */
+  .screen-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Section label row */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--zinc-500);
+  }
+  .section-action {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--zinc-500);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  /* Score section */
+  .score-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Base score input */
+  .score-input {
+    width: 52px;
+    background: var(--zinc-800);
+    border: 1px solid var(--zinc-600);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--zinc-50);
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .score-input::-webkit-inner-spin-button,
+  .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .score-input.active {
+    border-color: var(--emerald-500);
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
+  }
+
+  /* Stepper button base */
+  .step-btn {
+    background: var(--zinc-800);
+    border: 1px solid var(--zinc-700);
+    border-radius: 8px;
+    color: var(--zinc-400);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 400;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+    user-select: none;
+    -webkit-user-select: none;
+    flex-shrink: 0;
+  }
+  .step-btn:active {
+    background: var(--zinc-700);
+    color: var(--zinc-100);
+  }
+
+  /* Remove button */
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--zinc-600);
+    cursor: pointer;
+    font-size: 10px;
+    padding: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  /* Dash separator */
+  .score-dash {
+    color: var(--zinc-600);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  /* Event section */
+  .event-section {
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* Phone label */
+  .phone-label {
+    text-align: center;
+  }
+  .label-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--zinc-200);
+    letter-spacing: 0.01em;
+  }
+  .label-desc {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--zinc-500);
+    margin-top: 4px;
+    line-height: 1.5;
+    max-width: 260px;
+  }
+
+  /* ===================== OPTION 1 — FLANKED ===================== */
+  .opt1-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .opt1-step-btn {
+    width: 34px;
+    height: 36px;
+  }
+
+  /* ===================== OPTION 2 — BOOKENDS ===================== */
+  .opt2-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .opt2-scores-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+  .opt2-step-btn {
+    width: 36px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+  .score-with-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .active-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--emerald-500);
+    box-shadow: 0 0 4px var(--emerald-500);
+  }
+  .inactive-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: transparent;
+  }
+
+  /* ===================== OPTION 3 — STACKED ===================== */
+  .opt3-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .opt3-score-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .chevron-btn {
+    background: none;
+    border: none;
+    color: var(--zinc-500);
+    cursor: pointer;
+    width: 52px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    transition: color 0.12s, background 0.12s;
+    font-size: 10px;
+    padding: 0;
+  }
+  .chevron-btn:active {
+    background: var(--zinc-800);
+    color: var(--zinc-200);
+  }
+  .chevron-btn svg {
+    width: 12px; height: 12px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Active state demo for opt3 */
+  .opt3-remove {
+    align-self: center;
+    margin-left: 4px;
+  }
+</style>
+</head>
+<body>
+
+<p class="page-heading">Enter Match · Score Input</p>
+<h1 class="page-title">Score Stepper — <span>Hybrid</span> Options</h1>
+
+<div class="phones-row">
+
+  <!-- ============================================================ -->
+  <!-- OPTION 1 — FLANKED                                           -->
+  <!-- ============================================================ -->
+  <div class="phone-col">
+    <div class="phone-frame">
+      <div class="phone-notch">
+        <div class="notch-camera"></div>
+        <div class="notch-speaker"></div>
+        <div class="notch-camera"></div>
+      </div>
+      <div class="phone-screen">
+        <div class="app-header">
+          <div class="app-logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">Vector</span>
+          </div>
+          <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </div>
+
+        <div class="screen-content">
+          <div class="score-section">
+            <div class="section-header">
+              <span class="section-label">Game Scores</span>
+              <span class="section-action">+ add game</span>
+            </div>
+
+            <!-- Game row 1 -->
+            <div class="opt1-row">
+              <button class="step-btn opt1-step-btn">−</button>
+              <input class="score-input" type="number" value="11" readonly>
+              <button class="step-btn opt1-step-btn">+</button>
+
+              <span class="score-dash">—</span>
+
+              <button class="step-btn opt1-step-btn">−</button>
+              <input class="score-input" type="number" value="7" readonly>
+              <button class="step-btn opt1-step-btn">+</button>
+
+              <button class="remove-btn">✕</button>
+            </div>
+
+            <!-- Game row 2 -->
+            <div class="opt1-row">
+              <button class="step-btn opt1-step-btn">−</button>
+              <input class="score-input" type="number" value="9" readonly>
+              <button class="step-btn opt1-step-btn">+</button>
+
+              <span class="score-dash">—</span>
+
+              <button class="step-btn opt1-step-btn">−</button>
+              <input class="score-input" type="number" value="11" readonly>
+              <button class="step-btn opt1-step-btn">+</button>
+
+              <button class="remove-btn">✕</button>
+            </div>
+          </div>
+
+          <!-- Event section -->
+          <div class="event-section">
+            <div class="section-header" style="margin-bottom:0">
+              <span class="section-label">Event</span>
+              <span class="section-action">+ add to event</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-label">
+      <div class="label-title">Option 1 — Flanked</div>
+      <div class="label-desc">Each score has its own ± pair.<br>Clear ownership, but the row is wide and dense.</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- OPTION 2 — BOOKENDS                                          -->
+  <!-- ============================================================ -->
+  <div class="phone-col">
+    <div class="phone-frame">
+      <div class="phone-notch">
+        <div class="notch-camera"></div>
+        <div class="notch-speaker"></div>
+        <div class="notch-camera"></div>
+      </div>
+      <div class="phone-screen">
+        <div class="app-header">
+          <div class="app-logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">Vector</span>
+          </div>
+          <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </div>
+
+        <div class="screen-content">
+          <div class="score-section">
+            <div class="section-header">
+              <span class="section-label">Game Scores</span>
+              <span class="section-action">+ add game</span>
+            </div>
+
+            <!-- Game row 1: left score active -->
+            <div class="opt2-row">
+              <button class="step-btn opt2-step-btn">−</button>
+
+              <div class="opt2-scores-center">
+                <div class="score-with-indicator">
+                  <input class="score-input active" type="number" value="11" readonly>
+                  <div class="active-dot"></div>
+                </div>
+
+                <span class="score-dash">—</span>
+
+                <div class="score-with-indicator">
+                  <input class="score-input" type="number" value="7" readonly>
+                  <div class="inactive-dot"></div>
+                </div>
+              </div>
+
+              <button class="step-btn opt2-step-btn">+</button>
+              <button class="remove-btn" style="margin-left:2px">✕</button>
+            </div>
+
+            <!-- Game row 2: right score active -->
+            <div class="opt2-row">
+              <button class="step-btn opt2-step-btn">−</button>
+
+              <div class="opt2-scores-center">
+                <div class="score-with-indicator">
+                  <input class="score-input" type="number" value="9" readonly>
+                  <div class="inactive-dot"></div>
+                </div>
+
+                <span class="score-dash">—</span>
+
+                <div class="score-with-indicator">
+                  <input class="score-input active" type="number" value="11" readonly>
+                  <div class="active-dot"></div>
+                </div>
+              </div>
+
+              <button class="step-btn opt2-step-btn">+</button>
+              <button class="remove-btn" style="margin-left:2px">✕</button>
+            </div>
+          </div>
+
+          <!-- Event section -->
+          <div class="event-section">
+            <div class="section-header" style="margin-bottom:0">
+              <span class="section-label">Event</span>
+              <span class="section-action">+ add to event</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-label">
+      <div class="label-title">Option 2 — Bookends</div>
+      <div class="label-desc">One ± pair per row; dot shows active score.<br>Compact but requires focus awareness.</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- OPTION 3 — STACKED CHEVRONS                                  -->
+  <!-- ============================================================ -->
+  <div class="phone-col">
+    <div class="phone-frame">
+      <div class="phone-notch">
+        <div class="notch-camera"></div>
+        <div class="notch-speaker"></div>
+        <div class="notch-camera"></div>
+      </div>
+      <div class="phone-screen">
+        <div class="app-header">
+          <div class="app-logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">Vector</span>
+          </div>
+          <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </div>
+
+        <div class="screen-content">
+          <div class="score-section">
+            <div class="section-header">
+              <span class="section-label">Game Scores</span>
+              <span class="section-action">+ add game</span>
+            </div>
+
+            <!-- Game row 1 -->
+            <div class="opt3-row">
+              <!-- Team 1 score group -->
+              <div class="opt3-score-group">
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <input class="score-input" type="number" value="11" readonly>
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+
+              <span class="score-dash" style="padding-top:2px">—</span>
+
+              <!-- Team 2 score group -->
+              <div class="opt3-score-group">
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <input class="score-input" type="number" value="7" readonly>
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+
+              <button class="remove-btn opt3-remove">✕</button>
+            </div>
+
+            <!-- Game row 2 -->
+            <div class="opt3-row">
+              <div class="opt3-score-group">
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <input class="score-input" type="number" value="9" readonly>
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+
+              <span class="score-dash" style="padding-top:2px">—</span>
+
+              <div class="opt3-score-group">
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <input class="score-input" type="number" value="11" readonly>
+                <button class="chevron-btn">
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+
+              <button class="remove-btn opt3-remove">✕</button>
+            </div>
+          </div>
+
+          <!-- Event section -->
+          <div class="event-section">
+            <div class="section-header" style="margin-bottom:0">
+              <span class="section-label">Event</span>
+              <span class="section-action">+ add to event</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone-label">
+      <div class="label-title">Option 3 — Stacked</div>
+      <div class="label-desc">Chevrons above/below each score.<br>Tallest rows, most spacious — good for thumb reach.</div>
+    </div>
+  </div>
+
+</div><!-- end phones-row -->
+
+</body>
+</html>

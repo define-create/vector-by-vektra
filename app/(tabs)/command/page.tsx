@@ -8,8 +8,6 @@ import { MatchHistoryList } from "@/components/command/MatchHistoryList";
 import { ClaimProfilePrompt } from "@/components/command/ClaimProfilePrompt";
 import { FilterChip } from "@/components/command/FilterChip";
 import { getCommandData, type CommandFilter } from "@/lib/services/command";
-import { DisplayNameEdit } from "@/components/command/DisplayNameEdit";
-import { SituationBanner } from "@/components/command/SituationBanner";
 import { TrajectoryGraph } from "@/components/command/TrajectoryGraph";
 import { RecentPerformanceDots } from "@/components/command/RecentPerformanceDots";
 import { DriverTile } from "@/components/command/DriverTile";
@@ -32,6 +30,10 @@ const METRIC_INFO = {
   drift: {
     label: "Drift Score",
     body: "Measures how much your actual results diverge from what the rating model predicts. A positive Drift means you're consistently winning more than expected — your rating is likely to rise soon. A negative Drift means you're losing more than expected — a rating drop may follow.",
+  },
+  winProb: {
+    label: "Next Match Win Probability",
+    body: "An estimate of your chances of winning your next match, based on your rating versus the opponents you've faced recently. For a more precise prediction against a specific lineup, long-press any match in the Recent Matches list, or go to Stats → Matchup and select the teams manually.",
   },
 } as const;
 
@@ -86,9 +88,6 @@ export default async function CommandPage({
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Pinned above the fold */}
-      <SituationBanner state={data.situationState ?? null} detail={data.situationDetail ?? ""} />
-
       <div className="flex flex-col items-center pt-3 pb-1 px-5">
         <div className="flex items-center gap-1">
           <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Rating</p>
@@ -154,6 +153,12 @@ export default async function CommandPage({
           <div>
             <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Recent Performance</p>
             <RecentPerformanceDots matches={data.recentMatchHistory} />
+            {data.upcomingProbability !== null && (
+              <div className="mt-2 text-sm text-zinc-500 text-center flex items-center justify-center gap-3">
+                Next match win probability: <span className="font-semibold text-zinc-200">{pct(data.upcomingProbability, 0)}</span>
+                <MetricInfoSheet metric={METRIC_INFO.winProb} />
+              </div>
+            )}
           </div>
         )}
 
@@ -166,21 +171,6 @@ export default async function CommandPage({
           </div>
         )}
 
-        {data.upcomingProbability !== null && (
-          <div className="rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
-            <span className="text-sm text-zinc-400">Next match win prob.</span>
-            <span className="text-sm font-semibold text-zinc-200">
-              {pct(data.upcomingProbability, 0)}
-            </span>
-          </div>
-        )}
-
-        {data.myPlayerDisplayName && (
-          <div className="rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
-            <span className="text-sm text-zinc-400">Display name</span>
-            <DisplayNameEdit displayName={data.myPlayerDisplayName} />
-          </div>
-        )}
       </div>
     </div>
   );

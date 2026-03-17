@@ -55,6 +55,7 @@ export default function EnterPage() {
   // Tag state
   const [tag, setTag] = useState("");
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [tagExpanded, setTagExpanded] = useState(false);
 
   // Disambiguation ok-flags
   const [partnerOk, setPartnerOk] = useState(true);
@@ -233,6 +234,27 @@ export default function EnterPage() {
   }
 
   // ---------------------------------------------------------------------------
+  // Score-derived outcome
+  // ---------------------------------------------------------------------------
+
+  function handleGamesChange(newGames: GameScore[]) {
+    setGames(newGames);
+    const completed = newGames.filter(
+      (g) => g.team1Score !== "" && g.team2Score !== "",
+    );
+    if (completed.length === 0) return;
+    const team1GameWins = completed.filter(
+      (g) => (g.team1Score as number) > (g.team2Score as number),
+    ).length;
+    const team2GameWins = completed.filter(
+      (g) => (g.team2Score as number) > (g.team1Score as number),
+    ).length;
+    if (team1GameWins > team2GameWins) setOutcome("win");
+    else if (team2GameWins > team1GameWins) setOutcome("loss");
+    // tied — leave outcome unchanged
+  }
+
+  // ---------------------------------------------------------------------------
   // Submit
   // ---------------------------------------------------------------------------
 
@@ -322,6 +344,7 @@ export default function EnterPage() {
             setOutcome(null);
             setGames([{ gameOrder: 1, team1Score: "", team2Score: "" }]);
             setTag("");
+            setTagExpanded(false);
             setTeam1Player1Ok(true);
             setPartnerOk(true);
             setOpponent1Ok(true);
@@ -406,7 +429,7 @@ export default function EnterPage() {
                   }
                 }}
                 className={[
-                  "rounded-full px-2 py-0.5 text-xs font-bold border transition-colors",
+                  "rounded-full px-3 py-1 text-xs font-bold border transition-colors",
                   outcome === "win"
                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                     : outcome === "loss"
@@ -466,7 +489,7 @@ export default function EnterPage() {
                   }
                 }}
                 className={[
-                  "rounded-full px-2 py-0.5 text-xs font-bold border transition-colors",
+                  "rounded-full px-3 py-1 text-xs font-bold border transition-colors",
                   outcome === "loss"
                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                     : outcome === "win"
@@ -497,42 +520,58 @@ export default function EnterPage() {
             />
           </div>
 
-          <GameScoreInput ref={gameScoreRef} games={games} onChange={setGames} />
+          <GameScoreInput ref={gameScoreRef} games={games} onChange={handleGamesChange} />
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-medium text-zinc-500">Add to Event (optional)</p>
-            <div className="relative">
-              <input
-                type="text"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                placeholder="e.g. Winter League, Club Night…"
-                className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
-              />
-              {tag && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Event</p>
+              {!tagExpanded && !tag && (
                 <button
                   type="button"
-                  onClick={() => setTag("")}
-                  aria-label="Clear event"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                  onClick={() => setTagExpanded(true)}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
-                  ✕
+                  + add to event
                 </button>
               )}
             </div>
-            {tagSuggestions.length > 0 && !tag && (
-              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {tagSuggestions.slice(0, 5).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTag(t)}
-                    className="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            )}
+            {tagExpanded || tag ? (
+              <>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tag}
+                    onChange={(e) => setTag(e.target.value)}
+                    placeholder="e.g. Winter League, Club Night…"
+                    autoFocus={tagExpanded}
+                    className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+                  />
+                  {tag && (
+                    <button
+                      type="button"
+                      onClick={() => { setTag(""); setTagExpanded(false); }}
+                      aria-label="Clear event"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {tagSuggestions.length > 0 && !tag && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {tagSuggestions.slice(0, 5).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setTag(t)}
+                        className="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : null}
           </div>
           {submitError && (
             <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">

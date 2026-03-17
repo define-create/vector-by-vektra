@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Score Stepper — Bookends Bold</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --zinc-950: #09090b;
+    --zinc-900: #18181b;
+    --zinc-800: #27272a;
+    --zinc-700: #3f3f46;
+    --zinc-600: #52525b;
+    --zinc-500: #71717a;
+    --zinc-400: #a1a1aa;
+    --zinc-300: #d4d4d8;
+    --zinc-200: #e4e4e7;
+    --zinc-100: #f4f4f5;
+    --zinc-50:  #fafafa;
+    --emerald-500: #10b981;
+    --emerald-400: #34d399;
+    --rose-400: #fb7185;
+  }
+
+  body {
+    background: var(--zinc-950);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px 64px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .page-heading {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--zinc-500);
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--zinc-100);
+    letter-spacing: -0.02em;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  .page-title span { color: var(--emerald-500); }
+
+  /* Phone frame */
+  .phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .phone-frame {
+    width: 320px;
+    background: #0d0d0f;
+    border-radius: 44px;
+    border: 1.5px solid #2a2a2e;
+    padding: 14px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 40px 80px rgba(0,0,0,0.7),
+      0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  .phone-notch {
+    width: 100px;
+    height: 28px;
+    background: #0d0d0f;
+    border-radius: 0 0 20px 20px;
+    margin: 0 auto 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .notch-camera {
+    width: 10px; height: 10px;
+    background: #1a1a1f;
+    border-radius: 50%;
+    border: 1px solid #2a2a2f;
+  }
+  .notch-speaker {
+    width: 44px; height: 5px;
+    background: #1a1a1f;
+    border-radius: 3px;
+  }
+
+  .phone-screen {
+    background: var(--zinc-950);
+    border-radius: 30px;
+    overflow: hidden;
+  }
+
+  /* App header */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .app-logo {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .logo-dot {
+    width: 6px; height: 6px;
+    background: var(--emerald-500);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--emerald-500);
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--zinc-100);
+    letter-spacing: 0.04em;
+  }
+  .gear-icon {
+    color: var(--zinc-600);
+    width: 16px; height: 16px;
+  }
+
+  /* Screen content */
+  .screen-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--zinc-500);
+  }
+  .section-action {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--zinc-500);
+  }
+
+  /* Score input */
+  .score-input {
+    width: 54px;
+    background: var(--zinc-800);
+    border: 1px solid var(--zinc-600);
+    border-radius: 8px;
+    padding: 9px 4px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--zinc-50);
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+    flex-shrink: 0;
+  }
+  .score-input::-webkit-inner-spin-button,
+  .score-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .score-input.active {
+    border-color: var(--emerald-500);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.2), 0 0 12px rgba(16,185,129,0.12);
+  }
+
+  /* Score dash */
+  .score-dash {
+    color: var(--zinc-600);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  /* Bold bookend buttons — no background */
+  .bookend-btn {
+    background: none;
+    border: none;
+    color: var(--zinc-300);
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    width: 40px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.12s;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: 0;
+  }
+  .bookend-btn:active {
+    color: var(--zinc-50);
+  }
+
+  /* Score group */
+  .score-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Game row */
+  .game-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .scores-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Remove button */
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--zinc-600);
+    cursor: pointer;
+    font-size: 10px;
+    padding: 4px 2px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  /* Event section */
+  .event-section {
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* Phone label */
+  .phone-label {
+    text-align: center;
+  }
+  .label-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--zinc-200);
+  }
+  .label-desc {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--zinc-500);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<p class="page-heading">Option 2 — Revised</p>
+<h1 class="page-title">Bookends — <span>Bold</span></h1>
+
+<div class="phone-wrap">
+  <div class="phone-frame">
+    <div class="phone-notch">
+      <div class="notch-camera"></div>
+      <div class="notch-speaker"></div>
+      <div class="notch-camera"></div>
+    </div>
+    <div class="phone-screen">
+      <div class="app-header">
+        <div class="app-logo">
+          <div class="logo-dot"></div>
+          <span class="logo-text">Vector</span>
+        </div>
+        <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </div>
+
+      <div class="screen-content">
+        <!-- Game Scores section -->
+        <div>
+          <div class="section-header">
+            <span class="section-label">Game Scores</span>
+            <span class="section-action">+ add game</span>
+          </div>
+
+          <!-- Game row 1 — left score active -->
+          <div class="game-row" style="margin-bottom: 10px;">
+            <button class="bookend-btn">−</button>
+
+            <div class="scores-center">
+              <div class="score-group">
+                <input class="score-input active" type="number" value="11" readonly>
+              </div>
+
+              <span class="score-dash">—</span>
+
+              <div class="score-group">
+                <input class="score-input" type="number" value="7" readonly>
+              </div>
+            </div>
+
+            <button class="bookend-btn">+</button>
+            <button class="remove-btn">✕</button>
+          </div>
+
+          <!-- Game row 2 — right score active -->
+          <div class="game-row">
+            <button class="bookend-btn">−</button>
+
+            <div class="scores-center">
+              <div class="score-group">
+                <input class="score-input" type="number" value="9" readonly>
+              </div>
+
+              <span class="score-dash">—</span>
+
+              <div class="score-group">
+                <input class="score-input active" type="number" value="11" readonly>
+              </div>
+            </div>
+
+            <button class="bookend-btn">+</button>
+            <button class="remove-btn">✕</button>
+          </div>
+        </div>
+
+        <!-- Event section -->
+        <div class="event-section">
+          <div class="section-header" style="margin-bottom:0">
+            <span class="section-label">Event</span>
+            <span class="section-action">+ add to event</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone-label">
+    <div class="label-title">Option 2 — Bookends, Bold</div>
+    <div class="label-desc">Large bare − / + at row edges. Emerald glow on the active score box.</div>
+  </div>
+</div>
+
+</body>
+</html>
