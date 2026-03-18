@@ -29,7 +29,10 @@
       "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -type f -name *.css)",
       "Bash(grep -r max-w- d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.tsx)",
       "Bash(grep -r mx-auto d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.tsx)",
-      "Bash(ls -la d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/*.config.*)"
+      "Bash(ls -la d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/*.config.*)",
+      "Bash(grep -r \"revalidate\\\\|cache\\\\|unstable_cache\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"new PrismaClient\\\\|prisma$\\\\|prisma\\\\.\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/lib/db.ts)",
+      "Bash(npx prisma:*)"
     ]
   }
 }

@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/admin/recompute",
+      "path": "/api/cron/recompute",
       "schedule": "0 3 * * *"
     }
   ],
