@@ -61,9 +61,15 @@ export default async function ProfilePage() {
         </div>
       )}
 
-      {/* Sign Out */}
-      <div className="mx-5 mb-5 mt-auto pt-4">
+      {/* Sign Out + Close */}
+      <div className="mx-5 mb-5 mt-auto pt-4 flex gap-3">
         <SignOutButton />
+        <Link
+          href="/command"
+          className="flex-1 rounded-xl border border-zinc-700 px-4 py-3 text-center text-sm font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+        >
+          Close
+        </Link>
       </div>
     </div>
   );

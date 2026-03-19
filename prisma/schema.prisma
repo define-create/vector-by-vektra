@@ -100,6 +100,7 @@ model Player {
   rating           Float      @default(1000)
   ratingConfidence Float      @default(0)
   ratingVolatility Float      @default(0)
+  winPct           Float?
   createdAt        DateTime   @default(now())
   deletedAt        DateTime?
 
@@ -210,6 +211,19 @@ model RatingSnapshot {
 // ---------------------------------------------------------------------------
 // AuditEvents (immutable — never update, never delete)
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// CommunityStats (singleton row, id=1 — populated by recompute)
+// ---------------------------------------------------------------------------
+
+model CommunityStats {
+  id         Int      @id @default(1)
+  avgRating  Float
+  minRating  Float
+  maxRating  Float
+  totalCount Int
+  updatedAt  DateTime @updatedAt
+}
 
 model AuditEvent {
   id           String          @id @default(cuid())

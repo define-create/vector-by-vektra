@@ -4,6 +4,7 @@
  * The /api/command route also uses this for client-side callers.
  */
 
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { computeCI } from "@/lib/metrics/compounding-index";
 import { computeDriftScore } from "@/lib/metrics/drift-score";
@@ -61,7 +62,8 @@ export interface CommandData {
   dominantDriver: "winRate" | "ci" | "drift" | null;
 }
 
-export async function getCommandData(userId: string, filter?: CommandFilter): Promise<CommandData> {
+export const getCommandData = unstable_cache(
+  async (userId: string, filter?: CommandFilter): Promise<CommandData> => {
   const empty: Omit<CommandData, "hasPlayer" | "emailVerified" | "userDisplayName"> = {
     myPlayerId: null,
     myPlayerDisplayName: null,
@@ -122,14 +124,13 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
   };
 
   const [
-    filteredMatches,
+    allFilteredParticipants,
     filteredSnapshots,
     editableMatch,
     recentOpponentParticipants,
-    communityAgg,
-    historyParticipants,
+    statsRow,
   ] = await Promise.all([
-    // Filtered matches — used for win% calculation
+    // Combined: win% + match history (replaces filteredMatches + historyParticipants)
     prisma.matchParticipant.findMany({
       where: {
         playerId: myPlayer.id,
@@ -140,10 +141,11 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
           include: {
             participants: { include: { player: { select: { id: true, displayName: true } } } },
             games: true,
+            ratingSnapshots: { where: { playerId: myPlayer.id }, take: 1 },
           },
         },
       },
-      orderBy: { match: { matchDate: "desc" } },
+      orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
     }),
 
     // Filtered snapshots — used for CI + Drift (up to 20 most recent in the window)
@@ -170,7 +172,11 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
         match: {
           include: {
             participants: {
-              include: { player: { select: { id: true, rating: true } } },
+              select: {
+                playerId: true,
+                team: true,
+                player: { select: { rating: true } },
+              },
             },
           },
         },
@@ -179,34 +185,12 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
       take: 20,
     }),
 
-    // Community rating stats — always unfiltered (all-time community aggregate)
-    prisma.player.aggregate({
-      where: { deletedAt: null },
-      _avg: { rating: true },
-      _min: { rating: true },
-      _max: { rating: true },
-      _count: { id: true },
-    }),
-
-    // Match history — filtered, last 20 in the active window
-    prisma.matchParticipant.findMany({
-      where: {
-        playerId: myPlayer.id,
-        match: matchWhere,
-      },
-      include: {
-        match: {
-          include: {
-            participants: { include: { player: { select: { id: true, displayName: true } } } },
-            games: true,
-            ratingSnapshots: { where: { playerId: myPlayer.id }, take: 1 },
-          },
-        },
-      },
-      orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
-      take: 20,
-    }),
+    // Community stats singleton (populated by recompute)
+    prisma.communityStats.findUnique({ where: { id: 1 } }),
   ]);
+
+  const filteredMatches = allFilteredParticipants;
+  const historyParticipants = allFilteredParticipants.slice(0, 20);
 
   // Win % — all matches in the filter window (no date cap when unfiltered)
   let wins = 0;
@@ -408,7 +392,7 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     const myTeam = participation.team;
     for (const p of participation.match.participants) {
       if (p.team !== myTeam && p.playerId !== myPlayer.id) {
-        recentOpponents.push({ id: p.player.id, rating: p.player.rating });
+        recentOpponents.push({ id: p.playerId, rating: p.player.rating });
       }
     }
   }
@@ -416,16 +400,11 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
 
   // Community stats — always unfiltered
   let communityStats: CommunityStats | null = null;
-  if (
-    communityAgg._count.id >= 3 &&
-    communityAgg._avg.rating !== null &&
-    communityAgg._min.rating !== null &&
-    communityAgg._max.rating !== null
-  ) {
+  if (statsRow && statsRow.totalCount >= 3) {
     communityStats = {
-      avg: communityAgg._avg.rating,
-      min: communityAgg._min.rating,
-      max: communityAgg._max.rating,
+      avg: statsRow.avgRating,
+      min: statsRow.minRating,
+      max: statsRow.maxRating,
     };
   }
 
@@ -448,4 +427,10 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     driverDeltas,
     dominantDriver,
   };
-}
+  },
+  ["command-data"],
+  {
+    tags: ["command"],
+    revalidate: 300, // 5-minute fallback in case cron-triggered invalidation misses
+  }
+);

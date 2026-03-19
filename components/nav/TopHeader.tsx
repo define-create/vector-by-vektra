@@ -18,7 +18,7 @@ export default function TopHeader() {
 
   return (
     <header className="pt-safe-top fixed left-0 right-0 top-0 z-40 border-b border-zinc-800 bg-zinc-950">
-      <div className="mx-auto flex h-14 w-full max-w-md items-center justify-between px-5">
+      <div className="mx-auto flex h-14 w-full max-w-xl items-center justify-between px-5">
         {/* Left: logo + wordmark */}
         <div className="flex items-center gap-2">
           <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />

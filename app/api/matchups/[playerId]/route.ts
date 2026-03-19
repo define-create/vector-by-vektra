@@ -92,7 +92,7 @@ export async function GET(
         match: {
           include: {
             participants: { select: { playerId: true, team: true } },
-            games: true,
+            games: { select: { team1Score: true, team2Score: true } },
           },
         },
       },

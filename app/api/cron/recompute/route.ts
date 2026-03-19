@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { runRecompute } from "@/lib/services/recompute";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -9,6 +9,7 @@ export async function GET(req: Request) {
   }
 
   await runRecompute("nightly");
+  revalidateTag("command", "default");
   revalidatePath("/command");
 
   return NextResponse.json({ ok: true, completedAt: new Date().toISOString() });

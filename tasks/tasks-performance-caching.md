@@ -21,9 +21,9 @@
 
 ## Tasks
 
-- [ ] 1.0 Cache the dashboard query in command.ts
-  - [ ] 1.1 Open `lib/services/command.ts`. Add `unstable_cache` to the import from `"next/cache"` at the top of the file (or add a new import line if `"next/cache"` isn't imported yet).
-  - [ ] 1.2 Change the function declaration from:
+- [x] 1.0 Cache the dashboard query in command.ts
+  - [x] 1.1 Open `lib/services/command.ts`. Add `unstable_cache` to the import from `"next/cache"` at the top of the file (or add a new import line if `"next/cache"` isn't imported yet).
+  - [x] 1.2 Change the function declaration from:
     ```typescript
     export async function getCommandData(userId: string, filter?: CommandFilter): Promise<CommandData> {
     ```
@@ -32,7 +32,7 @@
     export const getCommandData = unstable_cache(
       async (userId: string, filter?: CommandFilter): Promise<CommandData> => {
     ```
-  - [ ] 1.3 Close the `unstable_cache` wrapper after the function body's closing `}`. Add the cache key array and options as the second and third arguments:
+  - [x] 1.3 Close the `unstable_cache` wrapper after the function body's closing `}`. Add the cache key array and options as the second and third arguments:
     ```typescript
       },
       ["command-data"],
@@ -42,28 +42,28 @@
       }
     );
     ```
-  - [ ] 1.4 Run `npx tsc --noEmit` to confirm no TypeScript errors. The callers (`app/api/command/route.ts` line 17) do not need to change since the function signature is identical.
+  - [x] 1.4 Run `npx tsc --noEmit` to confirm no TypeScript errors. The callers (`app/api/command/route.ts` line 17) do not need to change since the function signature is identical.
 
-- [ ] 2.0 Invalidate command cache after recompute
-  - [ ] 2.1 Open `app/api/cron/recompute/route.ts` (created in the background-recompute task). Add `revalidateTag` to the import from `"next/cache"`:
+- [x] 2.0 Invalidate command cache after recompute
+  - [x] 2.1 Open `app/api/cron/recompute/route.ts` (created in the background-recompute task). Add `revalidateTag` to the import from `"next/cache"`:
     ```typescript
     import { revalidatePath, revalidateTag } from "next/cache";
     ```
-  - [ ] 2.2 After `await runRecompute("nightly")` succeeds, add `revalidateTag("command")` before the existing `revalidatePath("/command")` call (or replace `revalidatePath` with `revalidateTag` — both work, but `revalidateTag` is more targeted):
+  - [x] 2.2 After `await runRecompute("nightly")` succeeds, add `revalidateTag("command")` before the existing `revalidatePath("/command")` call (or replace `revalidatePath` with `revalidateTag` — both work, but `revalidateTag` is more targeted):
     ```typescript
     await runRecompute("nightly");
     revalidateTag("command");       // invalidates all users' cached command data
     revalidatePath("/command");     // optional: also invalidates Next.js page cache
     ```
-  - [ ] 2.3 If the background-recompute task hasn't been completed yet, apply the same `revalidateTag("command")` call to `app/api/admin/recompute/route.ts` instead (after the `await runRecompute(runType, body.notes)` call succeeds, around line 83).
-  - [ ] 2.4 Run `npx tsc --noEmit` to confirm no TypeScript errors.
+  - [x] 2.3 If the background-recompute task hasn't been completed yet, apply the same `revalidateTag("command")` call to `app/api/admin/recompute/route.ts` instead (after the `await runRecompute(runType, body.notes)` call succeeds, around line 83).
+  - [x] 2.4 Run `npx tsc --noEmit` to confirm no TypeScript errors.
 
-- [ ] 3.0 Cache the tournament leaderboard in tournament.ts
-  - [ ] 3.1 Open `lib/services/tournament.ts`. Add `unstable_cache` to the imports at the top of the file:
+- [x] 3.0 Cache the tournament leaderboard in tournament.ts
+  - [x] 3.1 Open `lib/services/tournament.ts`. Add `unstable_cache` to the imports at the top of the file:
     ```typescript
     import { unstable_cache } from "next/cache";
     ```
-  - [ ] 3.2 Find `getTournamentData` at line 201. Change the function declaration from:
+  - [x] 3.2 Find `getTournamentData` at line 201. Change the function declaration from:
     ```typescript
     export async function getTournamentData(tag: string): Promise<TournamentData> {
     ```
@@ -72,7 +72,7 @@
     export const getTournamentData = unstable_cache(
       async (tag: string): Promise<TournamentData> => {
     ```
-  - [ ] 3.3 Close the `unstable_cache` wrapper after the function body's closing `}`:
+  - [x] 3.3 Close the `unstable_cache` wrapper after the function body's closing `}`:
     ```typescript
       },
       ["tournament-data"],
@@ -82,26 +82,26 @@
       }
     );
     ```
-  - [ ] 3.4 Run `npx tsc --noEmit` to confirm no TypeScript errors. The caller (`app/api/admin/tournament/route.ts` line 13) does not need to change.
+  - [x] 3.4 Run `npx tsc --noEmit` to confirm no TypeScript errors. The caller (`app/api/admin/tournament/route.ts` line 13) does not need to change.
 
-- [ ] 4.0 Invalidate tournament cache when a tagged match is saved
-  - [ ] 4.1 Open `app/api/matches/route.ts`. Add `revalidateTag` to the existing `"next/cache"` import at line 2:
+- [x] 4.0 Invalidate tournament cache when a tagged match is saved
+  - [x] 4.1 Open `app/api/matches/route.ts`. Add `revalidateTag` to the existing `"next/cache"` import at line 2:
     ```typescript
     import { revalidatePath, revalidateTag } from "next/cache";
     ```
-  - [ ] 4.2 Find where the `tag` variable is used in the transaction (line 222 — saved to the match). After the transaction completes and the match is created, add a conditional invalidation based on whether the match had a tag:
+  - [x] 4.2 Find where the `tag` variable is used in the transaction (line 222 — saved to the match). After the transaction completes and the match is created, add a conditional invalidation based on whether the match had a tag:
     ```typescript
     // After the transaction block, before the recompute try/catch:
     if (tag) {
       revalidateTag("tournament");
     }
     ```
-  - [ ] 4.3 Run `npx tsc --noEmit` to confirm no TypeScript errors.
+  - [x] 4.3 Run `npx tsc --noEmit` to confirm no TypeScript errors.
 
-- [ ] 5.0 Verify caching behavior end-to-end
-  - [ ] 5.1 Build the app in production mode: `npm run build && npm start`. Do NOT use `npm run dev` — caching is disabled in dev mode.
-  - [ ] 5.2 Open the Command screen in the browser. Load it twice in quick succession and check the Vercel function logs (or local terminal output) — the second load should NOT trigger a new DB query (cache hit).
-  - [ ] 5.3 Submit a test match, wait for the cron to run (or manually trigger `POST /api/admin/recompute`), then reload the Command screen — it should reflect updated ratings (cache was invalidated by `revalidateTag("command")`).
-  - [ ] 5.4 Open a tournament leaderboard. Load it twice — the second load should serve from cache (no new DB call).
-  - [ ] 5.5 Submit a match with a `tag` field matching the tournament. Reload the leaderboard — it should show the new match (cache was invalidated by `revalidateTag("tournament")`).
-  - [ ] 5.6 Verify no stale data is shown beyond the configured `revalidate` fallback window (300s for command, 60s for tournament) by waiting for the fallback period and confirming data auto-refreshes.
+- [x] 5.0 Verify caching behavior end-to-end
+  - [x] 5.1 Build the app in production mode: `npm run build && npm start`. Do NOT use `npm run dev` — caching is disabled in dev mode.
+  - [x] 5.2 Open the Command screen in the browser. Load it twice in quick succession and check the Vercel function logs (or local terminal output) — the second load should NOT trigger a new DB query (cache hit).
+  - [x] 5.3 Submit a test match, wait for the cron to run (or manually trigger `POST /api/admin/recompute`), then reload the Command screen — it should reflect updated ratings (cache was invalidated by `revalidateTag("command")`).
+  - [x] 5.4 Open a tournament leaderboard. Load it twice — the second load should serve from cache (no new DB call).
+  - [x] 5.5 Submit a match with a `tag` field matching the tournament. Reload the leaderboard — it should show the new match (cache was invalidated by `revalidateTag("tournament")`).
+  - [x] 5.6 Verify no stale data is shown beyond the configured `revalidate` fallback window (300s for command, 60s for tournament) by waiting for the fallback period and confirming data auto-refreshes.

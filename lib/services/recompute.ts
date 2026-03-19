@@ -89,18 +89,54 @@ export async function runRecompute(
       })),
     });
 
-    // Update all players: rating, confidence, volatility
+    // Compute win% per player from matchRecords (avoids N+1 queries at read time)
+    const winCount = new Map<string, number>();
+    const totalCount = new Map<string, number>();
+    for (const m of matchRecords) {
+      for (const pid of m.team1PlayerIds) {
+        winCount.set(pid, (winCount.get(pid) ?? 0) + (m.team1Won ? 1 : 0));
+        totalCount.set(pid, (totalCount.get(pid) ?? 0) + 1);
+      }
+      for (const pid of m.team2PlayerIds) {
+        winCount.set(pid, (winCount.get(pid) ?? 0) + (m.team1Won ? 0 : 1));
+        totalCount.set(pid, (totalCount.get(pid) ?? 0) + 1);
+      }
+    }
+
+    // Update all players: rating, confidence, volatility, winPct
     const allPlayerIds = [...finalRatings.keys()];
     const playerUpdates = allPlayerIds.map((playerId) => {
       const rating = finalRatings.get(playerId)!;
       const ratingConfidence = computeRatingConfidence(playerId, matchRecords, snapshots);
       const ratingVolatility = computeRatingVolatility(playerId, snapshots);
+      const total = totalCount.get(playerId) ?? 0;
+      const wins = winCount.get(playerId) ?? 0;
+      const winPct = total >= 3 ? wins / total : null;
       return prisma.player.update({
         where: { id: playerId },
-        data: { rating, ratingConfidence, ratingVolatility },
+        data: { rating, ratingConfidence, ratingVolatility, winPct },
       });
     });
     await prisma.$transaction(playerUpdates);
+
+    // Upsert CommunityStats singleton (id=1)
+    const ratings = [...finalRatings.values()];
+    await prisma.communityStats.upsert({
+      where: { id: 1 },
+      update: {
+        avgRating: ratings.reduce((s, r) => s + r, 0) / ratings.length,
+        minRating: Math.min(...ratings),
+        maxRating: Math.max(...ratings),
+        totalCount: ratings.length,
+      },
+      create: {
+        id: 1,
+        avgRating: ratings.reduce((s, r) => s + r, 0) / ratings.length,
+        minRating: Math.min(...ratings),
+        maxRating: Math.max(...ratings),
+        totalCount: ratings.length,
+      },
+    });
 
     // Mark run as succeeded
     await prisma.ratingRun.update({

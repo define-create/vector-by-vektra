@@ -58,10 +58,10 @@
   - [x] 4.2 Add `CRON_SECRET=<generated-value>` to `.env.local` for local development.
   - [x] 4.3 Add `CRON_SECRET` to Vercel project settings → Environment Variables (Production and Preview environments).
 
-- [ ] 5.0 Deploy and verify
-  - [ ] 5.1 Deploy to Vercel (push to the main branch or trigger a manual deployment).
-  - [ ] 5.2 In Vercel dashboard → Project → Cron Jobs, confirm the new cron entry at `/api/cron/recompute` is listed with the correct schedule.
-  - [ ] 5.3 Manually trigger the cron route to verify it works: in Vercel dashboard → Cron Jobs, click "Run Now" (or send a GET request with the correct `Authorization: Bearer <CRON_SECRET>` header using curl or Postman).
-  - [ ] 5.4 Confirm the cron response is `{ "ok": true, "completedAt": "..." }` with status 200.
-  - [ ] 5.5 Submit a test match in the app and confirm the response comes back immediately (< 1 second) without waiting for recompute.
-  - [ ] 5.6 Wait for the next cron cycle and confirm the test match's updated rating appears on the Command screen.
+- [x] 5.0 Deploy and verify
+  - [x] 5.1 Deploy to Vercel (push to the main branch or trigger a manual deployment).
+  - [x] 5.2 In Vercel dashboard → Project → Cron Jobs, confirm the new cron entry at `/api/cron/recompute` is listed with the correct schedule.
+  - [x] 5.3 Manually trigger the cron route to verify it works: in Vercel dashboard → Cron Jobs, click "Run Now" (or send a GET request with the correct `Authorization: Bearer <CRON_SECRET>` header using curl or Postman).
+  - [x] 5.4 Confirm the cron response is `{ "ok": true, "completedAt": "..." }` with status 200.
+  - [x] 5.5 Submit a test match in the app and confirm the response comes back immediately (< 1 second) without waiting for recompute.
+  - [x] 5.6 Wait for the next cron cycle and confirm the test match's updated rating appears on the Command screen.

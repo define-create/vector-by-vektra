@@ -5,7 +5,6 @@ import { authOptions } from "@/lib/auth";
 
 const NAV_LINKS = [
   { href: "/admin", label: "Dashboard" },
-  { href: "/command", label: "Home" },
 ];
 
 export default async function AdminLayout({
@@ -28,7 +27,7 @@ export default async function AdminLayout({
           <span className="text-sm font-bold tracking-widest text-zinc-400 uppercase">
             Vector Admin
           </span>
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex items-center gap-1 overflow-x-auto">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -38,6 +37,12 @@ export default async function AdminLayout({
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/command"
+              className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            >
+              ← Home
+            </Link>
           </div>
         </div>
       </nav>

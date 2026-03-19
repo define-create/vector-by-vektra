@@ -92,19 +92,19 @@ function GameScoreInput({ games, onChange }, ref) {
       </div>
 
       {games.map((game, gi) => (
-        <div key={game.gameOrder} className="flex items-center gap-0">
+        <div key={game.gameOrder} className="flex items-stretch justify-center gap-1">
           {/* Minus bookend */}
           <button
             type="button"
             onPointerDown={(e) => { e.preventDefault(); stepActive(-1); }}
             aria-label="Decrease score"
-            className="w-10 h-11 flex items-center justify-center text-2xl font-bold text-zinc-300 hover:text-zinc-50 active:text-zinc-50 transition-colors select-none"
+            className="w-12 flex items-center justify-center text-3xl font-bold text-zinc-300 hover:text-zinc-50 hover:bg-zinc-700 active:text-zinc-50 rounded-lg transition-colors select-none"
           >
             −
           </button>
 
           {/* Scores */}
-          <div className="flex flex-1 items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <input
               ref={(el) => { inputRefs.current[gi * 2] = el; }}
               type="number"
@@ -149,7 +149,7 @@ function GameScoreInput({ games, onChange }, ref) {
             type="button"
             onPointerDown={(e) => { e.preventDefault(); stepActive(1); }}
             aria-label="Increase score"
-            className="w-10 h-11 flex items-center justify-center text-2xl font-bold text-zinc-300 hover:text-zinc-50 active:text-zinc-50 transition-colors select-none"
+            className="w-12 flex items-center justify-center text-3xl font-bold text-zinc-300 hover:text-zinc-50 hover:bg-zinc-700 active:text-zinc-50 rounded-lg transition-colors select-none"
           >
             +
           </button>

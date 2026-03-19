@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -252,6 +253,10 @@ export async function POST(req: NextRequest) {
     });
 
     const editExpiresAt = new Date(match.createdAt.getTime() + 60 * 60 * 1000);
+
+    if (tag) {
+      revalidateTag("tournament", "default");
+    }
 
     return NextResponse.json(
       {
