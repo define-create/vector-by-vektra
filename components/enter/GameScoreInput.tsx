@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useImperativeHandle, forwardRef, useState } from "react";
 
 export interface GameScore {
   gameOrder: number;
@@ -8,13 +8,27 @@ export interface GameScore {
   team2Score: number | "";
 }
 
+export interface GameScoreHandle {
+  focusScore: (gameIndex: number, field: "team1Score" | "team2Score") => void;
+}
+
 interface GameScoreInputProps {
   games: GameScore[];
   onChange: (games: GameScore[]) => void;
 }
 
-export default function GameScoreInput({ games, onChange }: GameScoreInputProps) {
+const GameScoreInput = forwardRef<GameScoreHandle, GameScoreInputProps>(
+function GameScoreInput({ games, onChange }, ref) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [activeField, setActiveField] = useState<{ gi: number; field: "team1Score" | "team2Score" }>({ gi: 0, field: "team1Score" });
+
+  useImperativeHandle(ref, () => ({
+    focusScore(gameIndex: number, field: "team1Score" | "team2Score") {
+      const idx = gameIndex * 2 + (field === "team1Score" ? 0 : 1);
+      const el = inputRefs.current[idx];
+      if (el) { el.focus(); el.select(); }
+    },
+  }));
 
   const updateScore = (
     gameIndex: number,
@@ -39,6 +53,14 @@ export default function GameScoreInput({ games, onChange }: GameScoreInputProps)
     }
   };
 
+  const stepActive = (delta: 1 | -1) => {
+    const { gi, field } = activeField;
+    const current = games[gi]?.[field];
+    const val = current === "" ? 0 : current;
+    const next = Math.max(0, Math.min(99, val + delta));
+    onChange(games.map((g, i) => i === gi ? { ...g, [field]: next } : g));
+  };
+
   const addGame = () => {
     onChange([
       ...games,
@@ -53,71 +75,100 @@ export default function GameScoreInput({ games, onChange }: GameScoreInputProps)
     onChange(updated);
   };
 
-  return (
-    <div className="flex flex-col gap-4">
-      <label className="text-sm font-medium text-zinc-400">Game Scores</label>
+  const isActive = (gi: number, field: "team1Score" | "team2Score") =>
+    activeField.gi === gi && activeField.field === field;
 
-      {/* Column headers */}
-      <div className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-3 text-sm font-medium text-zinc-500">
-        <span className="w-8" />
-        <span className="text-center">Your team</span>
-        <span className="text-center">Opponents</span>
-        <span className="w-6" />
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium uppercase tracking-widest text-zinc-500">Game Scores</label>
+        <button
+          type="button"
+          onClick={addGame}
+          className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+        >
+          + add game
+        </button>
       </div>
 
       {games.map((game, gi) => (
-        <div
-          key={game.gameOrder}
-          className="grid grid-cols-[auto_1fr_1fr_auto] items-center gap-3"
-        >
-          <span className="w-8 text-center text-sm text-zinc-500">G{gi + 1}</span>
+        <div key={game.gameOrder} className="flex items-stretch justify-center gap-1">
+          {/* Minus bookend */}
+          <button
+            type="button"
+            onPointerDown={(e) => { e.preventDefault(); stepActive(-1); }}
+            aria-label="Decrease score"
+            className="w-12 flex items-center justify-center text-3xl font-bold text-zinc-300 hover:text-zinc-50 hover:bg-zinc-700 active:text-zinc-50 rounded-lg transition-colors select-none"
+          >
+            −
+          </button>
 
-          <input
-            ref={(el) => { inputRefs.current[gi * 2] = el; }}
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={99}
-            value={game.team1Score}
-            onChange={(e) => updateScore(gi, "team1Score", e.target.value)}
-            placeholder="0"
-            className="rounded-lg border border-zinc-600 bg-zinc-800 py-3 text-center text-xl font-semibold text-zinc-50 placeholder-zinc-600 focus:border-zinc-400 focus:outline-none"
-          />
+          {/* Scores */}
+          <div className="flex items-center justify-center gap-2">
+            <input
+              ref={(el) => { inputRefs.current[gi * 2] = el; }}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={99}
+              value={game.team1Score}
+              onFocus={() => setActiveField({ gi, field: "team1Score" })}
+              onChange={(e) => updateScore(gi, "team1Score", e.target.value)}
+              placeholder="0"
+              className={[
+                "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all",
+                isActive(gi, "team1Score")
+                  ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.2)]"
+                  : "border-zinc-600",
+              ].join(" ")}
+            />
 
-          <input
-            ref={(el) => { inputRefs.current[gi * 2 + 1] = el; }}
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={99}
-            value={game.team2Score}
-            onChange={(e) => updateScore(gi, "team2Score", e.target.value)}
-            placeholder="0"
-            className="rounded-lg border border-zinc-600 bg-zinc-800 py-3 text-center text-xl font-semibold text-zinc-50 placeholder-zinc-600 focus:border-zinc-400 focus:outline-none"
-          />
+            <span className="text-zinc-600 text-sm select-none">—</span>
 
+            <input
+              ref={(el) => { inputRefs.current[gi * 2 + 1] = el; }}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={99}
+              value={game.team2Score}
+              onFocus={() => setActiveField({ gi, field: "team2Score" })}
+              onChange={(e) => updateScore(gi, "team2Score", e.target.value)}
+              placeholder="0"
+              className={[
+                "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all",
+                isActive(gi, "team2Score")
+                  ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.2)]"
+                  : "border-zinc-600",
+              ].join(" ")}
+            />
+          </div>
+
+          {/* Plus bookend */}
+          <button
+            type="button"
+            onPointerDown={(e) => { e.preventDefault(); stepActive(1); }}
+            aria-label="Increase score"
+            className="w-12 flex items-center justify-center text-3xl font-bold text-zinc-300 hover:text-zinc-50 hover:bg-zinc-700 active:text-zinc-50 rounded-lg transition-colors select-none"
+          >
+            +
+          </button>
+
+          {/* Remove game */}
           {games.length > 1 ? (
             <button
               type="button"
               onClick={() => removeGame(gi)}
               aria-label={`Remove game ${gi + 1}`}
-              className="w-6 text-zinc-600 hover:text-rose-400"
+              className="w-6 text-xs text-zinc-600 hover:text-rose-400 transition-colors"
             >
               ✕
             </button>
-          ) : (
-            <span className="w-6" />
-          )}
+          ) : <div className="w-6" />}
         </div>
       ))}
-
-      <button
-        type="button"
-        onClick={addGame}
-        className="mt-1 rounded-lg border border-dashed border-zinc-600 py-2 text-sm text-zinc-500 hover:border-zinc-400 hover:text-zinc-300"
-      >
-        + Add game
-      </button>
     </div>
   );
-}
+});
+
+export default GameScoreInput;

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Enter Screen — Quick Mode Redesign Preview</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d1117;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 32px 80px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1 { color: #30363d; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; }
+h2 { color: #21262d; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 28px; }
+.screens-row { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+.wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.screen-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #30363d; }
+
+/* ── Phone shell ── */
+.phone {
+  width: 375px;
+  height: 812px;
+  background: #09090b;
+  border-radius: 44px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #1c1917;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.7), 0 0 0 0.5px #27272a, inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Status bar */
+.status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; flex-shrink: 0; }
+.status-time { font-size: 15px; font-weight: 600; color: #fafafa; }
+.status-right { display: flex; gap: 5px; align-items: center; color: #fafafa; font-size: 12px; }
+
+/* Scrollable content */
+.content { flex: 1; overflow-y: auto; padding: 12px 16px 8px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+.content::-webkit-scrollbar { display: none; }
+
+/* Mode toggle — NEW: high-contrast active pill */
+.mode-toggle { display: flex; background: #27272a; border-radius: 10px; padding: 3px; flex-shrink: 0; }
+.mode-btn { flex: 1; padding: 6px 12px; border-radius: 7px; border: none; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.mode-btn.on  { background: #f4f4f5; color: #09090b; }
+.mode-btn.off { background: transparent; color: #52525b; }
+
+/* Admin toggle */
+.admin-toggle { display: flex; align-items: center; gap: 10px; background: rgba(39,39,42,0.5); border-radius: 12px; padding: 10px 14px; }
+.admin-lbl { flex: 1; font-size: 12px; color: #a1a1aa; }
+.toggle-pill { width: 42px; height: 24px; border-radius: 12px; background: #3f3f46; position: relative; flex-shrink: 0; }
+.toggle-knob { width: 20px; height: 20px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+
+/* Team card — NEW layout */
+.team-card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.team-hdr { font-size: 9px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #52525b; }
+
+/* VS badge */
+.vs-row { display: flex; align-items: center; justify-content: center; padding: 2px 0; }
+.vs-badge { width: 34px; height: 34px; border-radius: 50%; background: #18181b; border: 1px solid #3f3f46; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; letter-spacing: 0.04em; color: #52525b; }
+
+/* Player selector — NEW: badge label + confirmed pill */
+.psel { display: flex; flex-direction: column; gap: 6px; }
+.psel-lbl { font-size: 8px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #52525b; }
+.chips-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { background: #3f3f46; border-radius: 100px; padding: 4px 11px; font-size: 12px; color: #d4d4d8; cursor: pointer; }
+.psel-input { background: #27272a; border: 1px solid #3f3f46; border-radius: 10px; padding: 11px 14px; font-size: 13px; color: #52525b; display: flex; align-items: center; }
+.psel-input.filled { color: #f4f4f5; border-color: #52525b; }
+.psel-input .clr { margin-left: auto; color: #52525b; font-size: 12px; }
+.confirmed-pill { display: inline-flex; align-items: center; gap: 5px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 100px; padding: 4px 12px; font-size: 11px; color: #34d399; width: fit-content; }
+
+/* Outcome toggle — NEW: taller, glow */
+.outcome-sec { display: flex; flex-direction: column; gap: 8px; }
+.sec-lbl { font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #52525b; }
+.outcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.out-btn { padding: 24px 8px; border-radius: 14px; font-size: 20px; font-weight: 900; letter-spacing: 0.18em; text-align: center; }
+.out-btn.unsel  { background: #18181b; border: 1px solid #3f3f46; color: #3f3f46; }
+.out-btn.win    { background: #10b981; color: #fff; border: 1px solid #34d399; box-shadow: 0 4px 24px rgba(16,185,129,0.3), 0 0 0 1px rgba(52,211,153,0.4); }
+.out-btn.loss   { background: #f43f5e; color: #fff; border: 1px solid #fb7185; box-shadow: 0 4px 24px rgba(244,63,94,0.3), 0 0 0 1px rgba(251,113,133,0.4); }
+
+/* Score input — NEW: larger, monospace, YOU/THEM headers */
+.score-sec { display: flex; flex-direction: column; gap: 8px; }
+.score-hdrs { display: grid; grid-template-columns: 26px 1fr 1fr 22px; gap: 8px; align-items: center; text-align: center; }
+.shdr-you  { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #34d399; }
+.shdr-them { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #fb7185; }
+.score-row { display: grid; grid-template-columns: 26px 1fr 1fr 22px; gap: 8px; align-items: center; }
+.glbl { font-size: 9px; font-weight: 700; color: #3f3f46; text-align: center; font-family: 'SF Mono', 'Courier New', monospace; }
+.score-box { background: #27272a; border: 1px solid #3f3f46; border-radius: 10px; padding: 12px 6px; text-align: center; font-size: 30px; font-weight: 900; color: #f4f4f5; font-family: 'SF Mono', 'Courier New', monospace; line-height: 1; }
+.score-box.empty { color: #3f3f46; font-size: 22px; }
+.s-rm { font-size: 11px; color: #3f3f46; text-align: center; }
+.add-game { border: 1.5px dashed #3f3f46; border-radius: 10px; padding: 7px; text-align: center; font-size: 11px; color: #52525b; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 2px; }
+
+/* Tag section */
+.tag-sec { display: flex; flex-direction: column; gap: 7px; }
+.tag-input { background: #18181b; border: 1px solid #27272a; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #3f3f46; }
+.tag-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag-chip { border: 1px solid #3f3f46; border-radius: 100px; padding: 3px 10px; font-size: 11px; color: #52525b; }
+
+/* Bottom bar — NEW: bigger submit */
+.bot-bar { border-top: 1px solid #1c1917; padding: 10px 16px 14px; flex-shrink: 0; }
+.btn-submit { width: 100%; padding: 15px; border-radius: 16px; border: none; font-size: 14px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.btn-submit.on  { background: #10b981; color: #fff; }
+.btn-submit.off { background: #27272a; color: #3f3f46; }
+
+/* Bottom nav */
+.bot-nav { border-top: 1px solid #1c1917; background: #09090b; height: 54px; display: flex; align-items: center; justify-content: space-around; padding-bottom: 4px; flex-shrink: 0; }
+.nav-it { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 64px; }
+.nav-ic { font-size: 16px; color: #3f3f46; }
+.nav-ic.on { color: #f4f4f5; }
+.nav-lb { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #3f3f46; }
+.nav-lb.on { color: #f4f4f5; }
+
+/* Success screen */
+.success { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 40px 24px; }
+.s-badge { width: 80px; height: 80px; border-radius: 50%; background: rgba(16,185,129,0.12); border: 2px solid rgba(16,185,129,0.35); display: flex; align-items: center; justify-content: center; font-size: 34px; color: #10b981; }
+.s-super { font-size: 9px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: #52525b; }
+.s-title { font-size: 30px; font-weight: 900; letter-spacing: -0.01em; text-transform: uppercase; color: #fafafa; text-align: center; }
+.s-sub { font-size: 12px; color: #52525b; text-align: center; line-height: 1.5; }
+.s-btn { padding: 14px 28px; border-radius: 14px; background: #27272a; border: none; color: #d4d4d8; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+.s-id { font-size: 9px; color: #27272a; font-family: monospace; }
+
+/* Diff annotation */
+.diff-new { position: relative; }
+.diff-new::after { content: 'NEW'; position: absolute; top: -6px; right: -6px; background: #1d4ed8; color: #93c5fd; font-size: 7px; font-weight: 800; letter-spacing: 0.08em; padding: 1px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Enter Screen — Quick Mode Redesign Preview</h1>
+<h2>Focus: Quick mode only · Steps mode unchanged</h2>
+
+<div class="screens-row">
+
+  <!-- ── QUICK: Empty ── -->
+  <div class="wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-right"><span>●●●</span><span>WiFi</span><span>⬛</span></div>
+      </div>
+      <div class="content">
+        <div class="mode-toggle diff-new">
+          <button class="mode-btn off">Steps</button>
+          <button class="mode-btn on">Quick</button>
+        </div>
+
+        <!-- Team 1 card -->
+        <div class="team-card diff-new">
+          <div class="team-hdr">Team 1</div>
+          <div class="psel">
+            <div class="psel-lbl">Your Partner</div>
+            <div class="chips-row">
+              <span class="chip">Alex</span>
+              <span class="chip">Sam</span>
+              <span class="chip">Jordan</span>
+            </div>
+            <div class="psel-input">Search or type a name…</div>
+          </div>
+        </div>
+
+        <div class="vs-row diff-new"><div class="vs-badge">VS</div></div>
+
+        <!-- Team 2 card -->
+        <div class="team-card diff-new">
+          <div class="team-hdr">Team 2</div>
+          <div class="psel">
+            <div class="psel-lbl">Opponent 1</div>
+            <div class="chips-row">
+              <span class="chip">Chris</span>
+              <span class="chip">Taylor</span>
+            </div>
+            <div class="psel-input">Search or type a name…</div>
+          </div>
+          <div class="psel">
+            <div class="psel-lbl">Opponent 2</div>
+            <div class="psel-input">Search or type a name…</div>
+          </div>
+        </div>
+
+        <div class="outcome-sec diff-new">
+          <div class="sec-lbl">Outcome</div>
+          <div class="outcome-grid">
+            <div class="out-btn unsel">WIN</div>
+            <div class="out-btn unsel">LOSS</div>
+          </div>
+        </div>
+
+        <div class="score-sec diff-new">
+          <div class="sec-lbl">Game Scores</div>
+          <div class="score-hdrs">
+            <span></span>
+            <span class="shdr-you">You</span>
+            <span class="shdr-them">Them</span>
+            <span></span>
+          </div>
+          <div class="score-row">
+            <span class="glbl">G1</span>
+            <div class="score-box empty">—</div>
+            <div class="score-box empty">—</div>
+            <span class="s-rm"></span>
+          </div>
+          <div class="add-game">⊕ &nbsp;Add game</div>
+        </div>
+
+        <div class="tag-sec">
+          <div class="sec-lbl">Add to Event (optional)</div>
+          <div class="tag-input">e.g. Winter League, Club Night…</div>
+          <div class="tag-chips">
+            <span class="tag-chip">Spring Cup</span>
+            <span class="tag-chip">Club Night</span>
+            <span class="tag-chip">March14</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bot-bar">
+        <button class="btn-submit off diff-new">Submit Match</button>
+      </div>
+      <div class="bot-nav">
+        <div class="nav-it"><span class="nav-ic">⌘</span><span class="nav-lb">Command</span></div>
+        <div class="nav-it"><span class="nav-ic on">⊕</span><span class="nav-lb on">Enter</span></div>
+        <div class="nav-it"><span class="nav-ic">▪</span><span class="nav-lb">Stats</span></div>
+      </div>
+    </div>
+    <div class="screen-label">Quick — empty</div>
+  </div>
+
+  <!-- ── QUICK: Players filled + WIN selected ── -->
+  <div class="wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-right"><span>●●●</span><span>WiFi</span><span>⬛</span></div>
+      </div>
+      <div class="content">
+        <div class="mode-toggle">
+          <button class="mode-btn off">Steps</button>
+          <button class="mode-btn on">Quick</button>
+        </div>
+
+        <div class="team-card">
+          <div class="team-hdr">Team 1</div>
+          <div class="psel">
+            <div class="psel-lbl">Your Partner</div>
+            <div class="psel-input filled">Alex Johnson <span class="clr">✕</span></div>
+            <span class="confirmed-pill">✓ Alex Johnson · 1247 · 34 matches</span>
+          </div>
+        </div>
+
+        <div class="vs-row"><div class="vs-badge">VS</div></div>
+
+        <div class="team-card">
+          <div class="team-hdr">Team 2</div>
+          <div class="psel">
+            <div class="psel-lbl">Opponent 1</div>
+            <div class="psel-input filled">Sam Torres <span class="clr">✕</span></div>
+            <span class="confirmed-pill">✓ Sam Torres · 1189 · 28 matches</span>
+          </div>
+          <div class="psel">
+            <div class="psel-lbl">Opponent 2</div>
+            <div class="psel-input filled">Jordan Lee <span class="clr">✕</span></div>
+            <span class="confirmed-pill">✓ Jordan Lee · 1301 · 41 matches</span>
+          </div>
+        </div>
+
+        <div class="outcome-sec">
+          <div class="sec-lbl">Outcome</div>
+          <div class="outcome-grid">
+            <div class="out-btn win">WIN</div>
+            <div class="out-btn unsel">LOSS</div>
+          </div>
+        </div>
+
+        <div class="score-sec">
+          <div class="sec-lbl">Game Scores</div>
+          <div class="score-hdrs">
+            <span></span>
+            <span class="shdr-you">You</span>
+            <span class="shdr-them">Them</span>
+            <span></span>
+          </div>
+          <div class="score-row">
+            <span class="glbl">G1</span>
+            <div class="score-box">11</div>
+            <div class="score-box">6</div>
+            <span class="s-rm">✕</span>
+          </div>
+          <div class="score-row">
+            <span class="glbl">G2</span>
+            <div class="score-box">9</div>
+            <div class="score-box">11</div>
+            <span class="s-rm">✕</span>
+          </div>
+          <div class="score-row">
+            <span class="glbl">G3</span>
+            <div class="score-box">11</div>
+            <div class="score-box">8</div>
+            <span class="s-rm">✕</span>
+          </div>
+          <div class="add-game">⊕ &nbsp;Add game</div>
+        </div>
+
+        <div class="tag-sec">
+          <div class="sec-lbl">Add to Event (optional)</div>
+          <div class="tag-input" style="color:#f4f4f5;border-color:#52525b">Spring Cup</div>
+        </div>
+      </div>
+
+      <div class="bot-bar">
+        <button class="btn-submit on">Submit Match</button>
+      </div>
+      <div class="bot-nav">
+        <div class="nav-it"><span class="nav-ic">⌘</span><span class="nav-lb">Command</span></div>
+        <div class="nav-it"><span class="nav-ic on">⊕</span><span class="nav-lb on">Enter</span></div>
+        <div class="nav-it"><span class="nav-ic">▪</span><span class="nav-lb">Stats</span></div>
+      </div>
+    </div>
+    <div class="screen-label">Quick — WIN, ready to submit</div>
+  </div>
+
+  <!-- ── QUICK: LOSS selected ── -->
+  <div class="wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-right"><span>●●●</span><span>WiFi</span><span>⬛</span></div>
+      </div>
+      <div class="content">
+        <div class="mode-toggle">
+          <button class="mode-btn off">Steps</button>
+          <button class="mode-btn on">Quick</button>
+        </div>
+
+        <div class="team-card">
+          <div class="team-hdr">Team 1</div>
+          <div class="psel">
+            <div class="psel-lbl">Your Partner</div>
+            <div class="psel-input filled">Alex Johnson <span class="clr">✕</span></div>
+            <span class="confirmed-pill">✓ Alex Johnson · 1247 · 34 matches</span>
+          </div>
+        </div>
+
+        <div class="vs-row"><div class="vs-badge">VS</div></div>
+
+        <div class="team-card">
+          <div class="team-hdr">Team 2</div>
+          <div class="psel">
+            <div class="psel-lbl">Opponent 1</div>
+            <div class="psel-input filled">Sam Torres <span class="clr">✕</span></div>
+            <span class="confirmed-pill">✓ Sam Torres · 1189 · 28 matches</span>
+          </div>
+          <div class="psel">
+            <div class="psel-lbl">Opponent 2</div>
+            <div class="psel-input filled">Jordan Lee <span class="clr">✕</span></div>
+            <span class="confirmed-pill">✓ Jordan Lee · 1301 · 41 matches</span>
+          </div>
+        </div>
+
+        <div class="outcome-sec">
+          <div class="sec-lbl">Outcome</div>
+          <div class="outcome-grid">
+            <div class="out-btn unsel">WIN</div>
+            <div class="out-btn loss">LOSS</div>
+          </div>
+        </div>
+
+        <div class="score-sec">
+          <div class="sec-lbl">Game Scores</div>
+          <div class="score-hdrs">
+            <span></span>
+            <span class="shdr-you">You</span>
+            <span class="shdr-them">Them</span>
+            <span></span>
+          </div>
+          <div class="score-row">
+            <span class="glbl">G1</span>
+            <div class="score-box">6</div>
+            <div class="score-box">11</div>
+            <span class="s-rm">✕</span>
+          </div>
+          <div class="score-row">
+            <span class="glbl">G2</span>
+            <div class="score-box">11</div>
+            <div class="score-box">9</div>
+            <span class="s-rm">✕</span>
+          </div>
+          <div class="score-row">
+            <span class="glbl">G3</span>
+            <div class="score-box">8</div>
+            <div class="score-box">11</div>
+            <span class="s-rm">✕</span>
+          </div>
+          <div class="add-game">⊕ &nbsp;Add game</div>
+        </div>
+
+        <div class="tag-sec">
+          <div class="sec-lbl">Add to Event (optional)</div>
+          <div class="tag-input">e.g. Winter League…</div>
+          <div class="tag-chips">
+            <span class="tag-chip">Spring Cup</span>
+            <span class="tag-chip">Club Night</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bot-bar">
+        <button class="btn-submit on">Submit Match</button>
+      </div>
+      <div class="bot-nav">
+        <div class="nav-it"><span class="nav-ic">⌘</span><span class="nav-lb">Command</span></div>
+        <div class="nav-it"><span class="nav-ic on">⊕</span><span class="nav-lb on">Enter</span></div>
+        <div class="nav-it"><span class="nav-ic">▪</span><span class="nav-lb">Stats</span></div>
+      </div>
+    </div>
+    <div class="screen-label">Quick — LOSS, ready to submit</div>
+  </div>
+
+  <!-- ── SUCCESS ── -->
+  <div class="wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-right"><span>●●●</span><span>WiFi</span><span>⬛</span></div>
+      </div>
+      <div class="success">
+        <div class="s-badge">✓</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+          <div class="s-super">Match Recorded</div>
+          <div class="s-title">Saved!</div>
+        </div>
+        <div class="s-sub">Ratings have been updated.</div>
+        <button class="s-btn">Enter Another Match</button>
+        <div class="s-id">match_01jqx3k9...</div>
+      </div>
+      <div class="bot-nav">
+        <div class="nav-it"><span class="nav-ic">⌘</span><span class="nav-lb">Command</span></div>
+        <div class="nav-it"><span class="nav-ic on">⊕</span><span class="nav-lb on">Enter</span></div>
+        <div class="nav-it"><span class="nav-ic">▪</span><span class="nav-lb">Stats</span></div>
+      </div>
+    </div>
+    <div class="screen-label">Success</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -48,6 +48,7 @@ interface MatchupsClientProps {
   initialPartner: SlotPlayer | null;
   initialOpp1: SlotPlayer | null;
   initialOpp2: SlotPlayer | null;
+  isAdmin: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +84,10 @@ export default function MatchupsClient({
   initialPartner,
   initialOpp1,
   initialOpp2,
+  isAdmin,
 }: MatchupsClientProps) {
+  const [adminMode, setAdminMode] = useState(false);
+  const [player1, setPlayer1] = useState<SlotPlayer | null>(null);
   const [partner, setPartner] = useState<SlotPlayer | null>(initialPartner);
   const [opp1, setOpp1] = useState<SlotPlayer | null>(initialOpp1);
   const [opp2, setOpp2] = useState<SlotPlayer | null>(initialOpp2);
@@ -97,16 +101,31 @@ export default function MatchupsClient({
     initialPartner !== null && initialOpp1 !== null && initialOpp2 !== null,
   );
 
-  const allSelected = partner !== null && opp1 !== null && opp2 !== null;
+  const allSelected = adminMode
+    ? player1 !== null && partner !== null && opp1 !== null && opp2 !== null
+    : partner !== null && opp1 !== null && opp2 !== null;
 
-  // Auto-collapse once all 4 players are selected
+  // Auto-collapse once all players are selected
   useEffect(() => {
     if (allSelected) setIsCollapsed(true);
   }, [allSelected]);
 
+  function toggleAdminMode() {
+    setAdminMode((prev) => !prev);
+    setPlayer1(null);
+    setPartner(null);
+    setOpp1(null);
+    setOpp2(null);
+    setData(null);
+    setError(null);
+    setIsCollapsed(false);
+  }
+
   // Summary line shown in the collapsed header
   const selectionSummary = allSelected
-    ? `You / ${partner.name}  vs  ${opp1.name} / ${opp2.name}`
+    ? adminMode
+      ? `${player1!.name} / ${partner!.name}  vs  ${opp1!.name} / ${opp2!.name}`
+      : `You / ${partner!.name}  vs  ${opp1!.name} / ${opp2!.name}`
     : "Tap to select players";
 
   useEffect(() => {
@@ -116,7 +135,8 @@ export default function MatchupsClient({
       return;
     }
 
-    const url = `/api/matchup?player1=${myPlayerId}&player2=${partner.id}&player3=${opp1.id}&player4=${opp2.id}`;
+    const p1Id = adminMode ? player1?.id : myPlayerId;
+    const url = `/api/matchup?player1=${p1Id}&player2=${partner!.id}&player3=${opp1!.id}&player4=${opp2!.id}`;
     let cancelled = false;
 
     setLoading(true);
@@ -140,15 +160,39 @@ export default function MatchupsClient({
     return () => {
       cancelled = true;
     };
-  }, [myPlayerId, partner?.id, opp1?.id, opp2?.id, allSelected]);
+  }, [myPlayerId, adminMode, player1?.id, partner?.id, opp1?.id, opp2?.id, allSelected]);
 
   return (
     <div className="flex flex-col p-5 gap-6 pb-24">
       {/* Page header */}
       <div>
         <h1 className="text-3xl font-bold text-zinc-50">Matchup Projection</h1>
-        <p className="text-sm text-zinc-500">Model Output · Fair Line</p>
+        <p className="text-sm text-zinc-500">Pick four players to see the win probability and fair-line favorite.</p>
       </div>
+
+      {/* Admin "analyze any four players" toggle */}
+      {isAdmin && (
+        <div className="flex items-center gap-3 rounded-xl bg-zinc-800/60 px-4 py-3">
+          <span className="flex-1 text-sm text-zinc-300">Analyze any four players</span>
+          <button
+            type="button"
+            onClick={toggleAdminMode}
+            className={[
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+              adminMode ? "bg-emerald-500" : "bg-zinc-600",
+            ].join(" ")}
+            role="switch"
+            aria-checked={adminMode}
+          >
+            <span
+              className={[
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200",
+                adminMode ? "translate-x-5" : "translate-x-0",
+              ].join(" ")}
+            />
+          </button>
+        </div>
+      )}
 
       {/* Collapsible player selector */}
       <div className="rounded-xl border border-[#374155]">
@@ -173,11 +217,15 @@ export default function MatchupsClient({
         {!isCollapsed && (
           <div className="px-5 pb-5">
             <PlayerPairSelector
+              key={adminMode ? "admin" : "normal"}
               recentPlayers={recentOpponents}
+              adminMode={adminMode}
+              initialPlayer1={player1}
               initialPartner={partner}
               initialOpp1={opp1}
               initialOpp2={opp2}
-              onChange={({ partner: p, opp1: o1, opp2: o2 }) => {
+              onChange={({ player1: p1, partner: p, opp1: o1, opp2: o2 }) => {
+                setPlayer1(p1);
                 setPartner(p);
                 setOpp1(o1);
                 setOpp2(o2);

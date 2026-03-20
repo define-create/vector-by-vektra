@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlayerSelector — Selected State Options</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #09090b;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #71717a;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #27272a;
+      margin-bottom: 10px;
+    }
+    .note {
+      font-size: 12px;
+      color: #52525b;
+      margin-bottom: 10px;
+    }
+
+    /* shared card shell */
+    .card {
+      border-radius: 16px;
+      border: 1px solid #3f3f4666;
+      background: #27272a66;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #a1a1aa;
+    }
+    .win-badge {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #16a34a4d;
+      background: #16a34a33;
+      color: #34d399;
+    }
+
+    /* ── OPTION A: Current ── */
+    .input-wrap { position: relative; }
+    .input-box {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #52525b;
+      background: #27272a;
+      padding: 12px 40px 12px 16px;
+      font-size: 16px;
+      color: #fafafa;
+    }
+    .input-empty {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #52525b;
+      background: #27272a;
+      padding: 12px 16px;
+      font-size: 16px;
+      color: #52525b;
+    }
+    .clear-abs {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a1a1aa;
+      font-size: 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .indicator-below {
+      font-size: 14px;
+      color: #34d399;
+      margin-top: 3px;
+    }
+
+    /* ── OPTION B: Replace with 2-line box ── */
+    .selected-2line {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #52525b;
+      background: #27272a;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .selected-2line .info { display: flex; flex-direction: column; gap: 2px; }
+    .selected-2line .name { font-size: 14px; font-weight: 500; color: #34d399; }
+    .selected-2line .meta { font-size: 12px; color: #71717a; }
+    .selected-2line .clr { color: #a1a1aa; font-size: 14px; background: none; border: none; cursor: pointer; padding-left: 8px; }
+
+    /* ── OPTION C: Same-line inline additions ── */
+    .selected-inline {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #52525b;
+      background: #27272a;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 50px;
+    }
+    .selected-inline .row {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: nowrap;
+      gap: 0;
+      flex: 1;
+      min-width: 0;
+    }
+    .selected-inline .pname { font-size: 16px; color: #fafafa; white-space: nowrap; }
+    .selected-inline .additions { font-size: 14px; color: #34d399; white-space: nowrap; margin-left: 6px; }
+    .selected-inline .clr { color: #a1a1aa; font-size: 14px; background: none; border: none; cursor: pointer; padding-left: 8px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ OPTION A ═══ -->
+  <div>
+    <div class="section-title">Option A — Current (unchanged)</div>
+    <div class="note">Input: white 16px name + separate ✓ line below in emerald 14px</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Opponents</span>
+        <span class="win-badge">WIN</span>
+      </div>
+      <div>
+        <div class="input-wrap">
+          <div class="input-box">Alice Chen</div>
+          <button class="clear-abs">✕</button>
+        </div>
+        <p class="indicator-below">✓ Alice Chen · Rating 1420 · 32 matches</p>
+      </div>
+      <div class="input-empty">Search or type a name…</div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTION B ═══ -->
+  <div>
+    <div class="section-title">Option B — Replace input with 2-line box</div>
+    <div class="note">Input replaced: ✓ Name in emerald 14px medium / Rating · matches in zinc 12px below. No duplicate name.</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Opponents</span>
+        <span class="win-badge">WIN</span>
+      </div>
+      <div class="selected-2line">
+        <div class="info">
+          <span class="name">✓ Alice Chen</span>
+          <span class="meta">Rating 1420 · 32 matches</span>
+        </div>
+        <button class="clr">✕</button>
+      </div>
+      <div class="input-empty">Search or type a name…</div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTION C ═══ -->
+  <div>
+    <div class="section-title">Option C — Same-line additions (proposed)</div>
+    <div class="note">Input replaced: Name stays white 16px, rating/matches appended on same line in emerald 14px.</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Opponents</span>
+        <span class="win-badge">WIN</span>
+      </div>
+      <div class="selected-inline">
+        <div class="row">
+          <span class="pname">Alice Chen</span>
+          <span class="additions">· 1420 · 32 matches</span>
+        </div>
+        <button class="clr">✕</button>
+      </div>
+      <div class="input-empty">Search or type a name…</div>
+    </div>
+  </div>
+
+  <!-- ═══ OPTION C — long name ═══ -->
+  <div>
+    <div class="section-title">Option C — Long name stress test</div>
+    <div class="note">What happens when the player name is long.</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Opponents</span>
+        <span class="win-badge">WIN</span>
+      </div>
+      <div class="selected-inline">
+        <div class="row">
+          <span class="pname" style="overflow:hidden;text-overflow:ellipsis;min-width:0;">Alexandra Kowalski</span>
+          <span class="additions" style="flex-shrink:0;">· 1420 · 32 matches</span>
+        </div>
+        <button class="clr">✕</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

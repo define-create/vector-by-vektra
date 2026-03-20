@@ -8,13 +8,14 @@ export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     email: "",
-    handle: "",
     displayName: "",
     password: "",
     confirmPassword: "",
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -37,7 +38,6 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
-          handle: form.handle,
           displayName: form.displayName,
           password: form.password,
         }),
@@ -50,7 +50,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/sign-in?registered=true");
+      router.push(`/sign-in?registered=true&email=${encodeURIComponent(form.email)}`);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -65,7 +65,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold mb-1">Create account</h1>
-        <p className="text-base text-zinc-500 mb-8">Track your pickleball rating over time.</p>
+        <p className="text-base text-zinc-500 mb-8">Every match tells a story. Yours, quantified.</p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -79,15 +79,6 @@ export default function RegisterPage() {
           />
           <input
             type="text"
-            placeholder="Handle"
-            value={form.handle}
-            onChange={update("handle")}
-            required
-            autoComplete="username"
-            className={inputClass}
-          />
-          <input
-            type="text"
             placeholder="Display name"
             value={form.displayName}
             onChange={update("displayName")}
@@ -95,25 +86,67 @@ export default function RegisterPage() {
             autoComplete="name"
             className={inputClass}
           />
-          <input
-            type="password"
-            placeholder="Password (min 8 characters)"
-            value={form.password}
-            onChange={update("password")}
-            required
-            autoComplete="new-password"
-            minLength={8}
-            className={inputClass}
-          />
-          <input
-            type="password"
-            placeholder="Confirm password"
-            value={form.confirmPassword}
-            onChange={update("confirmPassword")}
-            required
-            autoComplete="new-password"
-            className={inputClass}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password (min 8 characters)"
+              value={form.password}
+              onChange={update("password")}
+              required
+              autoComplete="new-password"
+              minLength={8}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
+          </div>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm password"
+              value={form.confirmPassword}
+              onChange={update("confirmPassword")}
+              required
+              autoComplete="new-password"
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              {showConfirmPassword ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
+          </div>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 

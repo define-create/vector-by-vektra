@@ -11,7 +11,32 @@
       "Bash(npm install --save-dev @testing-library/react @testing-library/jest-dom jest-environment-jsdom)",
       "Bash(npm ls @testing-library/react jest-environment-jsdom)",
       "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/command/)",
-      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/api/players/[id] -type f -name \"*.ts\")"
+      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/api/players/[id] -type f -name \"*.ts\")",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx jest --passWithNoTests)",
+      "Bash(ls -la \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra/app/\\(tabs\\)\")",
+      "Bash(cat \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra/app/\\(tabs\\)/trajectory/page.tsx\")",
+      "Bash(cat \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra/app/\\(tabs\\)/command/page.tsx\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/command/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/enter/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/matchups/\")",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/trajectory/\")",
+      "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/\")",
+      "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/enter/\")",
+      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/)",
+      "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components -type f -name *ottom* -o -name *Nav*)",
+      "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -type f -name *.css)",
+      "Bash(grep -r max-w- d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.tsx)",
+      "Bash(grep -r mx-auto d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.tsx)",
+      "Bash(ls -la d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/*.config.*)",
+      "Bash(grep -r \"revalidate\\\\|cache\\\\|unstable_cache\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"new PrismaClient\\\\|prisma$\\\\|prisma\\\\.\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/lib/db.ts)",
+      "Bash(npx prisma:*)",
+      "Bash(node -e \"const d = require\\(''''./node_modules/next/dist/server/web/exports/next-cache''''\\); console.log\\(Object.keys\\(d\\)\\)\")",
+      "Bash(xargs grep:*)",
+      "Bash(npm test:*)",
+      "Bash(done)"
     ]
   }
 }

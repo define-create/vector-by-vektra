@@ -9,14 +9,22 @@ interface PodiumSlotProps {
   position: 1 | 2 | 3;
 }
 
-const MEDAL = {
-  1: { label: "Gold", color: "text-amber-400", height: "h-20" },
-  2: { label: "Silver", color: "text-zinc-400", height: "h-14" },
-  3: { label: "Bronze", color: "text-orange-400", height: "h-10" },
-} as const;
+const HEIGHTS: Record<1 | 2 | 3, string> = {
+  1: "h-20",
+  2: "h-14",
+  3: "h-10",
+};
+const MEDAL_LABEL: Record<number, string> = { 1: "Gold", 2: "Silver", 3: "Bronze" };
+const MEDAL_COLOR: Record<number, string> = {
+  1: "text-amber-400",
+  2: "text-zinc-400",
+  3: "text-orange-400",
+};
 
 function PodiumSlot({ player, position }: PodiumSlotProps) {
-  const medal = MEDAL[position];
+  const height = HEIGHTS[position];
+  const label = player ? (MEDAL_LABEL[player.rank] ?? `#${player.rank}`) : "";
+  const color = player ? (MEDAL_COLOR[player.rank] ?? "text-zinc-500") : "text-zinc-500";
 
   return (
     <div className="flex flex-1 flex-col items-center gap-1">
@@ -36,10 +44,10 @@ function PodiumSlot({ player, position }: PodiumSlotProps) {
 
       {/* Podium block */}
       <div
-        className={`${medal.height} w-full rounded-t-lg bg-zinc-800 flex items-start justify-center pt-2`}
+        className={`${height} w-full rounded-t-lg bg-zinc-800 flex items-start justify-center pt-2`}
       >
-        <span className={`text-xs font-bold uppercase tracking-wider ${medal.color}`}>
-          {medal.label}
+        <span className={`text-xs font-bold uppercase tracking-wider ${color}`}>
+          {label}
         </span>
       </div>
     </div>

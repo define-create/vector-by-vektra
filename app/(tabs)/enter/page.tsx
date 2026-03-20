@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import PlayerSelector from "@/components/enter/PlayerSelector";
-import OutcomeToggle from "@/components/enter/OutcomeToggle";
-import GameScoreInput, { type GameScore } from "@/components/enter/GameScoreInput";
+import GameScoreInput, { type GameScore, type GameScoreHandle } from "@/components/enter/GameScoreInput";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,22 +21,9 @@ interface Player {
 interface PlayerValue {
   id?: string;
   name?: string;
+  rating?: number;
+  matchCount?: number;
 }
-
-type Step = "partner" | "opponents" | "outcome" | "scores" | "review";
-
-// ---------------------------------------------------------------------------
-// Step labels (for progress indicator)
-// ---------------------------------------------------------------------------
-
-const STEPS: Step[] = ["partner", "opponents", "outcome", "scores", "review"];
-const STEP_LABELS: Record<Step, string> = {
-  partner: "Partner",
-  opponents: "Opponents",
-  outcome: "Outcome",
-  scores: "Scores",
-  review: "Review",
-};
 
 // ---------------------------------------------------------------------------
 // EnterPage
@@ -48,12 +34,12 @@ export default function EnterPage() {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
 
-  const [step, setStep] = useState<Step>("partner");
+  // Admin mode
   const [adminMode, setAdminMode] = useState(false);
 
   // Form state
   const [matchDate] = useState(() => new Date().toISOString());
-  const [team1Player1, setTeam1Player1] = useState<PlayerValue | null>(null); // admin mode only
+  const [team1Player1, setTeam1Player1] = useState<PlayerValue | null>(null);
   const [partner, setPartner] = useState<PlayerValue | null>(null);
   const [opponent1, setOpponent1] = useState<PlayerValue | null>(null);
   const [opponent2, setOpponent2] = useState<PlayerValue | null>(null);
@@ -62,15 +48,16 @@ export default function EnterPage() {
     { gameOrder: 1, team1Score: "", team2Score: "" },
   ]);
 
-  // Recent players for chips
+  // Recent players for chip strip
   const [recentPartners, setRecentPartners] = useState<Player[]>([]);
   const [recentOpponents, setRecentOpponents] = useState<Player[]>([]);
 
-  // Tag state (optional event label)
+  // Tag state
   const [tag, setTag] = useState("");
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [tagExpanded, setTagExpanded] = useState(false);
 
-  // Disambiguation — tracks whether each player slot is "ok to proceed"
+  // Disambiguation ok-flags
   const [partnerOk, setPartnerOk] = useState(true);
   const [team1Player1Ok, setTeam1Player1Ok] = useState(true);
   const [opponent1Ok, setOpponent1Ok] = useState(true);
@@ -82,17 +69,18 @@ export default function EnterPage() {
   const [success, setSuccess] = useState(false);
   const [submittedMatchId, setSubmittedMatchId] = useState<string | null>(null);
 
-  // Load tag suggestions when reaching review step
-  useEffect(() => {
-    if (step === "review" && tagSuggestions.length === 0) {
-      fetch("/api/tags")
-        .then((r) => r.json())
-        .then((data: { tags: string[] }) => setTagSuggestions(data.tags ?? []))
-        .catch(() => {});
-    }
-  }, [step, tagSuggestions.length]);
+  // Flash slot for chip-tap feedback
+  const [flashSlot, setFlashSlot] = useState<"team1Player1" | "partner" | "opponent1" | "opponent2" | null>(null);
+  // Currently focused player slot — chip taps target this field first
+  const [focusedSlot, setFocusedSlot] = useState<"team1Player1" | "partner" | "opponent1" | "opponent2" | null>(null);
 
-  // Load recent players on mount
+  // Ref to GameScoreInput for imperative focus on win selection
+  const gameScoreRef = useRef<GameScoreHandle>(null);
+
+  // ---------------------------------------------------------------------------
+  // Load recent players + tags on mount
+  // ---------------------------------------------------------------------------
+
   useEffect(() => {
     fetch("/api/players/recent")
       .then((r) => r.json())
@@ -103,8 +91,24 @@ export default function EnterPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (tagSuggestions.length === 0) {
+      fetch("/api/tags")
+        .then((r) => r.json())
+        .then((data: { tags: string[] }) => setTagSuggestions(data.tags ?? []))
+        .catch(() => {});
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clear flash slot after animation duration
+  useEffect(() => {
+    if (!flashSlot) return;
+    const t = setTimeout(() => setFlashSlot(null), 650);
+    return () => clearTimeout(t);
+  }, [flashSlot]);
+
   // ---------------------------------------------------------------------------
-  // Toggle admin mode — resets form state
+  // Admin mode toggle — resets all form state
   // ---------------------------------------------------------------------------
 
   function toggleAdminMode() {
@@ -120,11 +124,27 @@ export default function EnterPage() {
     setPartnerOk(true);
     setOpponent1Ok(true);
     setOpponent2Ok(true);
-    setStep("partner");
+    setFocusedSlot(null);
   }
 
   // ---------------------------------------------------------------------------
-  // Helpers
+  // Derived values for chip strip
+  // ---------------------------------------------------------------------------
+
+  const recentAll = useMemo(() => {
+    const seen = new Set<string>();
+    const merged: Player[] = [];
+    for (const p of [...recentPartners, ...recentOpponents]) {
+      if (!seen.has(p.id)) {
+        seen.add(p.id);
+        merged.push(p);
+      }
+    }
+    return merged.slice(0, 10);
+  }, [recentPartners, recentOpponents]);
+
+  // ---------------------------------------------------------------------------
+  // Validators
   // ---------------------------------------------------------------------------
 
   const selectedIds = [
@@ -134,49 +154,104 @@ export default function EnterPage() {
     opponent2?.id,
   ].filter(Boolean) as string[];
 
-  function canProceed(): boolean {
-    switch (step) {
-      case "partner":
-        if (adminMode) {
-          return !!(team1Player1?.id || team1Player1?.name) && team1Player1Ok &&
-                 !!(partner?.id || partner?.name) && partnerOk;
+  const availableChips = recentAll.filter((p) => !selectedIds.includes(p.id));
+
+  const allSlotsFilled = adminMode
+    ? !!(team1Player1?.id || team1Player1?.name) && !!(partner?.id || partner?.name) &&
+      !!(opponent1?.id || opponent1?.name) && !!(opponent2?.id || opponent2?.name)
+    : !!(partner?.id || partner?.name) &&
+      !!(opponent1?.id || opponent1?.name) && !!(opponent2?.id || opponent2?.name);
+
+  function playersComplete(): boolean {
+    const partnerReady = !!(partner?.id || partner?.name) && partnerOk;
+    if (adminMode) {
+      return !!(team1Player1?.id || team1Player1?.name) && team1Player1Ok && partnerReady;
+    }
+    return partnerReady;
+  }
+
+  function opponentsComplete(): boolean {
+    return !!(opponent1?.id || opponent1?.name) && opponent1Ok &&
+           !!(opponent2?.id || opponent2?.name) && opponent2Ok;
+  }
+
+  function resultComplete(): boolean {
+    return outcome !== null &&
+           games.every((g) => g.team1Score !== "" && g.team2Score !== "");
+  }
+
+  function canSubmit(): boolean {
+    return playersComplete() && opponentsComplete() && resultComplete();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Chip-tap assignment — fills the next empty slot in order
+  // ---------------------------------------------------------------------------
+
+  function assignChip(player: Player) {
+    const val = { id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount };
+
+    // If a field is focused AND empty, target it directly
+    if (focusedSlot) {
+      const slotValue =
+        focusedSlot === "team1Player1" ? team1Player1 :
+        focusedSlot === "partner"      ? partner :
+        focusedSlot === "opponent1"    ? opponent1 : opponent2;
+
+      if (!slotValue?.id && !slotValue?.name) {
+        switch (focusedSlot) {
+          case "team1Player1": setTeam1Player1(val); setTeam1Player1Ok(true); break;
+          case "partner":      setPartner(val);      setPartnerOk(true);      break;
+          case "opponent1":    setOpponent1(val);    setOpponent1Ok(true);    break;
+          case "opponent2":    setOpponent2(val);    setOpponent2Ok(true);    break;
         }
-        return !!(partner?.id || partner?.name) && partnerOk;
-      case "opponents":
-        return !!(opponent1?.id || opponent1?.name) && opponent1Ok &&
-               !!(opponent2?.id || opponent2?.name) && opponent2Ok;
-      case "outcome":
-        return outcome !== null;
-      case "scores":
-        return games.every(
-          (g) => g.team1Score !== "" && g.team2Score !== "",
-        );
-      case "review":
-        return true;
-      default:
-        return false;
+        setFlashSlot(focusedSlot);
+        setFocusedSlot(null);
+        return;
+      }
+      // Focused slot is already filled — fall through to next-empty-slot logic
+    }
+
+    // Otherwise fill the next empty slot in order
+    if (adminMode) {
+      if (!team1Player1?.id && !team1Player1?.name) {
+        setTeam1Player1(val); setTeam1Player1Ok(true); setFlashSlot("team1Player1"); return;
+      }
+      if (!partner?.id && !partner?.name) {
+        setPartner(val); setPartnerOk(true); setFlashSlot("partner"); return;
+      }
+    } else {
+      if (!partner?.id && !partner?.name) {
+        setPartner(val); setPartnerOk(true); setFlashSlot("partner"); return;
+      }
+    }
+    if (!opponent1?.id && !opponent1?.name) {
+      setOpponent1(val); setOpponent1Ok(true); setFlashSlot("opponent1"); return;
+    }
+    if (!opponent2?.id && !opponent2?.name) {
+      setOpponent2(val); setOpponent2Ok(true); setFlashSlot("opponent2"); return;
     }
   }
 
-  function next() {
-    const idx = STEPS.indexOf(step);
-    if (idx < STEPS.length - 1) {
-      setStep(STEPS[idx + 1]!);
-    }
-  }
+  // ---------------------------------------------------------------------------
+  // Score-derived outcome
+  // ---------------------------------------------------------------------------
 
-  function back() {
-    const idx = STEPS.indexOf(step);
-    if (idx > 0) {
-      setStep(STEPS[idx - 1]!);
-    }
-  }
-
-  // Derive the heading for the current step
-  function stepHeading(): string {
-    if (adminMode && step === "partner") return "Team 1";
-    if (adminMode && step === "opponents") return "Team 2";
-    return STEP_LABELS[step];
+  function handleGamesChange(newGames: GameScore[]) {
+    setGames(newGames);
+    const completed = newGames.filter(
+      (g) => g.team1Score !== "" && g.team2Score !== "",
+    );
+    if (completed.length === 0) return;
+    const team1GameWins = completed.filter(
+      (g) => (g.team1Score as number) > (g.team2Score as number),
+    ).length;
+    const team2GameWins = completed.filter(
+      (g) => (g.team2Score as number) > (g.team1Score as number),
+    ).length;
+    if (team1GameWins > team2GameWins) setOutcome("win");
+    else if (team2GameWins > team1GameWins) setOutcome("loss");
+    // tied — leave outcome unchanged
   }
 
   // ---------------------------------------------------------------------------
@@ -238,7 +313,7 @@ export default function EnterPage() {
       } else {
         setSubmittedMatchId(data.match?.id ?? null);
         setSuccess(true);
-        router.refresh(); // clear Router Cache so /command re-fetches on next visit
+        router.refresh();
       }
     } catch {
       setSubmitError("Network error — please try again");
@@ -256,9 +331,7 @@ export default function EnterPage() {
       <div className="flex h-full flex-col items-center justify-center gap-6 p-6 text-center">
         <div className="text-5xl">✓</div>
         <h2 className="text-2xl font-bold text-zinc-50">Match Recorded</h2>
-        <p className="text-zinc-400">
-          Match saved. Ratings have been updated.
-        </p>
+        <p className="text-zinc-400">Match saved. Ratings have been updated.</p>
         <button
           type="button"
           onClick={() => {
@@ -271,11 +344,11 @@ export default function EnterPage() {
             setOutcome(null);
             setGames([{ gameOrder: 1, team1Score: "", team2Score: "" }]);
             setTag("");
+            setTagExpanded(false);
             setTeam1Player1Ok(true);
             setPartnerOk(true);
             setOpponent1Ok(true);
             setOpponent2Ok(true);
-            setStep("partner");
           }}
           className="rounded-xl bg-zinc-700 px-6 py-3 text-zinc-200 hover:bg-zinc-600"
         >
@@ -289,31 +362,16 @@ export default function EnterPage() {
   }
 
   // ---------------------------------------------------------------------------
-  // Progress bar + step renders
+  // Main render
   // ---------------------------------------------------------------------------
-
-  const stepIndex = STEPS.indexOf(step);
 
   return (
     <div className="flex h-full flex-col">
-      {/* Progress indicator */}
-      <div className="flex gap-1 px-4 pt-4">
-        {STEPS.map((s, i) => (
-          <div
-            key={s}
-            className={[
-              "h-1 flex-1 rounded-full transition-colors",
-              i <= stepIndex ? "bg-zinc-300" : "bg-zinc-700",
-            ].join(" ")}
-          />
-        ))}
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        {/* Admin "on behalf of" toggle — visible only to admins */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {/* Admin "on behalf of" toggle */}
         {isAdmin && (
           <div className="mb-5 flex items-center gap-3 rounded-xl bg-zinc-800/60 px-4 py-3">
-            <span className="flex-1 text-sm text-zinc-300">Entering on behalf of players</span>
+            <span className="flex-1 text-sm text-zinc-300">Enter on behalf of players</span>
             <button
               type="button"
               onClick={toggleAdminMode}
@@ -334,227 +392,209 @@ export default function EnterPage() {
           </div>
         )}
 
-        <h2 className="mb-6 text-xl font-semibold text-zinc-50">
-          {stepHeading()}
-        </h2>
+        <div className="flex flex-col gap-5">
+          {/* Shared recent-player chip strip */}
+          {!allSlotsFilled && availableChips.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {availableChips.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => assignChip(p)}
+                  className="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-base text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500"
+                >
+                  {p.displayName}
+                </button>
+              ))}
+            </div>
+          )}
 
-        {/* Step: Partner (Team 1 in admin mode) */}
-        {step === "partner" && (
-          <div className="flex flex-col gap-6">
+          {/* Team 1 card */}
+          <div className={["rounded-2xl border bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 transition-colors duration-300",
+            outcome === "win"  ? "border-emerald-500/70" :
+            outcome === "loss" ? "border-zinc-700/30" :
+            "border-zinc-700/60"].join(" ")}>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+                {adminMode ? "Team 1" : "Your Partner"}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = outcome === "win" ? null : "win";
+                  setOutcome(next);
+                  if (next === "win") {
+                    setGames((gs) => gs.map((g, i) => i === 0 ? { ...g, team1Score: 11, team2Score: "" } : g));
+                    gameScoreRef.current?.focusScore(0, "team2Score");
+                  }
+                }}
+                className={[
+                  "rounded-full px-3 py-1 text-xs font-bold border transition-colors",
+                  outcome === "win"
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : outcome === "loss"
+                    ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                    : "bg-zinc-700/50 text-zinc-500 border-zinc-600/50 hover:text-zinc-300",
+                ].join(" ")}
+              >
+                {outcome === "win" ? "WIN" : outcome === "loss" ? "LOSS" : "WIN?"}
+              </button>
+            </div>
             {adminMode && (
               <PlayerSelector
-                label="Team 1 Player 1"
+                key={`team1Player1-${adminMode}`}
                 value={team1Player1}
                 onChange={(v) => { setTeam1Player1(v); if (!v) setTeam1Player1Ok(true); }}
                 onDisambiguated={setTeam1Player1Ok}
-                recentPlayers={recentPartners}
                 excludeIds={selectedIds}
+                flashConfirm={flashSlot === "team1Player1"}
+                onSlotFocus={() => setFocusedSlot("team1Player1")}
               />
             )}
             <PlayerSelector
-              label={adminMode ? "Team 1 Player 2" : "Your partner"}
+              key={`partner-${adminMode}`}
               value={partner}
               onChange={(v) => { setPartner(v); if (!v) setPartnerOk(true); }}
               onDisambiguated={setPartnerOk}
-              recentPlayers={recentPartners}
               excludeIds={selectedIds}
+              flashConfirm={flashSlot === "partner"}
+              onSlotFocus={() => setFocusedSlot("partner")}
             />
           </div>
-        )}
 
-        {/* Step: Opponents (Team 2 in admin mode) */}
-        {step === "opponents" && (
-          <div className="flex flex-col gap-6">
+          {/* VS divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-zinc-700/60" />
+            <span className="text-xs font-bold tracking-widest text-zinc-600">VS</span>
+            <div className="flex-1 border-t border-zinc-700/60" />
+          </div>
+
+          {/* Team 2 card */}
+          <div className={["rounded-2xl border bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 transition-colors duration-300",
+            outcome === "loss" ? "border-emerald-500/70" :
+            outcome === "win"  ? "border-zinc-700/30" :
+            "border-zinc-700/60"].join(" ")}>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+                {adminMode ? "Team 2" : "Opponents"}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = outcome === "loss" ? null : "loss";
+                  setOutcome(next);
+                  if (next === "loss") {
+                    setGames((gs) => gs.map((g, i) => i === 0 ? { ...g, team2Score: 11, team1Score: "" } : g));
+                    gameScoreRef.current?.focusScore(0, "team1Score");
+                  }
+                }}
+                className={[
+                  "rounded-full px-3 py-1 text-xs font-bold border transition-colors",
+                  outcome === "loss"
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : outcome === "win"
+                    ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                    : "bg-zinc-700/50 text-zinc-500 border-zinc-600/50 hover:text-zinc-300",
+                ].join(" ")}
+              >
+                {outcome === "loss" ? "WIN" : outcome === "win" ? "LOSS" : "WIN?"}
+              </button>
+            </div>
             <PlayerSelector
-              label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
+              key={`opponent1-${adminMode}`}
               value={opponent1}
               onChange={(v) => { setOpponent1(v); if (!v) setOpponent1Ok(true); }}
               onDisambiguated={setOpponent1Ok}
-              recentPlayers={recentOpponents}
               excludeIds={selectedIds}
+              flashConfirm={flashSlot === "opponent1"}
+              onSlotFocus={() => setFocusedSlot("opponent1")}
             />
             <PlayerSelector
-              label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
+              key={`opponent2-${adminMode}`}
               value={opponent2}
               onChange={(v) => { setOpponent2(v); if (!v) setOpponent2Ok(true); }}
               onDisambiguated={setOpponent2Ok}
-              recentPlayers={recentOpponents}
               excludeIds={selectedIds}
+              flashConfirm={flashSlot === "opponent2"}
+              onSlotFocus={() => setFocusedSlot("opponent2")}
             />
           </div>
-        )}
 
-        {/* Step: Outcome */}
-        {step === "outcome" && (
-          <OutcomeToggle value={outcome} onChange={setOutcome} />
-        )}
-
-        {/* Step: Game Scores */}
-        {step === "scores" && (
-          <GameScoreInput games={games} onChange={setGames} />
-        )}
-
-        {/* Step: Review */}
-        {step === "review" && (
-          <div className="flex flex-col gap-5 text-sm">
-            <div className="rounded-xl bg-zinc-800 p-4 space-y-3">
-              <ReviewRow
-                label="Date"
-                value={new Date(matchDate).toLocaleString("en-US", {
-                  month: "short", day: "numeric",
-                  hour: "numeric", minute: "2-digit",
-                })}
-              />
-              {adminMode && (
-                <ReviewRow
-                  label="Team 1 Player 1"
-                  value={team1Player1?.name ?? "—"}
-                  subtext={team1Player1?.id ? undefined : "Shadow profile"}
-                />
+          <GameScoreInput ref={gameScoreRef} games={games} onChange={handleGamesChange} />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Event</p>
+              {!tagExpanded && !tag && (
+                <button
+                  type="button"
+                  onClick={() => setTagExpanded(true)}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  + add to event
+                </button>
               )}
-              <ReviewRow
-                label={adminMode ? "Team 1 Player 2" : "Partner"}
-                value={partner?.name ?? "—"}
-                subtext={partner?.id ? undefined : "Shadow profile"}
-              />
-              <ReviewRow
-                label={adminMode ? "Team 2 Player 1" : "Opponent 1"}
-                value={opponent1?.name ?? "—"}
-                subtext={opponent1?.id ? undefined : "Shadow profile"}
-              />
-              <ReviewRow
-                label={adminMode ? "Team 2 Player 2" : "Opponent 2"}
-                value={opponent2?.name ?? "—"}
-                subtext={opponent2?.id ? undefined : "Shadow profile"}
-              />
-              <ReviewRow
-                label={adminMode ? "Team 1 Result" : "Outcome"}
-                value={outcome === "win" ? "WIN" : "LOSS"}
-                highlight={outcome === "win" ? "emerald" : "rose"}
-              />
             </div>
-
-            <div className="rounded-xl bg-zinc-800 p-4 space-y-2">
-              <p className="text-sm font-medium text-zinc-500 mb-3">Games</p>
-              {games.map((g, i) => (
-                <div key={i} className="flex justify-between">
-                  <span className="text-zinc-400">Game {i + 1}</span>
-                  <span className="font-semibold text-zinc-200">
-                    {g.team1Score} – {g.team2Score}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Optional event tag */}
-            <div className="rounded-xl bg-zinc-800 p-4 flex flex-col gap-3">
-              <p className="text-sm font-medium text-zinc-500">Add to Event (optional)</p>
-              <input
-                type="text"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                placeholder="e.g. Winter League, Club Night…"
-                className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
-              />
-              {tagSuggestions.length > 0 && !tag && (
-                <div className="flex flex-wrap gap-2">
-                  {tagSuggestions.slice(0, 5).map((t) => (
+            {tagExpanded || tag ? (
+              <>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tag}
+                    onChange={(e) => setTag(e.target.value)}
+                    placeholder="e.g. Winter League, Club Night…"
+                    autoFocus={tagExpanded}
+                    className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+                  />
+                  {tag && (
                     <button
-                      key={t}
                       type="button"
-                      onClick={() => setTag(t)}
-                      className="rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
+                      onClick={() => { setTag(""); setTagExpanded(false); }}
+                      aria-label="Clear event"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
                     >
-                      {t}
+                      ✕
                     </button>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
-
-            {submitError && (
-              <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">
-                {submitError}
-              </p>
-            )}
+                {tagSuggestions.length > 0 && !tag && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {tagSuggestions.slice(0, 5).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setTag(t)}
+                        className="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : null}
           </div>
-        )}
+          {submitError && (
+            <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">
+              {submitError}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Navigation buttons */}
-      <div className="flex gap-3 border-t border-zinc-800 px-4 py-4">
-        {step !== "partner" && (
-          <button
-            type="button"
-            onClick={back}
-            className="flex-1 rounded-xl border border-zinc-600 py-3 text-zinc-300 hover:bg-zinc-800"
-          >
-            Back
-          </button>
-        )}
-
-        {step !== "review" ? (
-          <button
-            type="button"
-            onClick={next}
-            disabled={!canProceed()}
-            className={[
-              "flex-1 rounded-xl py-3 font-semibold transition-colors",
-              canProceed()
-                ? "bg-zinc-100 text-zinc-900 hover:bg-white"
-                : "bg-zinc-800 text-zinc-600 cursor-not-allowed",
-            ].join(" ")}
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={submit}
-            disabled={submitting}
-            className={[
-              "flex-1 rounded-xl py-3 font-semibold transition-colors",
-              submitting
-                ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
-                : "bg-emerald-500 text-white hover:bg-emerald-400",
-            ].join(" ")}
-          >
-            {submitting ? "Saving…" : "Submit Match"}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Review row sub-component
-// ---------------------------------------------------------------------------
-
-function ReviewRow({
-  label,
-  value,
-  subtext,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  subtext?: string;
-  highlight?: "emerald" | "rose";
-}) {
-  const valueColor =
-    highlight === "emerald"
-      ? "text-emerald-400 font-semibold"
-      : highlight === "rose"
-        ? "text-rose-400 font-semibold"
-        : "text-zinc-200";
-
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <span className="text-zinc-500">{label}</span>
-      <div className="text-right">
-        <span className={valueColor}>{value}</span>
-        {subtext && <p className="text-sm text-amber-400">{subtext}</p>}
+      <div className="border-t border-zinc-800 px-4 py-4">
+        <button
+          type="button"
+          onClick={submit}
+          disabled={submitting || !canSubmit()}
+          className={[
+            "w-full rounded-xl py-3 font-semibold transition-colors",
+            submitting || !canSubmit()
+              ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+              : "bg-emerald-500 text-white hover:bg-emerald-400",
+          ].join(" ")}
+        >
+          {submitting ? "Saving…" : "Submit Match"}
+        </button>
       </div>
     </div>
   );

@@ -102,6 +102,7 @@ model Player {
   rating           Float      @default(1000)
   ratingConfidence Float      @default(0)
   ratingVolatility Float      @default(0)
+  winPct           Float?
   createdAt        DateTime   @default(now())
   deletedAt        DateTime?
 
@@ -109,6 +110,8 @@ model Player {
   user             User?              @relation(fields: [userId], references: [id])
   matchParticipants MatchParticipant[]
   ratingSnapshots  RatingSnapshot[]
+
+  @@index([displayName, deletedAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -130,6 +133,9 @@ model Match {
   participants    MatchParticipant[]
   games           Game[]
   ratingSnapshots RatingSnapshot[]
+
+  @@index([voidedAt, matchDate])
+  @@index([tag, voidedAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -145,6 +151,8 @@ model MatchParticipant {
   // Relations
   match    Match  @relation(fields: [matchId], references: [id])
   player   Player @relation(fields: [playerId], references: [id])
+
+  @@index([playerId])
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +184,8 @@ model RatingRun {
 
   // Relations
   snapshots  RatingSnapshot[]
+
+  @@index([status, startedAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -196,11 +206,26 @@ model RatingSnapshot {
   run           RatingRun @relation(fields: [runId], references: [id])
   player        Player    @relation(fields: [playerId], references: [id])
   match         Match     @relation(fields: [matchId], references: [id])
+
+  @@index([playerId, matchId])
 }
 
 // ---------------------------------------------------------------------------
 // AuditEvents (immutable — never update, never delete)
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// CommunityStats (singleton row, id=1 — populated by recompute)
+// ---------------------------------------------------------------------------
+
+model CommunityStats {
+  id         Int      @id @default(1)
+  avgRating  Float
+  minRating  Float
+  maxRating  Float
+  totalCount Int
+  updatedAt  DateTime @updatedAt
+}
 
 model AuditEvent {
   id           String          @id @default(cuid())

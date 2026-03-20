@@ -3,6 +3,7 @@
  * Used by GET /api/admin/tournament.
  */
 
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 
 // ---------------------------------------------------------------------------
@@ -198,7 +199,8 @@ function rankPlayers(players: PlayerEntry[], matches: MatchRow[]): TournamentPla
 // getTournamentData — main export
 // ---------------------------------------------------------------------------
 
-export async function getTournamentData(tag: string): Promise<TournamentData> {
+export const getTournamentData = unstable_cache(
+  async (tag: string): Promise<TournamentData> => {
   // Fetch all non-voided matches for this tag
   const matches = (await prisma.match.findMany({
     where: {
@@ -307,4 +309,10 @@ export async function getTournamentData(tag: string): Promise<TournamentData> {
   });
 
   return { leaderboard, matches: matchList };
-}
+  },
+  ["tournament-data"],
+  {
+    tags: ["tournament"],
+    revalidate: 60, // 60-second fallback
+  }
+);

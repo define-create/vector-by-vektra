@@ -1,10 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { findOrCreateShadowPlayer } from "@/lib/services/players";
-import { runRecompute } from "@/lib/services/recompute";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -255,15 +254,8 @@ export async function POST(req: NextRequest) {
 
     const editExpiresAt = new Date(match.createdAt.getTime() + 60 * 60 * 1000);
 
-    // Trigger a full rating recompute so Player.rating reflects the new match immediately.
-    // If recompute fails the match is still created; we log and surface ratingUpdated=false.
-    let ratingUpdated = false;
-    try {
-      await runRecompute("nightly");
-      ratingUpdated = true;
-      revalidatePath("/command");
-    } catch (recomputeErr) {
-      console.error("[POST /api/matches] Post-match recompute failed:", recomputeErr);
+    if (tag) {
+      revalidateTag("tournament", "default");
     }
 
     return NextResponse.json(
@@ -275,7 +267,6 @@ export async function POST(req: NextRequest) {
           createdAt: match.createdAt,
           editExpiresAt,
         },
-        ratingUpdated,
       },
       { status: 201 },
     );

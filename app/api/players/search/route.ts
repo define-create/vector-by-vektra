@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { computeWinPct } from "@/lib/services/players";
 
 // ---------------------------------------------------------------------------
 // GET /api/players/search?q=<query>[&unclaimed=true][&includeStats=true]
@@ -62,6 +61,7 @@ export async function GET(req: NextRequest) {
       displayName: true,
       rating: true,
       claimed: true,
+      winPct: true,
       _count: { select: { matchParticipants: true } },
       matchParticipants: {
         select: { match: { select: { matchDate: true } } },
@@ -73,17 +73,15 @@ export async function GET(req: NextRequest) {
     take: 10,
   });
 
-  const enriched = await Promise.all(
-    players.map(async (p) => ({
-      id: p.id,
-      displayName: p.displayName,
-      rating: p.rating,
-      claimed: p.claimed,
-      matchCount: p._count.matchParticipants,
-      lastMatchDate: p.matchParticipants[0]?.match.matchDate.toISOString() ?? null,
-      winPct: await computeWinPct(p.id, prisma),
-    })),
-  );
+  const enriched = players.map((p) => ({
+    id: p.id,
+    displayName: p.displayName,
+    rating: p.rating,
+    claimed: p.claimed,
+    matchCount: p._count.matchParticipants,
+    lastMatchDate: p.matchParticipants[0]?.match.matchDate.toISOString() ?? null,
+    winPct: p.winPct ?? null,
+  }));
 
   return NextResponse.json({ players: enriched });
 }

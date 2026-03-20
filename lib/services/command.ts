@@ -4,6 +4,7 @@
  * The /api/command route also uses this for client-side callers.
  */
 
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { computeCI } from "@/lib/metrics/compounding-index";
 import { computeDriftScore } from "@/lib/metrics/drift-score";
@@ -47,9 +48,22 @@ export interface CommandData {
   editTimer: { expiresAt: string | null };
   upcomingProbability: number | null;
   communityStats: CommunityStats | null;
+  ratingHistory: { date: string; rating: number; outcome: "win" | "loss" }[];
+  driverHistory: {
+    winRateHistory: number[];
+    ciHistory: number[];
+    driftHistory: number[];
+  };
+  driverDeltas: {
+    winRateDelta: number | null;
+    ciDelta: number | null;
+    driftDelta: number | null;
+  };
+  dominantDriver: "winRate" | "ci" | "drift" | null;
 }
 
-export async function getCommandData(userId: string, filter?: CommandFilter): Promise<CommandData> {
+export const getCommandData = unstable_cache(
+  async (userId: string, filter?: CommandFilter): Promise<CommandData> => {
   const empty: Omit<CommandData, "hasPlayer" | "emailVerified" | "userDisplayName"> = {
     myPlayerId: null,
     myPlayerDisplayName: null,
@@ -61,6 +75,10 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     editTimer: { expiresAt: null },
     upcomingProbability: null,
     communityStats: null,
+    ratingHistory: [],
+    driverHistory: { winRateHistory: [], ciHistory: [], driftHistory: [] },
+    driverDeltas: { winRateDelta: null, ciDelta: null, driftDelta: null },
+    dominantDriver: null,
   };
 
   const [myPlayer, userRecord] = await Promise.all([
@@ -106,14 +124,13 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
   };
 
   const [
-    filteredMatches,
+    allFilteredParticipants,
     filteredSnapshots,
     editableMatch,
     recentOpponentParticipants,
-    communityAgg,
-    historyParticipants,
+    statsRow,
   ] = await Promise.all([
-    // Filtered matches — used for win% calculation
+    // Combined: win% + match history (replaces filteredMatches + historyParticipants)
     prisma.matchParticipant.findMany({
       where: {
         playerId: myPlayer.id,
@@ -124,17 +141,18 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
           include: {
             participants: { include: { player: { select: { id: true, displayName: true } } } },
             games: true,
+            ratingSnapshots: { where: { playerId: myPlayer.id }, take: 1 },
           },
         },
       },
-      orderBy: { match: { matchDate: "desc" } },
+      orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
     }),
 
-    // Filtered snapshots — used for CI + Drift (up to 10 most recent in the window)
+    // Filtered snapshots — used for CI + Drift (up to 20 most recent in the window)
     prisma.ratingSnapshot.findMany({
       where: snapshotWhere,
       orderBy: { matchDate: "desc" },
-      take: 10,
+      take: 20,
     }),
 
     // Edit timer — always unfiltered (last 60 minutes regardless of active filter)
@@ -154,7 +172,11 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
         match: {
           include: {
             participants: {
-              include: { player: { select: { id: true, rating: true } } },
+              select: {
+                playerId: true,
+                team: true,
+                player: { select: { rating: true } },
+              },
             },
           },
         },
@@ -163,34 +185,12 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
       take: 20,
     }),
 
-    // Community rating stats — always unfiltered (all-time community aggregate)
-    prisma.player.aggregate({
-      where: { deletedAt: null },
-      _avg: { rating: true },
-      _min: { rating: true },
-      _max: { rating: true },
-      _count: { id: true },
-    }),
-
-    // Match history — filtered, last 20 in the active window
-    prisma.matchParticipant.findMany({
-      where: {
-        playerId: myPlayer.id,
-        match: matchWhere,
-      },
-      include: {
-        match: {
-          include: {
-            participants: { include: { player: { select: { id: true, displayName: true } } } },
-            games: true,
-            ratingSnapshots: { where: { playerId: myPlayer.id }, take: 1 },
-          },
-        },
-      },
-      orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
-      take: 20,
-    }),
+    // Community stats singleton (populated by recompute)
+    prisma.communityStats.findUnique({ where: { id: 1 } }),
   ]);
+
+  const filteredMatches = allFilteredParticipants;
+  const historyParticipants = allFilteredParticipants.slice(0, 20);
 
   // Win % — all matches in the filter window (no date cap when unfiltered)
   let wins = 0;
@@ -221,6 +221,22 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
   const histAsc = [...historyParticipants].sort(
     (a, b) => a.match.matchDate.getTime() - b.match.matchDate.getTime(),
   );
+  // ratingHistory — chronological, from histAsc + snapshotRatingByMatchId
+  const ratingHistory: CommandData["ratingHistory"] = histAsc
+    .map((p) => {
+      const snap = snapshotRatingByMatchId.get(p.match.id);
+      if (snap == null) return null;
+      const myTeam = p.team;
+      let t1w = 0, t2w = 0;
+      for (const g of p.match.games) {
+        if (g.team1Score > g.team2Score) t1w++;
+        else if (g.team2Score > g.team1Score) t2w++;
+      }
+      const won = myTeam === 1 ? t1w > t2w : t2w > t1w;
+      return { date: p.match.matchDate.toISOString(), rating: snap, outcome: (won ? "win" : "loss") as "win" | "loss" };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+
   const ratingDeltaByMatchId = new Map<string, number | null>();
   for (let i = 0; i < histAsc.length; i++) {
     const matchId = histAsc[i]!.match.id;
@@ -297,6 +313,74 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
   const compoundingIndex = ciSnapshots.length >= 2 ? computeCI(ciSnapshots) : null;
   const driftScore = ciSnapshots.length >= 1 ? computeDriftScore(ciSnapshots, driftActuals) : null;
 
+  // Driver history — sliding windows for sparklines
+  const winRateHistory: number[] = [];
+  for (let i = 4; i <= Math.min(9, histAsc.length - 1); i++) {
+    const window = histAsc.slice(i - 4, i + 1);
+    let wWins = 0;
+    for (const p of window) {
+      const myTeam = p.team;
+      let t1w = 0, t2w = 0;
+      for (const g of p.match.games) {
+        if (g.team1Score > g.team2Score) t1w++;
+        else if (g.team2Score > g.team1Score) t2w++;
+      }
+      if (myTeam === 1 ? t1w > t2w : t2w > t1w) wWins++;
+    }
+    winRateHistory.push(wWins / 5);
+  }
+
+  const ciHistoryArr: number[] = [];
+  if (snapsAsc.length >= 10) {
+    for (let i = 9; i <= Math.min(19, snapsAsc.length - 1); i += 2) {
+      const windowSnaps = ciSnapshots.slice(i - 9, i + 1);
+      ciHistoryArr.push(computeCI(windowSnaps));
+    }
+  }
+
+  const driftHistoryArr: number[] = [];
+  if (snapsAsc.length >= 10) {
+    for (let i = 9; i <= Math.min(19, snapsAsc.length - 1); i += 2) {
+      const windowSnaps = ciSnapshots.slice(i - 9, i + 1);
+      const windowActuals = windowSnaps.map((s, j) =>
+        j === 0 ? 0 : (windowSnaps[j]!.rating > windowSnaps[j - 1]!.rating ? 1 : 0),
+      );
+      driftHistoryArr.push(computeDriftScore(windowSnaps, windowActuals));
+    }
+  }
+
+  const driverHistory: CommandData["driverHistory"] = {
+    winRateHistory,
+    ciHistory: ciHistoryArr,
+    driftHistory: driftHistoryArr,
+  };
+
+  // Driver deltas
+  const winRateDelta =
+    winRateHistory.length >= 2
+      ? winRateHistory[winRateHistory.length - 1]! - winRateHistory[winRateHistory.length - 2]!
+      : null;
+  const ciDelta =
+    ciHistoryArr.length >= 2
+      ? ciHistoryArr[ciHistoryArr.length - 1]! - ciHistoryArr[ciHistoryArr.length - 2]!
+      : null;
+  const driftDelta =
+    driftHistoryArr.length >= 2
+      ? driftHistoryArr[driftHistoryArr.length - 1]! - driftHistoryArr[driftHistoryArr.length - 2]!
+      : null;
+  const driverDeltas: CommandData["driverDeltas"] = { winRateDelta, ciDelta, driftDelta };
+
+  // Dominant driver
+  let dominantDriver: CommandData["dominantDriver"] = null;
+  if (winRateDelta !== null || ciDelta !== null || driftDelta !== null) {
+    const absWR = winRateDelta !== null ? Math.abs(winRateDelta * 100) : 0;
+    const absCI = ciDelta !== null ? Math.abs(ciDelta) : 0;
+    const absDrift = driftDelta !== null ? Math.abs(driftDelta) : 0;
+    if (absWR >= absCI && absWR >= absDrift) dominantDriver = "winRate";
+    else if (absCI >= absDrift) dominantDriver = "ci";
+    else dominantDriver = "drift";
+  }
+
   // Edit timer — always unfiltered
   const editExpiresAt = editableMatch
     ? new Date(editableMatch.createdAt.getTime() + 60 * 60 * 1000).toISOString()
@@ -308,7 +392,7 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     const myTeam = participation.team;
     for (const p of participation.match.participants) {
       if (p.team !== myTeam && p.playerId !== myPlayer.id) {
-        recentOpponents.push({ id: p.player.id, rating: p.player.rating });
+        recentOpponents.push({ id: p.playerId, rating: p.player.rating });
       }
     }
   }
@@ -316,16 +400,11 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
 
   // Community stats — always unfiltered
   let communityStats: CommunityStats | null = null;
-  if (
-    communityAgg._count.id >= 3 &&
-    communityAgg._avg.rating !== null &&
-    communityAgg._min.rating !== null &&
-    communityAgg._max.rating !== null
-  ) {
+  if (statsRow && statsRow.totalCount >= 3) {
     communityStats = {
-      avg: communityAgg._avg.rating,
-      min: communityAgg._min.rating,
-      max: communityAgg._max.rating,
+      avg: statsRow.avgRating,
+      min: statsRow.minRating,
+      max: statsRow.maxRating,
     };
   }
 
@@ -343,5 +422,15 @@ export async function getCommandData(userId: string, filter?: CommandFilter): Pr
     editTimer: { expiresAt: editExpiresAt },
     upcomingProbability,
     communityStats,
+    ratingHistory,
+    driverHistory,
+    driverDeltas,
+    dominantDriver,
   };
-}
+  },
+  ["command-data"],
+  {
+    tags: ["command"],
+    revalidate: 300, // 5-minute fallback in case cron-triggered invalidation misses
+  }
+);
