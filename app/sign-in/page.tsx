@@ -11,6 +11,7 @@ function SignInForm() {
 
   const registered = searchParams.get("registered") === "true";
   const verified = searchParams.get("verified") === "true";
+  const reset = searchParams.get("reset") === "true";
   const errorParam = searchParams.get("error");
 
   const [form, setForm] = useState({ email: "", password: "" });
@@ -68,6 +69,12 @@ function SignInForm() {
           </div>
         )}
 
+        {reset && (
+          <div className="mb-4 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-base text-green-400">
+            Password updated. You can now sign in.
+          </div>
+        )}
+
         {(errorParam === "InvalidToken" || errorParam === "InvalidOrExpiredToken") && (
           <div className="mb-4 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-base text-red-400">
             Verification link is invalid or expired. Please register again.
@@ -116,6 +123,12 @@ function SignInForm() {
           Didn&apos;t get the verification email?{" "}
           <Link href="/resend-verification" className="text-zinc-500 hover:text-zinc-300">
             Resend it
+          </Link>
+        </p>
+
+        <p className="mt-3 text-sm text-zinc-600 text-center">
+          <Link href="/forgot-password" className="text-zinc-500 hover:text-zinc-300">
+            Forgot password?
           </Link>
         </p>
       </div>

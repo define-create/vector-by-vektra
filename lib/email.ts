@@ -1,3 +1,31 @@
+export async function sendPasswordResetEmail(email: string, rawToken: string): Promise<void> {
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("RESEND_API_KEY is not configured.");
+    }
+    console.log(`[email] Password reset URL for ${email}:\n  ${resetUrl}`);
+    return;
+  }
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "Vector by Vektra <noreply@yourdomain.com>",
+    to: email,
+    subject: "Reset your Vector password",
+    html: `
+      <p>You requested a password reset for your Vector by Vektra account.</p>
+      <p>Click the link below to set a new password. This link expires in 1 hour.</p>
+      <p><a href="${resetUrl}">Reset password</a></p>
+      <p>If you didn't request this, you can ignore this email — your password won't change.</p>
+    `,
+  });
+}
+
 export async function sendVerificationEmail(email: string, rawToken: string): Promise<void> {
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
   const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${rawToken}`;

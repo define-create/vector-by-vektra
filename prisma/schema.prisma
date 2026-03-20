@@ -73,6 +73,8 @@ model User {
   emailVerifiedAt              DateTime?
   emailVerificationToken       String?   @unique
   emailVerificationTokenExpiry DateTime?
+  passwordResetToken           String?
+  passwordResetTokenExpiresAt  DateTime?
   handle                       String    @unique
   displayName                  String
   passwordHash                 String
