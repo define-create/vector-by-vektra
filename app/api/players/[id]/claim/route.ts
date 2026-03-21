@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -88,6 +89,7 @@ export async function POST(
       prisma,
     );
 
+    revalidateTag("command");
     return NextResponse.json({ ok: true, player: updatedPlayer });
   } catch (error) {
     console.error("[POST /api/players/[id]/claim] Error:", error);
