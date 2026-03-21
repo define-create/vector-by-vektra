@@ -180,7 +180,7 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName, userEmail }
     setClaimError(null);
     try {
       const res = await fetch(`/api/players/${playerId}/claim`, { method: "POST" });
-      if (res.ok) { router.refresh(); return; }
+      if (res.ok) { router.push("/command"); return; }
       const body = await res.json().catch(() => ({})) as { error?: string };
       setClaimError(body.error ?? "Unable to claim — please try again.");
     } catch {
@@ -201,7 +201,7 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName, userEmail }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ displayName: name }),
       });
-      if (res.ok) { router.refresh(); return; }
+      if (res.ok) { router.push("/command"); return; }
       const data = await res.json().catch(() => ({})) as { error?: string };
       setCreateError(data.error ?? "Unable to create profile — please try again.");
     } catch {

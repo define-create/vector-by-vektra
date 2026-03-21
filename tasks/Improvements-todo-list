@@ -2,10 +2,16 @@
 
 Potential Issues
 High Priority
-1. Email verification is broken in production
-RESEND_API_KEY is empty in .env.local — and likely also empty in Vercel env vars. New user registrations will never receive a verification email in production. The console-log fallback only works in local dev. Any real users trying to register are silently stuck.
+1. ~~Email verification is broken in production~~ ✓ RESOLVED — Resend configured with michianapickleball.com, RESEND_API_KEY and EMAIL_FROM set in Vercel, smoke-tested end-to-end.
 
-2. No rate limiting on API routes
+2. ClaimProfilePrompt: user stuck on screen after creating/claiming a profile
+After a successful POST /api/players (or POST /api/players/:id/claim), the component calls router.refresh(). In the (tabs) App Router layout this doesn't reliably re-render the parent server component, so the user stays on the "Set up your player profile" screen and nav taps do nothing.
+Fix: replace router.refresh() with router.push('/command') in both handleCreate and handleClaim (components/command/ClaimProfilePrompt.tsx lines 183 and 204).
+
+3. ClaimProfilePrompt: "Find Your Stats" search returns no results
+Search hits /api/players/search?unclaimed=true — only returns players where userId IS NULL. Needs investigation: confirm whether the shadow profile for the test user existed and was truly unclaimed, or whether the search filter itself is too strict (e.g. claimed=false vs userId=null mismatch).
+
+4. No rate limiting on API routes
 /api/matches (match entry), /api/auth, /api/admin/* — all unprotected. A bad actor could flood match entries or hammer the auth endpoint. Vercel's built-in DDoS protection helps, but there's no app-level throttle.
 
 3. JWT role changes aren't immediate

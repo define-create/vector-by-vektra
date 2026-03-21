@@ -28,11 +28,12 @@ Update the file after completing each sub-task, not just after completing an ent
 
 ## Tasks
 
-- [ ] 0.0 Configure Resend sending subdomain and update `EMAIL_FROM`
-  - [ ] 0.1 In the Resend dashboard (resend.com → Domains → Add Domain), add `vector.resend.dev` as a sending domain and follow the DNS verification steps
-  - [ ] 0.2 Once verified, update `.env.local`: set `EMAIL_FROM="Vector by Vektra <noreply@vector.resend.dev>"`
-  - [ ] 0.3 Update the Vercel environment variables to set the same `EMAIL_FROM` value (and confirm `RESEND_API_KEY` is already set in Vercel)
-  - [ ] 0.4 Verify the existing `lib/email.ts` reads `EMAIL_FROM` from `process.env.EMAIL_FROM` (it does — no code change needed here)
+- [x] 0.0 Configure custom domain in Resend and update `EMAIL_FROM`
+  - [x] 0.1 In the Resend dashboard (resend.com → Domains → Add Domain), add `michianapickleball.com` as a sending domain
+  - [x] 0.2 Add the DNS records Resend provides (SPF, DKIM, DMARC) to your DNS registrar for `michianapickleball.com` and wait for verification
+  - [x] 0.3 Once verified, update `.env.local`: set `EMAIL_FROM="Vector by Vektra <noreply@michianapickleball.com>"`
+  - [x] 0.4 Update the Vercel environment variable `EMAIL_FROM` to `"Vector by Vektra <noreply@michianapickleball.com>"` (confirm `RESEND_API_KEY` is already set in Vercel)
+  - [x] 0.5 Verify the existing `lib/email.ts` reads `EMAIL_FROM` from `process.env.EMAIL_FROM` (it does — no code change needed here)
 
 - [x] 1.0 Apply Prisma schema changes for password reset token fields
   - [x] 1.1 Open `prisma/schema.prisma` and add two optional fields to the `User` model, after `emailVerificationTokenExpiry`:
@@ -41,12 +42,12 @@ Update the file after completing each sub-task, not just after completing an ent
     passwordResetTokenExpiresAt DateTime?
     ```
   - [x] 1.2 Run `npx prisma generate` to regenerate the Prisma client (no DB connection needed)
-  - [ ] 1.3 Apply the migration via the Supabase SQL editor (direct connection, not pgBouncer):
+  - [x] 1.3 Apply the migration via the Supabase SQL editor (direct connection, not pgBouncer):
     ```sql
     ALTER TABLE "User" ADD COLUMN "passwordResetToken" TEXT;
     ALTER TABLE "User" ADD COLUMN "passwordResetTokenExpiresAt" TIMESTAMPTZ;
     ```
-  - [ ] 1.4 Confirm the columns appear in the Supabase table editor for the `User` table
+  - [x] 1.4 Confirm the columns appear in the Supabase table editor for the `User` table
 
 - [x] 2.0 Add `sendPasswordResetEmail` helper to `lib/email.ts`
   - [x] 2.1 In `lib/email.ts`, add a new exported function `sendPasswordResetEmail(email: string, rawToken: string): Promise<void>` following the same structure as `sendVerificationEmail`
@@ -94,7 +95,7 @@ Update the file after completing each sub-task, not just after completing an ent
 - [x] 5.0 Add "Forgot password?" link to sign-in page and verify all email flows end-to-end
   - [x] 5.1 In `app/sign-in/page.tsx`, add a "Forgot password?" link below the sign-in form, pointing to `/forgot-password` (similar style to the existing "Resend it" link)
   - [x] 5.2 In `app/sign-in/page.tsx`, handle the `?reset=true` query param: show a success banner "Password updated. You can now sign in." (similar to the existing `verified` banner)
-  - [ ] 5.3 Manual test — registration: register with a real external email address, confirm the verification email arrives and the verify link works
-  - [ ] 5.4 Manual test — resend verification: use the `/resend-verification` page, confirm a new email arrives
-  - [ ] 5.5 Manual test — password reset: use `/forgot-password`, confirm the reset email arrives, click the link, set a new password, confirm redirect to sign-in and that sign-in works with the new password
-  - [ ] 5.6 Confirm the reset token is cleared after use (check DB: `passwordResetToken` and `passwordResetTokenExpiresAt` are null after successful reset)
+  - [x] 5.3 Manual test — registration: register with a real external email address, confirm the verification email arrives and the verify link works
+  - [x] 5.4 Manual test — resend verification: use the `/resend-verification` page, confirm a new email arrives
+  - [x] 5.5 Manual test — password reset: use `/forgot-password`, confirm the reset email arrives, click the link, set a new password, confirm redirect to sign-in and that sign-in works with the new password
+  - [x] 5.6 Confirm the reset token is cleared after use (check DB: `passwordResetToken` and `passwordResetTokenExpiresAt` are null after successful reset)
