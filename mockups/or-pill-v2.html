@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OR Pill V2 — Amber brighter, bolder + tinted lines</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #09090b; font-family: ui-sans-serif, system-ui, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-950 text-zinc-50">
+
+  <div class="max-w-sm mx-auto px-5 pb-16">
+
+    <!-- Simulated top bar -->
+    <div class="flex items-center justify-between py-4 border-b border-zinc-900 mb-2">
+      <span class="text-sm font-semibold text-zinc-400 tracking-widest uppercase">Vector</span>
+      <span class="text-xs text-zinc-600">Command</span>
+    </div>
+
+    <!-- Page header -->
+    <div class="pt-8 pb-2">
+      <h2 class="text-lg font-semibold text-zinc-100">Set up your profile</h2>
+      <p class="text-sm text-zinc-400 mt-1 leading-relaxed">
+        If you've played in any tracked matches, your stats are already recorded.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-4 mt-5">
+
+      <!-- Card 1 — FIND -->
+      <div class="rounded-xl border border-zinc-700 bg-zinc-800/60 px-5 py-5 flex flex-col gap-3">
+        <div class="flex items-start gap-3">
+          <div class="shrink-0 w-8 h-8 rounded-full bg-zinc-200 text-zinc-900 flex items-center justify-center font-bold text-sm mt-0.5">
+            1
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-zinc-100 leading-snug">Already played here</h3>
+            <p class="text-xs text-zinc-500 mt-0.5 leading-relaxed">Find your stats from past matches</p>
+          </div>
+        </div>
+        <div class="border-t border-zinc-700/50 pt-3 flex flex-col gap-3">
+          <input type="text" placeholder="Type your (nick) name…" oninput="handleSearch(this.value)"
+            class="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm" />
+          <p id="searchLoading" class="text-sm text-zinc-500 hidden">Searching…</p>
+          <p id="searchEmpty" class="text-sm text-zinc-500 hidden">No unclaimed profiles found.</p>
+          <ul id="searchResults" class="flex flex-col gap-2 hidden">
+            <li class="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900/60 px-4 py-3">
+              <div>
+                <p class="text-sm font-medium text-zinc-100">Ali Taha</p>
+                <p class="text-xs text-zinc-500">12 matches · Mar 2026 · 67% wins</p>
+              </div>
+              <button type="button" onclick="handleClaim(this)" class="rounded-lg bg-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-500 transition-colors">This is me</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OR Divider V2 — Brighter amber, bolder pill, tinted lines -->
+      <!-- amber-600/70 border, amber-900/25 bg, amber-300 text, text-sm bold, lines amber-tinted -->
+      <div class="flex items-center gap-0">
+        <div class="flex-1 border-t border-amber-800/40"></div>
+        <span class="mx-3 border border-amber-600/70 bg-amber-900/25 text-amber-300 text-sm font-bold tracking-wide rounded-full px-5 py-2 shrink-0">OR</span>
+        <div class="flex-1 border-t border-amber-800/40"></div>
+      </div>
+
+      <!-- Card 2 — CREATE (same treatment as Card 1) -->
+      <div class="rounded-xl border border-zinc-700 bg-zinc-800/60 px-5 py-5 flex flex-col gap-3">
+        <div class="flex items-start gap-3">
+          <div class="shrink-0 w-8 h-8 rounded-full bg-zinc-200 text-zinc-900 flex items-center justify-center font-bold text-sm mt-0.5">
+            2
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-zinc-100 leading-snug">New here</h3>
+            <p class="text-xs text-zinc-500 mt-0.5 leading-relaxed">Haven't played in any tracked matches yet? Create a fresh profile.</p>
+          </div>
+        </div>
+        <div class="border-t border-zinc-700/50 pt-3 flex flex-col gap-3">
+          <input type="text" placeholder="Your display name…" oninput="handleCreateInput(this.value)"
+            class="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm" />
+          <button id="createBtn" type="button" onclick="handleCreate()" disabled
+            class="w-full rounded-lg bg-zinc-700 px-4 py-3 text-sm font-medium text-zinc-100 hover:bg-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            Create Profile
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let searchTimer;
+    function handleSearch(val) {
+      clearTimeout(searchTimer);
+      const loading = document.getElementById('searchLoading');
+      const empty = document.getElementById('searchEmpty');
+      const results = document.getElementById('searchResults');
+      loading.classList.add('hidden'); empty.classList.add('hidden'); results.classList.add('hidden');
+      if (!val.trim()) return;
+      loading.classList.remove('hidden');
+      searchTimer = setTimeout(() => {
+        loading.classList.add('hidden');
+        if (val.toLowerCase().includes('al')) results.classList.remove('hidden');
+        else empty.classList.remove('hidden');
+      }, 400);
+    }
+    function handleClaim(btn) {
+      btn.textContent = 'Claiming…'; btn.disabled = true;
+      setTimeout(() => { btn.textContent = 'Claimed ✓'; btn.classList.remove('bg-zinc-600'); btn.classList.add('bg-green-800'); }, 800);
+    }
+    function handleCreateInput(val) {
+      document.getElementById('createBtn').disabled = !val.trim();
+    }
+    function handleCreate() {
+      const btn = document.getElementById('createBtn');
+      btn.textContent = 'Creating…'; btn.disabled = true;
+      setTimeout(() => { btn.textContent = 'Profile Created ✓'; btn.classList.remove('bg-zinc-700'); btn.classList.add('bg-green-800'); }, 800);
+    }
+  </script>
+</body>
+</html>

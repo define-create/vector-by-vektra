@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
@@ -5,8 +6,8 @@ import EditTimer from "@/components/command/EditTimer";
 import { MetricInfoSheet } from "@/components/command/MetricInfoSheet";
 import { RatingContext } from "@/components/command/RatingContext";
 import { MatchHistoryList } from "@/components/command/MatchHistoryList";
-import { ClaimProfilePrompt } from "@/components/command/ClaimProfilePrompt";
 import { FilterChip } from "@/components/command/FilterChip";
+import { prisma } from "@/lib/db";
 import { getCommandData, type CommandFilter } from "@/lib/services/command";
 import { TrajectoryGraph } from "@/components/command/TrajectoryGraph";
 import { RecentPerformanceDots } from "@/components/command/RecentPerformanceDots";
@@ -74,15 +75,14 @@ export default async function CommandPage({
         }
       : undefined;
 
-  const data = await getCommandData(session.user.id, filter);
+  // Direct uncached check — cache cannot interfere with this redirect
+  const playerExists = await prisma.player.findFirst({
+    where: { userId: session.user.id, deletedAt: null },
+    select: { id: true },
+  });
+  if (!playerExists) redirect("/setup");
 
-  if (!data.hasPlayer) {
-    return (
-      <div className="flex h-full flex-col overflow-y-auto p-5">
-        <ClaimProfilePrompt emailVerified={data.emailVerified} userDisplayName={data.userDisplayName} userEmail={session.user.email ?? undefined} />
-      </div>
-    );
-  }
+  const data = await getCommandData(session.user.id, filter);
 
   const formState = ciToFormState(data.compoundingIndex);
 
@@ -164,11 +164,15 @@ export default async function CommandPage({
 
         <MatchHistoryList matches={data.recentMatchHistory} myPlayerId={data.myPlayerId} />
 
-        {data.editTimer.expiresAt && (
-          <div className="rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+        {data.editTimer.expiresAt && data.editTimer.matchId && (
+          <Link
+            href={`/enter/edit/${data.editTimer.matchId}`}
+            className="rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between hover:bg-zinc-700/60 transition-colors"
+          >
             <span className="text-sm text-zinc-400">Last match</span>
+            <span className="text-xs text-zinc-500">Tap to edit</span>
             <EditTimer expiresAt={data.editTimer.expiresAt} />
-          </div>
+          </Link>
         )}
 
       </div>

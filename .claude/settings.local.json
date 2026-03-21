@@ -18,7 +18,11 @@
       "Bash(grep -r \"ratingConfidence\\\\|winProbability\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra --include=*.ts --include=*.tsx ! -path */.next/* ! -path */node_modules/*)",
       "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/)",
       "Bash(grep -r \"computeUpcomingProbability\\\\|expectedScore\\\\|ratingConfidence\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra --include=*.tsx --include=*.ts -l)",
-      "Bash(grep -rn \"ratingConfidence\\\\|matchCount\\\\|MIN_MATCH\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.ts --include=*.tsx)"
+      "Bash(grep -rn \"ratingConfidence\\\\|matchCount\\\\|MIN_MATCH\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"runRecompute\\\\|revalidateTag\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/api/matches --include=*.ts)",
+      "Bash(xargs grep:*)",
+      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components -name StatsTabView* -o -name stats*)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|js\\)$\")"
     ]
   }
 }

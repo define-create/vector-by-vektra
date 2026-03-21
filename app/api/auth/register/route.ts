@@ -27,11 +27,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { email, displayName, password } = body as Record<string, string>;
+  const { email, password } = body as Record<string, string>;
 
-  if (!email || !displayName || !password) {
+  if (!email || !password) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
   }
+
+  const displayName = email.split("@")[0];
 
   if (password.length < 8) {
     return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });

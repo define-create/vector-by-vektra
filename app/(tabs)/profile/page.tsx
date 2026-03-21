@@ -22,7 +22,6 @@ export default async function ProfilePage() {
   });
 
   const displayName = myPlayer?.displayName ?? user?.displayName ?? "";
-  const isAdmin = session.user.role === "admin";
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
@@ -48,18 +47,6 @@ export default async function ProfilePage() {
         <ChangePasswordForm />
       </div>
 
-      {/* Admin Panel */}
-      {isAdmin && (
-        <div className="mx-5 mb-3">
-          <Link
-            href="/admin"
-            className="flex items-center justify-between rounded-xl bg-zinc-800/60 px-4 py-3 text-sm font-medium text-zinc-200 hover:bg-zinc-700/60"
-          >
-            <span>Admin Panel</span>
-            <span className="text-zinc-400">→</span>
-          </Link>
-        </div>
-      )}
 
       {/* Sign Out + Close */}
       <div className="mx-5 mb-5 mt-auto pt-4 flex gap-3">

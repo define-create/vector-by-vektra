@@ -8,7 +8,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     email: "",
-    displayName: "",
     password: "",
     confirmPassword: "",
   });
@@ -38,7 +37,6 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
-          displayName: form.displayName,
           password: form.password,
         }),
       });
@@ -75,15 +73,6 @@ export default function RegisterPage() {
             onChange={update("email")}
             required
             autoComplete="email"
-            className={inputClass}
-          />
-          <input
-            type="text"
-            placeholder="Display name"
-            value={form.displayName}
-            onChange={update("displayName")}
-            required
-            autoComplete="name"
             className={inputClass}
           />
           <div className="relative">

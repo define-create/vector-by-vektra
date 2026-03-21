@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { findOrCreateShadowPlayer } from "@/lib/services/players";
+import { runRecompute } from "@/lib/services/recompute";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -252,8 +253,11 @@ export async function POST(req: NextRequest) {
       return created;
     });
 
+    await runRecompute("admin");
+
     const editExpiresAt = new Date(match.createdAt.getTime() + 60 * 60 * 1000);
 
+    revalidateTag("command", "default");
     if (tag) {
       revalidateTag("tournament", "default");
     }

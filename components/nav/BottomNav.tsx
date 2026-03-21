@@ -12,7 +12,7 @@ const StatsIcon = (
 );
 
 const tabs = [
-  { label: "Command", href: "/command", icon: "⌘" as React.ReactNode },
+  { label: "Home", href: "/command", icon: "⌘" as React.ReactNode },
   { label: "Enter", href: "/enter", icon: "⊕" as React.ReactNode },
   { label: "Stats", href: "/stats", icon: StatsIcon },
 ] satisfies { label: string; href: string; icon: React.ReactNode }[];

@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { runRecompute } from "@/lib/services/recompute";
 
 // ---------------------------------------------------------------------------
 // PATCH /api/matches/[id]
@@ -112,6 +114,9 @@ export async function PATCH(
         },
       });
     });
+
+    await runRecompute("admin");
+    revalidateTag("command", "default");
 
     return NextResponse.json({
       ok: true,

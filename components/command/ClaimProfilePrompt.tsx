@@ -214,144 +214,162 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName, userEmail }
   if (!emailVerified) return <UnverifiedState userEmail={userEmail} />;
 
   return (
-    <div className="flex flex-col gap-5 pt-10">
+    <div className="flex flex-col gap-4 pt-10">
       {/* Page header — outside any card */}
       <div className="pb-1">
-        <h2 className="text-lg font-semibold text-zinc-100">Set up your player profile</h2>
+        <h2 className="text-lg font-semibold text-zinc-100">Set up your profile</h2>
         <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
           If you&apos;ve played in any tracked matches, your stats are already recorded.
-          Find your name below to connect them to this account.
         </p>
       </div>
 
       {/* Card 1 — find your stats (primary) */}
       <div className={card}>
-        <p className={label}>Find Your Stats</p>
-        <p className={body}>
-          Search your name as it appears in match results.
-        </p>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setClaimError(null); }}
-          placeholder="Type your name…"
-          className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
-        />
-        {searching && <p className="text-sm text-zinc-500">Searching…</p>}
-        {!searching && debouncedQuery.trim() && results.length === 0 && (
-          <p className="text-sm text-zinc-500">No unclaimed profiles found.</p>
-        )}
-        {!searching && results.length > 0 && (
-          <ul className="flex flex-col gap-2">
-            {results.map((p) => (
-              <li key={p.id} className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900/60 px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-zinc-100">{p.displayName}</p>
-                  <p className="text-xs text-zinc-500">
-                    {p.matchCount != null
-                      ? p.matchCount === 0
-                        ? "No matches yet"
-                        : `${p.matchCount} match${p.matchCount === 1 ? "" : "es"}`
-                      : `${Math.round(p.rating)} rating`}
-                    {p.lastMatchDate ? ` · ${formatLastPlayed(p.lastMatchDate)}` : ""}
-                    {p.winPct != null ? ` · ${Math.round(p.winPct * 100)}% wins` : ""}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleClaim(p.id)}
-                  disabled={claimingId === p.id}
-                  className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 active:bg-zinc-500 disabled:opacity-50"
-                >
-                  {claimingId === p.id ? "Claiming…" : "This is me"}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {claimError && <p className="text-sm text-amber-400">{claimError}</p>}
-      </div>
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 w-8 h-8 rounded-full bg-zinc-200 text-zinc-900 flex items-center justify-center font-bold text-sm mt-0.5">
+            1
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-100 leading-snug">Already played here</h3>
+            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">Find your stats from past matches</p>
+          </div>
+        </div>
 
-      {/* Divider */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 border-t border-zinc-800" />
-        <span className="text-xs text-zinc-600 shrink-0">or</span>
-        <div className="flex-1 border-t border-zinc-800" />
-      </div>
-
-      {/* Card 2 — new here (secondary, visually subdued) */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-5 flex flex-col gap-3">
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-600">New Here?</p>
-        <p className="text-sm text-zinc-500 leading-relaxed">
-          Haven&apos;t played in any tracked matches yet? Start fresh.
-        </p>
-        <input
-          type="text"
-          value={displayName}
-          onChange={(e) => {
-            setDisplayName(e.target.value);
-            setCreateError(null);
-            setWarningDismissed(false);
-          }}
-          placeholder="Display name…"
-          className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none text-sm"
-        />
-
-        {/* Warning — similar unclaimed profiles found */}
-        {warningProfiles.length > 0 && !warningDismissed && (
-          <div className="rounded-xl border border-amber-800/60 bg-amber-900/10 p-4 flex flex-col gap-3">
-            <p className="text-sm text-amber-300">
-              We found profiles with similar names. Are you sure none of these are you?
-            </p>
+        <div className="border-t border-zinc-700/50 pt-3 flex flex-col gap-3">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setClaimError(null); }}
+            placeholder="Type your (nick) name…"
+            className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+          />
+          {searching && <p className="text-sm text-zinc-500">Searching…</p>}
+          {!searching && debouncedQuery.trim() && results.length === 0 && (
+            <p className="text-sm text-zinc-500">No unclaimed profiles found.</p>
+          )}
+          {!searching && results.length > 0 && (
             <ul className="flex flex-col gap-2">
-              {warningProfiles.map((p) => (
-                <li key={p.id} className="flex items-center justify-between">
+              {results.map((p) => (
+                <li key={p.id} className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900/60 px-4 py-3">
                   <div>
-                    <p className="text-sm text-zinc-200">{p.displayName}</p>
+                    <p className="text-sm font-medium text-zinc-100">{p.displayName}</p>
                     <p className="text-xs text-zinc-500">
                       {p.matchCount != null
                         ? p.matchCount === 0
                           ? "No matches yet"
                           : `${p.matchCount} match${p.matchCount === 1 ? "" : "es"}`
-                        : ""}
+                        : `${Math.round(p.rating)} rating`}
+                      {p.lastMatchDate ? ` · ${formatLastPlayed(p.lastMatchDate)}` : ""}
+                      {p.winPct != null ? ` · ${Math.round(p.winPct * 100)}% wins` : ""}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleClaim(p.id)}
                     disabled={claimingId === p.id}
-                    className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 disabled:opacity-50"
+                    className="rounded-lg bg-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-500 active:bg-zinc-400 disabled:opacity-50 transition-colors"
                   >
                     {claimingId === p.id ? "Claiming…" : "This is me"}
                   </button>
                 </li>
               ))}
             </ul>
-            {claimError && (
-              <p className="text-sm text-amber-400">{claimError}</p>
-            )}
+          )}
+          {claimError && <p className="text-sm text-amber-400">{claimError}</p>}
+        </div>
+      </div>
+
+      {/* Divider — amber glow pill */}
+      <div className="flex items-center gap-0">
+        <div className="flex-1 border-t border-zinc-600" />
+        <span
+          className="mx-3 border border-amber-500/60 bg-amber-950/60 text-amber-300 text-xs font-bold tracking-widest rounded-full px-5 py-2 shrink-0"
+          style={{ boxShadow: "0 0 12px 0 rgba(180, 100, 0, 0.25)" }}
+        >OR</span>
+        <div className="flex-1 border-t border-zinc-600" />
+      </div>
+
+      {/* Card 2 — new here (same treatment as Card 1) */}
+      <div className={card}>
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 w-8 h-8 rounded-full bg-zinc-200 text-zinc-900 flex items-center justify-center font-bold text-sm mt-0.5">
+            2
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-100 leading-snug">New here</h3>
+            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">Haven&apos;t played in any tracked matches yet? Create a fresh profile.</p>
+          </div>
+        </div>
+
+        <div className="border-t border-zinc-700/50 pt-3 flex flex-col gap-3">
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              setCreateError(null);
+              setWarningDismissed(false);
+            }}
+            placeholder="Your display name…"
+            className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
+          />
+
+          {/* Warning — similar unclaimed profiles found */}
+          {warningProfiles.length > 0 && !warningDismissed && (
+            <div className="rounded-xl border border-amber-800/60 bg-amber-900/10 p-4 flex flex-col gap-3">
+              <p className="text-sm text-amber-300">
+                We found profiles with similar names. Are you sure none of these are you?
+              </p>
+              <ul className="flex flex-col gap-2">
+                {warningProfiles.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-zinc-200">{p.displayName}</p>
+                      <p className="text-xs text-zinc-500">
+                        {p.matchCount != null
+                          ? p.matchCount === 0
+                            ? "No matches yet"
+                            : `${p.matchCount} match${p.matchCount === 1 ? "" : "es"}`
+                          : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleClaim(p.id)}
+                      disabled={claimingId === p.id}
+                      className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 disabled:opacity-50"
+                    >
+                      {claimingId === p.id ? "Claiming…" : "This is me"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {claimError && (
+                <p className="text-sm text-amber-400">{claimError}</p>
+              )}
+              <button
+                type="button"
+                onClick={() => setWarningDismissed(true)}
+                className="self-start text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+              >
+                None of these are me — create fresh profile
+              </button>
+            </div>
+          )}
+
+          {/* Show create button only when no warning or warning dismissed */}
+          {(warningProfiles.length === 0 || warningDismissed) && (
             <button
               type="button"
-              onClick={() => setWarningDismissed(true)}
-              className="self-start text-xs text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+              onClick={handleCreate}
+              disabled={creating || !displayName.trim()}
+              className="w-full rounded-lg bg-zinc-700 px-4 py-3 text-sm font-medium text-zinc-100 hover:bg-zinc-600 active:bg-zinc-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              None of these are me — create fresh profile
+              {creating ? "Creating…" : "Create Profile"}
             </button>
-          </div>
-        )}
-
-        {/* Show create button only when no warning or warning dismissed */}
-        {(warningProfiles.length === 0 || warningDismissed) && (
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={creating || !displayName.trim()}
-            className="w-full rounded-lg bg-zinc-700 px-4 py-3 text-sm font-medium text-zinc-100 hover:bg-zinc-600 active:bg-zinc-500 disabled:opacity-50"
-          >
-            {creating ? "Creating…" : "Create Profile"}
-          </button>
-        )}
-        {createError && <p className="text-sm text-amber-400">{createError}</p>}
+          )}
+          {createError && <p className="text-sm text-amber-400">{createError}</p>}
+        </div>
       </div>
     </div>
   );

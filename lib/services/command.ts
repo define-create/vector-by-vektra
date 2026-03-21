@@ -45,7 +45,7 @@ export interface CommandData {
   compoundingIndex: number | null;
   driftScore: number | null;
   recentMatchHistory: LastMatch[];
-  editTimer: { expiresAt: string | null };
+  editTimer: { expiresAt: string | null; matchId: string | null };
   upcomingProbability: number | null;
   communityStats: CommunityStats | null;
   ratingHistory: { date: string; rating: number; outcome: "win" | "loss" }[];
@@ -72,7 +72,7 @@ export const getCommandData = unstable_cache(
     compoundingIndex: null,
     driftScore: null,
     recentMatchHistory: [],
-    editTimer: { expiresAt: null },
+    editTimer: { expiresAt: null, matchId: null },
     upcomingProbability: null,
     communityStats: null,
     ratingHistory: [],
@@ -419,7 +419,7 @@ export const getCommandData = unstable_cache(
     compoundingIndex,
     driftScore,
     recentMatchHistory,
-    editTimer: { expiresAt: editExpiresAt },
+    editTimer: { expiresAt: editExpiresAt, matchId: editableMatch?.id ?? null },
     upcomingProbability,
     communityStats,
     ratingHistory,

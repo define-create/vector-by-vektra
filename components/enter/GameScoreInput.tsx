@@ -116,7 +116,7 @@ function GameScoreInput({ games, onChange }, ref) {
               onChange={(e) => updateScore(gi, "team1Score", e.target.value)}
               placeholder="0"
               className={[
-                "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all",
+                "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
                 isActive(gi, "team1Score")
                   ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.2)]"
                   : "border-zinc-600",
@@ -136,7 +136,7 @@ function GameScoreInput({ games, onChange }, ref) {
               onChange={(e) => updateScore(gi, "team2Score", e.target.value)}
               placeholder="0"
               className={[
-                "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all",
+                "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
                 isActive(gi, "team2Score")
                   ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.2)]"
                   : "border-zinc-600",
