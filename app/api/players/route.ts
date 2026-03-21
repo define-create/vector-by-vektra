@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       prisma,
     );
 
-    revalidateTag("command");
+    revalidateTag("command", "default");
     return NextResponse.json({ ok: true, player }, { status: 201 });
   } catch (error) {
     console.error("[POST /api/players] Error:", error);

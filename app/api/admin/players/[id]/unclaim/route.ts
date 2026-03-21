@@ -58,7 +58,7 @@ export async function POST(
       prisma,
     );
 
-    revalidateTag("command");
+    revalidateTag("command", "default");
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[POST /api/admin/players/[id]/unclaim] Error:", error);

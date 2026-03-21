@@ -89,7 +89,7 @@ export async function POST(
       prisma,
     );
 
-    revalidateTag("command");
+    revalidateTag("command", "default");
     return NextResponse.json({ ok: true, player: updatedPlayer });
   } catch (error) {
     console.error("[POST /api/players/[id]/claim] Error:", error);
