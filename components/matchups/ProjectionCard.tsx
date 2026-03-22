@@ -55,6 +55,7 @@ interface ProjectionCardProps {
   moneyline: number | "Even";
   ratingDiff: number;
   confidence: number;
+  minConfidence: number;
   volatility: string;
   momentum: number;
   expectationGap: number;
@@ -126,6 +127,7 @@ export default function ProjectionCard({
   moneyline,
   ratingDiff,
   confidence,
+  minConfidence,
   volatility,
   momentum,
   expectationGap,
@@ -134,6 +136,7 @@ export default function ProjectionCard({
   myPlayerId,
 }: ProjectionCardProps) {
   const pct = Math.round(probability * 100);
+  const lowConfidence = minConfidence < 0.40;
 
   const p1Label = myPlayerId && players.player1.id === myPlayerId
     ? "You"
@@ -153,8 +156,8 @@ export default function ProjectionCard({
       <div className="flex items-start gap-5">
         {/* Forecast Block */}
         <div className="flex flex-col flex-none">
-          <span className="text-[64px] font-bold tracking-tight leading-none tabular-nums text-zinc-50">
-            {pct}%
+          <span className={`text-[64px] font-bold tracking-tight leading-none tabular-nums ${lowConfidence ? "text-zinc-400" : "text-zinc-50"}`}>
+            {lowConfidence ? `~${pct}%` : `${pct}%`}
           </span>
           <span className="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
             {formatMoneyline(moneyline)}
@@ -171,6 +174,10 @@ export default function ProjectionCard({
           <MetricCell label="Expectation Gap" value={signedNum(expectationGap, 1)}         info={METRIC_INFO.expectationGap} dimmed={expectationGapLowSample} />
         </div>
       </div>
+
+      {lowConfidence && (
+        <p className="text-xs text-zinc-500">Low confidence — fewer than ~10 matches on record</p>
+      )}
     </div>
   );
 }

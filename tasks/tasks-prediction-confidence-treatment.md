@@ -21,19 +21,19 @@ Update the file after completing each sub-task, not just after completing an ent
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch
-  - [ ] 0.1 Create and checkout a new branch: `git checkout -b feature/prediction-confidence-treatment`
+- [x] 0.0 Create feature branch
+  - [x] 0.1 Create and checkout a new branch: `git checkout -b feature/prediction-confidence-treatment`
 
-- [ ] 1.0 Expose `minConfidence` from the matchup API
-  - [ ] 1.1 In `app/api/matchup/route.ts` (section 3.10), add to the JSON response:
+- [x] 1.0 Expose `minConfidence` from the matchup API
+  - [x] 1.1 In `app/api/matchup/route.ts` (section 3.10), add to the JSON response:
         `minConfidence: Math.min(p1.ratingConfidence, p2.ratingConfidence, p3.ratingConfidence, p4.ratingConfidence)`
 
-- [ ] 2.0 Add low-confidence visual treatment to `ProjectionCard`
-  - [ ] 2.1 Add `minConfidence: number` to the `ProjectionCardProps` interface
-  - [ ] 2.2 Derive `const lowConfidence = minConfidence < 0.40` inside the component
-  - [ ] 2.3 When `lowConfidence`: prefix the `pct` display with `~` and apply `text-zinc-400` instead of `text-zinc-50`
-  - [ ] 2.4 When `lowConfidence`: show a callout below the forecast block — `"Low confidence — fewer than ~10 matches on record"` styled `text-xs text-zinc-500`
-  - [ ] 2.5 In `components/matchups/MatchupsClient.tsx`, pass `minConfidence` from the API response to `<ProjectionCard />`
+- [x] 2.0 Add low-confidence visual treatment to `ProjectionCard`
+  - [x] 2.1 Add `minConfidence: number` to the `ProjectionCardProps` interface
+  - [x] 2.2 Derive `const lowConfidence = minConfidence < 0.40` inside the component
+  - [x] 2.3 When `lowConfidence`: prefix the `pct` display with `~` and apply `text-zinc-400` instead of `text-zinc-50`
+  - [x] 2.4 When `lowConfidence`: show a callout below the forecast block — `"Low confidence — fewer than ~10 matches on record"` styled `text-xs text-zinc-500`
+  - [x] 2.5 In `components/matchups/MatchupsClient.tsx`, pass `minConfidence` from the API response to `<ProjectionCard />`
 
 - [ ] 3.0 Manual verification
   - [ ] 3.1 Test with a player who has fewer than 10 matches — confirm `~` prefix, dimmed number, and callout appear

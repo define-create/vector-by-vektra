@@ -259,6 +259,7 @@ export async function GET(req: NextRequest) {
     moneyline,
     ratingDiff: Math.round(ratingDiff * 10) / 10,
     confidence: Math.round(confidence * 100) / 100,
+    minConfidence: Math.min(p1.ratingConfidence, p2.ratingConfidence, p3.ratingConfidence, p4.ratingConfidence),
     volatility,
     momentum: Math.round(momentum * 10) / 10,
     expectationGap: Math.round(expectationGapResult.value * 10) / 10,

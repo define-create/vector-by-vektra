@@ -22,6 +22,7 @@ interface MatchupResponse {
   moneyline: number | "Even";
   ratingDiff: number;
   confidence: number;
+  minConfidence: number;
   volatility: string;
   momentum: number;
   expectationGap: number;
@@ -255,6 +256,7 @@ export default function MatchupsClient({
             moneyline={data.moneyline}
             ratingDiff={data.ratingDiff}
             confidence={data.confidence}
+            minConfidence={data.minConfidence}
             volatility={data.volatility}
             momentum={data.momentum}
             expectationGap={data.expectationGap}

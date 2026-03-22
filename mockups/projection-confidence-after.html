@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProjectionCard — AFTER confidence treatment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #09090b; font-family: ui-sans-serif, system-ui, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-5 gap-8">
+
+  <!-- ─── LOW confidence ─── -->
+  <div class="w-full max-w-sm">
+    <p class="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">AFTER — Low-confidence player (3 matches, minConfidence &lt; 0.40)</p>
+
+    <div class="rounded-xl border border-[#374155] p-5 flex flex-col gap-4">
+
+      <!-- Teams Block -->
+      <div>
+        <p class="text-base font-medium text-zinc-50 leading-snug">You / Alex Chen</p>
+        <p class="text-base text-zinc-500 leading-snug">vs Jordan Lee / Sam Park</p>
+      </div>
+
+      <!-- Forecast + Metrics side by side -->
+      <div class="flex items-start gap-5">
+
+        <!-- Forecast Block — LOW CONFIDENCE treatment -->
+        <div class="flex flex-col flex-none">
+          <!-- pct: ~ prefix + text-zinc-400 (dimmed) instead of text-zinc-50 -->
+          <span class="text-[64px] font-bold tracking-tight leading-none tabular-nums text-zinc-400">
+            ~63%
+          </span>
+          <span class="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
+            -180
+          </span>
+          <span class="text-sm text-zinc-500 mt-2">Model Line</span>
+        </div>
+
+        <!-- Structural Metrics — unchanged -->
+        <div class="flex-1 flex flex-col gap-3 pl-3">
+
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-zinc-500 leading-none">Δ Rating</span>
+              <span class="text-xs text-zinc-600 select-none">ⓘ</span>
+            </div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">+38.5</span>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-zinc-500 leading-none">Confidence</span>
+              <span class="text-xs text-zinc-600 select-none">ⓘ</span>
+            </div>
+            <!-- 14% unchanged; the dim + callout on the headline number provides the signal -->
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">14%</span>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-zinc-500 leading-none">Volatility</span>
+              <span class="text-xs text-zinc-600 select-none">ⓘ</span>
+            </div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">±18%</span>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-zinc-500 leading-none">Momentum</span>
+              <span class="text-xs text-zinc-600 select-none">ⓘ</span>
+            </div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">↑ Rising (+8)</span>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-zinc-500 leading-none">Expectation Gap</span>
+              <span class="text-xs text-zinc-600 select-none">ⓘ</span>
+            </div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-500">+2.3</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Low-confidence callout — NEW -->
+      <p class="text-xs text-zinc-500">
+        Low confidence — fewer than ~10 matches on record
+      </p>
+
+    </div>
+
+    <p class="text-xs text-zinc-600 mt-3">
+      Changes: "~63%" prefix + dimmed to text-zinc-400 so the number looks approximate.
+      Callout beneath the forecast block explains why.
+    </p>
+  </div>
+
+  <!-- ─── HIGH confidence — unchanged ─── -->
+  <div class="w-full max-w-sm">
+    <p class="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">AFTER — High-confidence players (40+ matches, minConfidence ≥ 0.40)</p>
+
+    <div class="rounded-xl border border-[#374155] p-5 flex flex-col gap-4">
+      <div>
+        <p class="text-base font-medium text-zinc-50 leading-snug">You / Alex Chen</p>
+        <p class="text-base text-zinc-500 leading-snug">vs Jordan Lee / Sam Park</p>
+      </div>
+      <div class="flex items-start gap-5">
+        <!-- Forecast Block — NO treatment (normal) -->
+        <div class="flex flex-col flex-none">
+          <span class="text-[64px] font-bold tracking-tight leading-none tabular-nums text-zinc-50">
+            63%
+          </span>
+          <span class="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
+            -180
+          </span>
+          <span class="text-sm text-zinc-500 mt-2">Model Line</span>
+        </div>
+        <div class="flex-1 flex flex-col gap-3 pl-3">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Δ Rating</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">+38.5</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Confidence</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">86%</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Volatility</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">±5%</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Momentum</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">↑ Rising (+8)</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Expectation Gap</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">+2.3</span>
+          </div>
+        </div>
+      </div>
+      <!-- NO callout — confidence is fine -->
+    </div>
+
+    <p class="text-xs text-zinc-600 mt-3">
+      High confidence: no changes — "63%" stays full white, no callout shown.
+    </p>
+  </div>
+
+  <!-- ─── Edge case: borderline (minConfidence exactly around 0.40) ─── -->
+  <div class="w-full max-w-sm">
+    <p class="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">AFTER — Borderline (~10 matches, minConfidence ≈ 0.39)</p>
+
+    <div class="rounded-xl border border-[#374155] p-5 flex flex-col gap-4">
+      <div>
+        <p class="text-base font-medium text-zinc-50 leading-snug">You / Alex Chen</p>
+        <p class="text-base text-zinc-500 leading-snug">vs Jordan Lee / Sam Park</p>
+      </div>
+      <div class="flex items-start gap-5">
+        <div class="flex flex-col flex-none">
+          <span class="text-[64px] font-bold tracking-tight leading-none tabular-nums text-zinc-400">
+            ~57%
+          </span>
+          <span class="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
+            -133
+          </span>
+          <span class="text-sm text-zinc-500 mt-2">Model Line</span>
+        </div>
+        <div class="flex-1 flex flex-col gap-3 pl-3">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Δ Rating</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">+12.0</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Confidence</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">39%</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Volatility</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">±14%</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Momentum</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-50">→ Steady (0)</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1"><span class="text-sm text-zinc-500 leading-none">Expectation Gap</span><span class="text-xs text-zinc-600">ⓘ</span></div>
+            <span class="text-base font-medium tabular-nums leading-none text-zinc-500">+0.5</span>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs text-zinc-500">
+        Low confidence — fewer than ~10 matches on record
+      </p>
+    </div>
+
+    <p class="text-xs text-zinc-600 mt-3">
+      Borderline case (confidence = 39%, just below the 40% threshold) — treatment still applies.
+    </p>
+  </div>
+
+</body>
+</html>
