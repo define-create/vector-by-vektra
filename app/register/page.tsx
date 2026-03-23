@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -15,6 +16,17 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = searchParams.get("inviteToken");
+    if (token) {
+      setInviteToken(token);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("pendingInviteToken", token);
+      }
+    }
+  }, [searchParams]);
 
   function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -63,7 +75,16 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-semibold mb-1">Create account</h1>
-        <p className="text-base text-zinc-500 mb-8">Every match tells a story. Yours, quantified.</p>
+        <p className="text-base text-zinc-500 mb-6">Every match tells a story. Yours, quantified.</p>
+
+        {inviteToken && (
+          <div className="mb-5 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 flex items-start gap-2.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 mt-1" />
+            <p className="text-sm text-emerald-300 leading-relaxed">
+              Invite detected — your stats will be linked after you register and sign in.
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
@@ -156,5 +177,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }

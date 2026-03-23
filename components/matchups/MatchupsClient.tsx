@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import PlayerPairSelector, { type SlotPlayer } from "@/components/matchups/PlayerPairSelector";
 import ProjectionCard from "@/components/matchups/ProjectionCard";
 import HistoryCard from "@/components/matchups/HistoryCard";
+import ShareButton from "@/components/matchups/ShareButton";
+import InviteButton from "@/components/players/InviteButton";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -263,7 +265,46 @@ export default function MatchupsClient({
             expectationGapLowSample={data.expectationGapLowSample}
             players={data.players}
             myPlayerId={myPlayerId}
+            footer={partner && opp1 && opp2 ? (
+              <ShareButton
+                player1Id={adminMode ? (player1?.id ?? myPlayerId) : myPlayerId}
+                player2Id={partner.id}
+                player3Id={opp1.id}
+                player4Id={opp2.id}
+              />
+            ) : undefined}
           />
+          {(() => {
+            const candidates = adminMode
+              ? [player1, partner, opp1, opp2]
+              : [partner, opp1, opp2];
+            const unclaimed = candidates.filter(
+              (p): p is SlotPlayer => p !== null && p.claimed === false,
+            );
+            if (unclaimed.length === 0) return null;
+            return (
+              <div className="rounded-xl border border-zinc-800 p-4 flex flex-col gap-4">
+                <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">
+                  Not on Vector yet
+                </p>
+                {unclaimed.map((p) => (
+                  <div key={p.id} className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-zinc-300 truncate">{p.name}</p>
+                      <p className="text-xs text-zinc-600">hasn't claimed their profile</p>
+                    </div>
+                    <div className="w-32 flex-shrink-0 flex">
+                      <InviteButton
+                        playerId={p.id}
+                        playerName={p.name}
+                        playerFirstName={p.name.split(" ")[0] ?? p.name}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
           <HistoryCard
             history={data.history}
             record={data.record}

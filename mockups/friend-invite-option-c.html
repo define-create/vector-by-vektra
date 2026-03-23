@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friend Invite — Option C: Match History Spotlight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #09090b;
+      --surface:   #111113;
+      --surface2:  #18181b;
+      --border:    #27272a;
+      --border-hi: #374155;
+      --t1:        #fafafa;
+      --t2:        #a1a1aa;
+      --t3:        #71717a;
+      --t4:        #52525b;
+      --t5:        #3f3f46;
+      --em:        #34d399;
+      --em-mid:    #10b981;
+      --em-glow:   rgba(52,211,153,0.10);
+      --em-subtle: rgba(52,211,153,0.05);
+      --rose:      #fb7185;
+      --mono:      'DM Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #020204; color: var(--t1);
+      font-family: var(--sans);
+      padding: 52px 32px 80px; min-height: 100vh;
+    }
+
+    .page-header { max-width: 1380px; margin: 0 auto 52px; }
+    .ph-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t5); margin-bottom: 8px; }
+    .ph-title { font-size: 26px; font-weight: 700; color: var(--t1); letter-spacing: -0.02em; margin-bottom: 6px; }
+    .ph-desc { font-family: var(--mono); font-size: 12px; color: var(--t4); line-height: 1.6; max-width: 560px; }
+
+    .columns { max-width: 1380px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; align-items: start; }
+    .col-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t5); margin-bottom: 16px; }
+    .col-note { font-family: var(--mono); font-size: 10px; color: var(--t4); line-height: 1.7; margin-top: 12px; }
+
+    .phone {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 28px;
+      overflow: hidden; box-shadow: 0 0 0 1px #000, 0 32px 64px rgba(0,0,0,0.6);
+    }
+    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 6px; font-family: var(--mono); font-size: 10px; color: var(--t4); }
+
+    .nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+    .nav-logo { display: flex; align-items: center; gap: 7px; }
+    .nav-dot { width: 7px; height: 7px; background: var(--em); border-radius: 50%; }
+    .nav-wordmark { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--t1); letter-spacing: 0.04em; }
+    .nav-tag { font-family: var(--mono); font-size: 10px; color: var(--t3); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; }
+
+    /* ─── OPTION C: LANDING PAGE — Match history is the hero ─── */
+
+    /* Tight, confident intro — doesn't need much space */
+    .intro-strip {
+      padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
+    }
+    .intro-from {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .from-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--em-glow); border: 1px solid rgba(52,211,153,0.18);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .from-dot { width: 5px; height: 5px; background: var(--em); border-radius: 50%; }
+    .from-name { font-family: var(--mono); font-size: 10px; color: var(--em); }
+    .intro-headline { font-size: 17px; font-weight: 600; color: var(--t1); letter-spacing: -0.02em; line-height: 1.35; }
+
+    /* Player identity row */
+    .identity-row {
+      margin: 0 20px;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .identity-left {}
+    .identity-name { font-size: 18px; font-weight: 700; color: var(--t1); letter-spacing: -0.02em; }
+    .identity-stats { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-top: 4px; }
+    .identity-stats em { font-style: normal; color: var(--em); }
+    .identity-right { text-align: right; }
+    .identity-rating { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--em); }
+    .identity-rating-lbl { font-family: var(--mono); font-size: 9px; color: var(--t4); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+    /* Match history — the centerpiece */
+    .history-block { padding: 0 20px; }
+    .history-header {
+      padding: 14px 0 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .history-title { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--t4); }
+    .history-count { font-family: var(--mono); font-size: 10px; color: var(--t5); }
+
+    /* Each match gets a real card — this is the wow moment */
+    .match-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 8px; overflow: hidden;
+    }
+    .match-card-top {
+      padding: 11px 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .mc-result-chip {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 12px; font-weight: 500;
+      flex-shrink: 0;
+    }
+    .mc-result-chip.w { background: rgba(52,211,153,0.12); color: var(--em); border: 1px solid rgba(52,211,153,0.22); }
+    .mc-result-chip.l { background: rgba(251,113,133,0.10); color: var(--rose); border: 1px solid rgba(251,113,133,0.2); }
+    .mc-info { flex: 1; min-width: 0; }
+    .mc-teams { font-size: 12px; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mc-date { font-family: var(--mono); font-size: 10px; color: var(--t5); }
+    .mc-score-row {
+      padding: 8px 14px; border-top: 1px solid var(--border);
+      display: flex; gap: 6px; align-items: center;
+    }
+    .mc-score-label { font-family: var(--mono); font-size: 9px; color: var(--t5); text-transform: uppercase; letter-spacing: 0.1em; }
+    .mc-score-games { display: flex; gap: 5px; }
+    .mc-game-score {
+      font-family: var(--mono); font-size: 10px; padding: 2px 6px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    }
+    .mc-game-score.w-game { color: var(--em); border-color: rgba(52,211,153,0.2); }
+    .mc-game-score.l-game { color: var(--rose); border-color: rgba(251,113,133,0.2); }
+    .mc-game-score.neutral { color: var(--t4); }
+
+    /* "And X more…" teaser */
+    .history-more {
+      text-align: center; padding: 10px;
+      font-family: var(--mono); font-size: 10px; color: var(--t4);
+    }
+
+    /* CTAs */
+    .cta-block { padding: 16px 20px 24px; }
+    .btn-primary { width: 100%; padding: 14px 16px; border-radius: 12px; background: var(--t1); color: #09090b; font-size: 14px; font-weight: 700; border: none; cursor: pointer; text-align: center; letter-spacing: -0.01em; margin-bottom: 10px; }
+    .btn-secondary { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--t3); cursor: pointer; }
+    .btn-secondary span { color: var(--em-mid); }
+
+    .page-footer { padding: 14px 20px; border-top: 1px solid var(--border); text-align: center; }
+    .footer-text { font-family: var(--mono); font-size: 10px; color: var(--t5); }
+
+    /* ─── Col 2: In-app with expanded player card ─── */
+    .search-header { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+    .search-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px; display: flex; align-items: center; gap: 9px; }
+
+    /* Player card — expanded, shows match preview inline */
+    .player-card-c {
+      margin: 12px 20px; background: var(--surface2);
+      border: 1px solid var(--border-hi); border-radius: 12px; overflow: hidden;
+    }
+    .pcc-header { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .pcc-row { display: flex; align-items: flex-start; justify-content: space-between; }
+    .pcc-name { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 2px; }
+    .pcc-meta { font-family: var(--mono); font-size: 11px; color: var(--t3); }
+    .pcc-rating { text-align: right; }
+    .pcc-rating-val { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--em); }
+    .pcc-rating-lbl { font-family: var(--mono); font-size: 9px; color: var(--t4); }
+
+    /* Inline mini-history preview in player card */
+    .pcc-history { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .pcc-history-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .pcc-history-row:last-child { margin-bottom: 0; }
+    .pcc-res { font-family: var(--mono); font-size: 10px; font-weight: 500; min-width: 12px; }
+    .pcc-res.w { color: var(--em); }
+    .pcc-res.l { color: var(--rose); }
+    .pcc-match-vs { font-size: 11px; color: var(--t3); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pcc-match-score { font-family: var(--mono); font-size: 10px; color: var(--t5); }
+
+    .pcc-actions { padding: 10px 16px; display: flex; gap: 8px; }
+    .pcc-btn-me { flex: 1; padding: 9px; border-radius: 8px; background: var(--t1); color: #09090b; font-size: 12px; font-weight: 600; border: none; cursor: pointer; text-align: center; }
+    .pcc-btn-invite { flex: 1; padding: 9px; border-radius: 8px; background: var(--em-glow); color: var(--em); font-size: 12px; font-weight: 500; border: 1px solid rgba(52,211,153,0.22); cursor: pointer; text-align: center; }
+
+    /* ─── Col 2 sheet ─── */
+    .divider { height: 1px; background: var(--border); margin: 12px 0; }
+    .sheet-lead { padding: 0 20px 8px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--em-mid); }
+
+    .invite-sheet-c { border-top: 1px solid var(--border); padding-top: 4px; }
+    .isc-drag { padding: 10px; display: flex; justify-content: center; }
+    .isc-handle { width: 36px; height: 3px; background: var(--t5); border-radius: 2px; }
+    .isc-inner { padding: 4px 20px 24px; }
+    .isc-h { font-size: 16px; font-weight: 600; color: var(--t1); }
+    .isc-sub { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-top: 3px; margin-bottom: 16px; }
+
+    /* Mini profile card inside sheet — gives context of what they're sharing */
+    .isc-profile-preview {
+      background: var(--surface2); border: 1px solid var(--border-hi);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .isc-pp-left {}
+    .isc-pp-name { font-size: 13px; font-weight: 600; color: var(--t1); }
+    .isc-pp-meta { font-family: var(--mono); font-size: 10px; color: var(--t3); margin-top: 2px; }
+    .isc-pp-right { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--em); }
+
+    .isc-method { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+    .isc-method-head { padding: 11px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .isc-method-title { font-size: 13px; font-weight: 500; color: var(--t1); }
+    .isc-method-tag { font-family: var(--mono); font-size: 9px; color: var(--em-mid); background: var(--em-glow); border-radius: 3px; padding: 2px 6px; }
+    .isc-method-body { padding: 12px 14px; }
+    .link-row-c { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; margin-bottom: 8px; }
+    .link-url-c { font-family: var(--mono); font-size: 10px; color: var(--t3); }
+    .link-copy-c { font-family: var(--mono); font-size: 10px; color: var(--em-mid); }
+    .hint-c { font-family: var(--mono); font-size: 10px; color: var(--t4); }
+    .email-f { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; font-size: 13px; color: var(--t1); margin-bottom: 8px; }
+    .btn-send-c { width: 100%; padding: 10px; border-radius: 8px; background: var(--em-glow); color: var(--em); font-size: 13px; font-weight: 500; border: 1px solid rgba(52,211,153,0.22); cursor: pointer; text-align: center; }
+    .isc-cancel { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--t4); margin-top: 12px; cursor: pointer; }
+
+    /* ─── Col 3: Registration bridge visual ─── */
+    .flow-step {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin: 12px 20px;
+    }
+    .flow-step-num {
+      font-family: var(--mono); font-size: 10px; color: var(--t4);
+      text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .flow-num-chip {
+      width: 18px; height: 18px; border-radius: 4px;
+      background: var(--em-glow); border: 1px solid rgba(52,211,153,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 10px; color: var(--em);
+    }
+    .flow-step-title { font-size: 13px; font-weight: 600; color: var(--t1); margin-bottom: 4px; }
+    .flow-step-desc { font-family: var(--mono); font-size: 10px; color: var(--t3); line-height: 1.6; }
+    .flow-step-code { font-family: var(--mono); font-size: 10px; color: var(--em-mid); margin-top: 6px; background: var(--em-subtle); border: 1px solid rgba(52,211,153,0.12); border-radius: 4px; padding: 4px 8px; display: inline-block; }
+
+    .flow-arrow { text-align: center; padding: 4px 0; font-family: var(--mono); font-size: 12px; color: var(--t5); }
+
+    /* Register page sim */
+    .register-sim { margin: 8px 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .register-sim-top { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .reg-invite-banner {
+      background: var(--em-glow); border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 6px; padding: 8px 10px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .reg-banner-dot { width: 5px; height: 5px; background: var(--em); border-radius: 50%; flex-shrink: 0; }
+    .reg-banner-text { font-family: var(--mono); font-size: 10px; color: var(--em); line-height: 1.4; }
+    .reg-title { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 10px; }
+    .reg-field { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; margin-bottom: 8px; font-size: 12px; color: var(--t4); }
+    .reg-btn { width: 100%; padding: 11px; border-radius: 8px; background: var(--t1); color: #09090b; font-size: 13px; font-weight: 600; text-align: center; }
+
+    /* Final claim state */
+    .claim-state { margin: 8px 20px 20px; }
+    .claim-header { padding: 12px 14px; background: var(--em-glow); border: 1px solid rgba(52,211,153,0.2); border-radius: 12px 12px 0 0; }
+    .claim-header-tag { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--em); margin-bottom: 4px; }
+    .claim-header-text { font-size: 14px; font-weight: 600; color: var(--t1); }
+    .claim-body { background: var(--surface2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 14px; }
+    .claim-btn { width: 100%; padding: 11px; border-radius: 8px; background: var(--t1); color: #09090b; font-size: 13px; font-weight: 600; text-align: center; }
+    .claim-dismiss { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--t4); margin-top: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="ph-eyebrow">Friend Invite — Option C</div>
+    <div class="ph-title">Match History Spotlight</div>
+    <div class="ph-desc">The "wow, that's really my data" moment comes from seeing specific match results — scores, opponents, dates. Make the match history the hero, with stats as context and CTA below. Shows the full registration-to-claim flow in column 3.</div>
+  </div>
+
+  <div class="columns">
+
+    <!-- ─── Col 1: Landing Page — history-first ─── -->
+    <div>
+      <div class="col-label">01 — Invite landing page · /invite/[token]</div>
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+
+        <div class="nav-bar">
+          <div class="nav-logo"><div class="nav-dot"></div><div class="nav-wordmark">Vector</div></div>
+          <div class="nav-tag">Invite</div>
+        </div>
+
+        <!-- Tight intro -->
+        <div class="intro-strip">
+          <div class="intro-from">
+            <div class="from-badge">
+              <div class="from-dot"></div>
+              <div class="from-name">From Ali Taha</div>
+            </div>
+          </div>
+          <div class="intro-headline">Your stats are<br>already in Vector.</div>
+        </div>
+
+        <!-- Player identity row -->
+        <div class="identity-row">
+          <div class="identity-left">
+            <div class="identity-name">Sam Taylor</div>
+            <div class="identity-stats">14 matches · <em>58%</em> win rate</div>
+          </div>
+          <div class="identity-right">
+            <div class="identity-rating">1,043</div>
+            <div class="identity-rating-lbl">Rating</div>
+          </div>
+        </div>
+
+        <!-- Match history — the hero -->
+        <div class="history-block">
+          <div class="history-header">
+            <div class="history-title">Your recent matches</div>
+            <div class="history-count">3 of 14</div>
+          </div>
+
+          <!-- Match 1 -->
+          <div class="match-card">
+            <div class="match-card-top">
+              <div class="mc-result-chip w">W</div>
+              <div class="mc-info">
+                <div class="mc-teams">w/ Jordan · vs Chris &amp; Taylor</div>
+                <div class="mc-date">Mar 18, 2026</div>
+              </div>
+            </div>
+            <div class="mc-score-row">
+              <div class="mc-score-label">Score —</div>
+              <div class="mc-score-games">
+                <div class="mc-game-score w-game">21–17</div>
+                <div class="mc-game-score l-game">18–21</div>
+                <div class="mc-game-score w-game">11–8</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Match 2 -->
+          <div class="match-card">
+            <div class="match-card-top">
+              <div class="mc-result-chip l">L</div>
+              <div class="mc-info">
+                <div class="mc-teams">w/ Mike · vs Ali &amp; Pat</div>
+                <div class="mc-date">Mar 12, 2026</div>
+              </div>
+            </div>
+            <div class="mc-score-row">
+              <div class="mc-score-label">Score —</div>
+              <div class="mc-score-games">
+                <div class="mc-game-score l-game">15–21</div>
+                <div class="mc-game-score l-game">19–21</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Match 3 -->
+          <div class="match-card">
+            <div class="match-card-top">
+              <div class="mc-result-chip w">W</div>
+              <div class="mc-info">
+                <div class="mc-teams">w/ Chris · vs Jordan &amp; Lee</div>
+                <div class="mc-date">Mar 5, 2026</div>
+              </div>
+            </div>
+            <div class="mc-score-row">
+              <div class="mc-score-label">Score —</div>
+              <div class="mc-score-games">
+                <div class="mc-game-score w-game">21–15</div>
+                <div class="mc-game-score w-game">21–18</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="history-more">+ 11 more matches tracked</div>
+        </div>
+
+        <!-- CTAs -->
+        <div class="cta-block">
+          <div class="btn-primary">Create account to claim your stats →</div>
+          <div class="btn-secondary">Already a member? <span>Sign in →</span></div>
+        </div>
+
+        <div class="page-footer">
+          <div class="footer-text">Powered by Vector · vector.app</div>
+        </div>
+      </div>
+      <div class="col-note">
+        → Match cards are the "wow" moment — real opponents, real scores, real dates<br>
+        → Each game score is color-coded W/L so context is immediate<br>
+        → "11 more matches tracked" creates FOMO without exposing everything<br>
+        → Player rating + win rate gives quick snapshot above the fold
+      </div>
+    </div>
+
+    <!-- ─── Col 2: In-App with match preview in card ─── -->
+    <div>
+      <div class="col-label">02 — In-app: ClaimProfilePrompt + invite sheet</div>
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+
+        <div class="nav-bar">
+          <div class="nav-logo"><div class="nav-dot"></div><div class="nav-wordmark">Vector</div></div>
+          <div class="nav-tag">Find profile</div>
+        </div>
+
+        <div class="search-header">
+          <div class="search-bar">
+            <div style="font-size: 14px; color: var(--t4);">⌕</div>
+            <div style="font-size: 13px; color: var(--t4);">Search players…</div>
+          </div>
+        </div>
+
+        <div style="padding: 10px 20px 6px;"><div style="font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--t5);">Shadows you've played with</div></div>
+
+        <!-- Expanded player card with inline match history preview -->
+        <div class="player-card-c">
+          <div class="pcc-header">
+            <div class="pcc-row">
+              <div>
+                <div class="pcc-name">Sam Taylor</div>
+                <div class="pcc-meta">14 matches · played 4 together</div>
+              </div>
+              <div class="pcc-rating">
+                <div class="pcc-rating-val">1,043</div>
+                <div class="pcc-rating-lbl">Rating</div>
+              </div>
+            </div>
+          </div>
+          <!-- Mini match preview inline -->
+          <div class="pcc-history">
+            <div class="pcc-history-row">
+              <div class="pcc-res w">W</div>
+              <div class="pcc-match-vs">w/ Jordan vs Chris / Taylor</div>
+              <div class="pcc-match-score">21–17…</div>
+            </div>
+            <div class="pcc-history-row">
+              <div class="pcc-res l">L</div>
+              <div class="pcc-match-vs">w/ Mike vs Ali / Pat</div>
+              <div class="pcc-match-score">15–21…</div>
+            </div>
+            <div class="pcc-history-row">
+              <div class="pcc-res w">W</div>
+              <div class="pcc-match-vs">w/ Chris vs Jordan / Lee</div>
+              <div class="pcc-match-score">21–15…</div>
+            </div>
+          </div>
+          <div class="pcc-actions">
+            <div class="pcc-btn-me">This is me</div>
+            <div class="pcc-btn-invite">Invite Sam →</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="sheet-lead">↓ After tapping "Invite Sam"</div>
+
+        <!-- Invite sheet -->
+        <div class="invite-sheet-c">
+          <div class="isc-drag"><div class="isc-handle"></div></div>
+          <div class="isc-inner">
+            <div class="isc-h">Invite Sam Taylor</div>
+            <div class="isc-sub">to join Vector and see their stats</div>
+
+            <!-- Mini profile preview in sheet for confirmation context -->
+            <div class="isc-profile-preview">
+              <div class="isc-pp-left">
+                <div class="isc-pp-name">Sam Taylor</div>
+                <div class="isc-pp-meta">14 matches · 58% win rate</div>
+              </div>
+              <div class="isc-pp-right">1,043</div>
+            </div>
+
+            <div class="isc-method">
+              <div class="isc-method-head">
+                <div class="isc-method-title">Copy invite link</div>
+                <div class="isc-method-tag">Recommended</div>
+              </div>
+              <div class="isc-method-body">
+                <div class="link-row-c">
+                  <div class="link-url-c">vector.app/invite/a8f3c…</div>
+                  <div class="link-copy-c">Copy →</div>
+                </div>
+                <div class="hint-c">Drop into iMessage, WhatsApp, Telegram</div>
+              </div>
+            </div>
+
+            <div class="isc-method">
+              <div class="isc-method-head">
+                <div class="isc-method-title">Send by email</div>
+                <div style="font-family: var(--mono); font-size: 9px; color: var(--t4);">Optional</div>
+              </div>
+              <div class="isc-method-body">
+                <input class="email-f" placeholder="sam@email.com" />
+                <div class="btn-send-c">Send invite →</div>
+              </div>
+            </div>
+
+            <div class="isc-cancel">Cancel</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-note">
+        → Player card shows inline match history preview — same "that's my data" hook in-app<br>
+        → Mini profile card in the invite sheet gives confirmation context before sending<br>
+        → Player card is slightly expanded vs Option A/B — worth the height for that recognition moment<br>
+        → "Copy invite link" always visible even before generating — on tap it generates + copies
+      </div>
+    </div>
+
+    <!-- ─── Col 3: Registration-to-Claim Bridge ─── -->
+    <div>
+      <div class="col-label">03 — Registration → claim flow (localStorage bridge)</div>
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+
+        <div class="nav-bar">
+          <div class="nav-logo"><div class="nav-dot"></div><div class="nav-wordmark">Vector</div></div>
+          <div class="nav-tag">Flow</div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="flow-step">
+          <div class="flow-step-num"><div class="flow-num-chip">1</div> Invite landing page</div>
+          <div class="flow-step-title">User taps "Create account"</div>
+          <div class="flow-step-desc">Link goes to /register?inviteToken=[rawToken]. Token is in the URL so it survives any redirect.</div>
+        </div>
+
+        <div class="flow-arrow">↓</div>
+
+        <!-- Step 2: Register page with banner -->
+        <div class="register-sim">
+          <div class="register-sim-top">
+            <div class="reg-invite-banner">
+              <div class="reg-banner-dot"></div>
+              <div class="reg-banner-text">Invite detected — Sam Taylor's stats will be linked after you register.</div>
+            </div>
+            <div class="reg-title">Create account</div>
+            <div class="reg-field">Email</div>
+            <div class="reg-field">Password</div>
+            <div class="reg-btn">Create account →</div>
+          </div>
+        </div>
+        <div style="padding: 4px 20px; font-family: var(--mono); font-size: 10px; color: var(--t5);">Register page reads inviteToken from URL → stores as localStorage["pendingInviteToken"]</div>
+
+        <div class="flow-arrow">↓</div>
+
+        <!-- Step 3 -->
+        <div class="flow-step">
+          <div class="flow-step-num"><div class="flow-num-chip">3</div> Email verification → Sign in</div>
+          <div class="flow-step-title">Post-login redirect checks localStorage</div>
+          <div class="flow-step-desc">Instead of redirecting to /command, sign-in page reads pendingInviteToken first. If present, redirects to /invite/[token].</div>
+          <div class="flow-step-code">localStorage.getItem("pendingInviteToken")</div>
+        </div>
+
+        <div class="flow-arrow">↓</div>
+
+        <!-- Step 4: Claim state -->
+        <div class="claim-state">
+          <div class="claim-header">
+            <div class="claim-header-tag">Session detected · unclaimed profile found</div>
+            <div class="claim-header-text">Is Sam Taylor's profile yours?</div>
+          </div>
+          <div class="claim-body">
+            <div style="font-family: var(--mono); font-size: 10px; color: var(--t3); margin-bottom: 12px; line-height: 1.6;">Claiming this profile will permanently link all 14 matches and your 1,043 rating to your account.</div>
+            <div class="claim-btn">Claim Profile →</div>
+            <div class="claim-dismiss">Not me — go to dashboard instead</div>
+          </div>
+        </div>
+
+        <div style="margin: 0 20px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;">
+          <div style="font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--t5); margin-bottom: 6px;">On successful claim</div>
+          <div style="font-family: var(--mono); font-size: 10px; color: var(--t4); line-height: 1.6;">
+            → Clear localStorage["pendingInviteToken"]<br>
+            → Redirect to /command<br>
+            → Email inviter: "Sam Taylor joined Vector!"
+          </div>
+        </div>
+
+      </div>
+      <div class="col-note">
+        → Register page shows a banner confirming invite was detected — reduces abandonment<br>
+        → localStorage key persists through email verification (survives page reloads)<br>
+        → Claim state is unambiguous: states exactly what will be linked and how many matches<br>
+        → "Not me — go to dashboard instead" preserves a clean exit without being hostile
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

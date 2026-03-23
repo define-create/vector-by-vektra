@@ -2,7 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
 
 // Paths that don't require authentication
-const PUBLIC_PREFIXES = ["/sign-in", "/register", "/api/auth"];
+const PUBLIC_PREFIXES = ["/sign-in", "/register", "/api/auth", "/s", "/api/share", "/invite", "/api/invite"];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
@@ -50,5 +50,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   // Run on all paths except Next.js internals and static files
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|fonts/).*)"],
 };

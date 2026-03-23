@@ -5,6 +5,19 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+function redirectAfterSignIn(router: ReturnType<typeof useRouter>) {
+  if (typeof window !== "undefined") {
+    const pending = localStorage.getItem("pendingInviteToken");
+    if (pending) {
+      router.push(`/invite/${pending}`);
+      router.refresh();
+      return;
+    }
+  }
+  router.push("/command");
+  router.refresh();
+}
+
 function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -14,6 +27,12 @@ function SignInForm() {
   const verified = searchParams.get("verified") === "true";
   const reset = searchParams.get("reset") === "true";
   const errorParam = searchParams.get("error");
+
+  // Persist invite token from URL so post-login redirect picks it up
+  const inviteTokenParam = searchParams.get("inviteToken");
+  if (inviteTokenParam && typeof window !== "undefined") {
+    localStorage.setItem("pendingInviteToken", inviteTokenParam);
+  }
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +77,7 @@ function SignInForm() {
         return;
       }
 
-      router.push("/command");
-      router.refresh();
+      redirectAfterSignIn(router);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

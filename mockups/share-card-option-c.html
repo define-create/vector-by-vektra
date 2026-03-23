@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Share Card — Option C: Dark Glass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #09090b;
+      --surface: #111113;
+      --surface2: #18181b;
+      --border: #27272a;
+      --border-hi: #374155;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #52525b;
+      --text-dim: #3f3f46;
+      --emerald: #34d399;
+      --emerald-mid: #10b981;
+      --emerald-glow: rgba(52,211,153,0.15);
+      --rose: #fb7185;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      background: #020204;
+      color: var(--text-primary);
+      font-family: var(--sans);
+      min-height: 100vh;
+      padding: 48px 24px;
+    }
+
+    .label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    /* ══════════════════════════════════════════════
+       PHONE FRAME
+    ══════════════════════════════════════════════ */
+    .phone {
+      width: 375px;
+      background: var(--bg);
+      border-radius: 36px;
+      border: 1.5px solid #1a1a1d;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 40px 80px rgba(0,0,0,0.95);
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 24px 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .phone-scroll {
+      padding: 0 16px 0;
+    }
+
+    /* Projection card */
+    .proj-card {
+      background: linear-gradient(135deg, #141418 0%, #111113 100%);
+      border: 1px solid var(--border-hi);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .proj-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 40%, transparent 100%);
+    }
+    .pc-teams { margin-bottom: 16px; }
+    .pc-t1 { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .pc-t2 { font-size: 14px; color: var(--text-muted); margin-top: 1px; }
+    .pc-body { display: flex; gap: 18px; }
+    .pc-forecast { display: flex; flex-direction: column; }
+    .pc-pct {
+      font-family: var(--mono);
+      font-size: 60px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--text-primary);
+      letter-spacing: -0.04em;
+    }
+    .pc-ml {
+      font-family: var(--mono);
+      font-size: 34px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .pc-ml-label { font-size: 11px; color: var(--text-muted); font-family: var(--mono); margin-top: 4px; }
+    .pc-metrics { flex: 1; display: flex; flex-direction: column; gap: 9px; padding-left: 10px; border-left: 1px solid var(--border); }
+    .pc-metric-l { font-size: 11px; color: var(--text-muted); }
+    .pc-metric-v { font-family: var(--mono); font-size: 13px; color: var(--text-primary); font-weight: 500; }
+
+    /* Share trigger button — elegant outline */
+    .share-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 0;
+    }
+    .share-trigger-left { display: flex; align-items: center; gap: 10px; }
+    .trigger-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald-glow);
+    }
+    .trigger-arrow { font-size: 16px; color: var(--text-muted); }
+
+    /* Modal sheet */
+    .modal-sheet {
+      background: #141416;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-radius: 24px 24px 0 0;
+      padding: 0 16px 36px;
+      margin-top: 12px;
+    }
+    .modal-handle { width: 32px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 20px; }
+    .modal-preview {
+      background: linear-gradient(135deg, #141418 0%, #0f0f11 100%);
+      border: 1px solid var(--border-hi);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mp-top { display: flex; align-items: center; gap: 6px; }
+    .mp-logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); }
+    .mp-logo-name { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; }
+    .mp-teams { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+    .mp-teams span { color: var(--text-muted); }
+    .mp-pct {
+      font-family: var(--mono);
+      font-size: 40px;
+      font-weight: 500;
+      color: var(--emerald);
+      letter-spacing: -0.03em;
+    }
+    .mp-pct small { font-size: 15px; color: var(--text-muted); margin-left: 4px; font-weight: 400; }
+    .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+    .ma-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      background: var(--text-primary);
+      color: #09090b;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .ma-row { display: flex; gap: 8px; }
+    .ma-secondary {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* ══════════════════════════════════════════════
+       SHARE IMAGE CARD — Dark glass / layered depth
+    ══════════════════════════════════════════════ */
+    .card-wrap {
+      width: 400px;
+      background: var(--bg);
+      border: 1px solid #1c1c1f;
+      border-radius: 24px;
+      padding: 1px;
+      position: relative;
+    }
+    /* Subtle outer glow matching emerald */
+    .card-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 25px;
+      background: linear-gradient(135deg, rgba(52,211,153,0.1) 0%, transparent 50%, transparent 100%);
+      z-index: -1;
+    }
+    .share-card {
+      background: linear-gradient(160deg, #111115 0%, #0c0c0e 60%, #090909 100%);
+      border-radius: 23px;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Noise texture overlay */
+    .share-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    /* Radial emerald glow from top-right */
+    .share-card::after {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(52,211,153,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .sc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 2;
+    }
+    .sc-logo { display: flex; align-items: center; gap: 8px; }
+    .sc-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 10px rgba(52,211,153,0.4); }
+    .sc-wordmark { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.08em; }
+    .sc-meta { text-align: right; }
+    .sc-domain { font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; }
+
+    .sc-teams {
+      position: relative;
+      z-index: 2;
+      margin-bottom: 28px;
+    }
+    .sc-t1 { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+    .sc-sep {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+    }
+    .sc-sep-line { flex: 1; height: 1px; background: var(--border); }
+    .sc-sep-vs { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+    .sc-t2 { font-size: 17px; font-weight: 500; color: var(--text-muted); }
+
+    /* Probability display — glass pill */
+    .sc-prob {
+      position: relative;
+      z-index: 2;
+      background: rgba(52,211,153,0.04);
+      border: 1px solid rgba(52,211,153,0.12);
+      border-radius: 16px;
+      padding: 22px 26px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sc-pct-block {}
+    .sc-pct {
+      font-family: var(--mono);
+      font-size: 72px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+    .sc-pct-sub {
+      font-size: 12px;
+      color: var(--emerald);
+      margin-top: 6px;
+      font-family: var(--mono);
+      letter-spacing: 0.04em;
+    }
+    .sc-bar-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+      min-width: 80px;
+    }
+    .sc-bar-label { font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; }
+    .sc-bar-track {
+      width: 80px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .sc-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--emerald-mid), var(--emerald));
+      border-radius: 3px;
+    }
+    .sc-bar-track.opp .sc-bar-fill { background: var(--text-muted); }
+
+    .sc-footer-stats {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 16px;
+    }
+    .sc-fstat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .sc-fstat + .sc-fstat {
+      padding-left: 16px;
+      border-left: 1px solid var(--border);
+    }
+    .sc-fstat-label { font-family: var(--mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+    .sc-fstat-val { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--text-primary); }
+
+    /* ══════════════════════════════════════════════
+       PUBLIC PAGE /s/[token]
+    ══════════════════════════════════════════════ */
+    .pub-page {
+      width: 375px;
+      background: var(--bg);
+      border-radius: 36px;
+      border: 1.5px solid #1a1a1d;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.95);
+      min-height: 680px;
+      display: flex;
+      flex-direction: column;
+    }
+    .pub-status { display: flex; justify-content: space-between; padding: 12px 24px 8px; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+
+    .pub-header {
+      padding: 12px 20px 20px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      background: linear-gradient(180deg, rgba(52,211,153,0.04) 0%, transparent 100%);
+    }
+    .pub-header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(52,211,153,0.2), transparent);
+    }
+    .pub-logo { display: flex; align-items: center; gap: 7px; margin-bottom: 16px; }
+    .pub-logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--emerald); box-shadow: 0 0 8px rgba(52,211,153,0.4); }
+    .pub-logo-name { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--text-primary); }
+    .pub-title { font-size: 13px; color: var(--text-muted); margin-bottom: 0; }
+
+    .pub-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+    /* Probability pill */
+    .pub-prob-pill {
+      background: rgba(52,211,153,0.05);
+      border: 1px solid rgba(52,211,153,0.1);
+      border-radius: 16px;
+      padding: 20px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .pub-big-pct {
+      font-family: var(--mono);
+      font-size: 64px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      flex-shrink: 0;
+    }
+    .pub-prob-right { display: flex; flex-direction: column; gap: 6px; }
+    .pub-favored-team { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .pub-favored-label { font-family: var(--mono); font-size: 11px; color: var(--emerald); letter-spacing: 0.04em; }
+    .pub-prob-bar-row { display: flex; flex-direction: column; gap: 3px; }
+    .pub-bar-label { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+    .pub-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; width: 100%; margin-top: 2px; }
+    .pub-bar-fill { height: 100%; background: var(--emerald); border-radius: 2px; }
+    .pub-bar-fill.opp { background: var(--text-muted); }
+
+    /* Teams */
+    .pub-teams {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .pub-team-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+    }
+    .pub-team-row + .pub-team-row { border-top: 1px solid var(--border); }
+    .ptr-indicator { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .ptr-indicator.fav { background: var(--emerald); }
+    .ptr-indicator.dog { background: var(--text-muted); }
+    .ptr-name { font-size: 14px; font-weight: 500; color: var(--text-primary); flex: 1; }
+    .ptr-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--text-muted); }
+    .ptr-label.fav { color: var(--emerald); }
+
+    /* Stats grid */
+    .pub-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .pub-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .ps-l { font-family: var(--mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .ps-v { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--text-primary); }
+
+    .pub-cta-block { margin-top: auto; }
+    .pub-cta {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background: var(--text-primary);
+      color: var(--bg);
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .pub-cta-sub {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--mono);
+    }
+    .pub-cta-sub span { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+
+    .pub-footer {
+      text-align: center;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Layout */
+    .grid-3 { display: flex; gap: 48px; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
+    .col { display: flex; flex-direction: column; gap: 16px; }
+    .heading-block { max-width: 1400px; margin: 0 auto 48px; }
+    h1 { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: var(--text-muted); font-family: var(--mono); }
+  </style>
+</head>
+<body>
+
+  <div class="heading-block">
+    <p class="label">Shareable Prediction Card — Option C</p>
+    <h1>Dark Glass</h1>
+    <p class="subtitle">DM Mono + DM Sans. Layered depth with glass surfaces and emerald radial glows. Refined, premium feel — the app's aesthetic dialed up.</p>
+  </div>
+
+  <div class="grid-3">
+
+    <!-- Col 1: In-app -->
+    <div class="col">
+      <p class="label">01 / In-app — share trigger + action sheet</p>
+
+      <div class="phone">
+        <div class="status-bar"><span>9:41</span><span>⚡ 84%</span></div>
+        <div class="phone-scroll">
+
+          <div class="proj-card">
+            <div class="pc-teams">
+              <p class="pc-t1">You / Alex Chen</p>
+              <p class="pc-t2">vs Jordan Lee / Sam Park</p>
+            </div>
+            <div class="pc-body">
+              <div class="pc-forecast">
+                <div class="pc-pct">73%</div>
+                <div class="pc-ml">−240</div>
+                <div class="pc-ml-label">Model Line</div>
+              </div>
+              <div class="pc-metrics">
+                <div><div class="pc-metric-l">Δ Rating</div><div class="pc-metric-v">+82.0</div></div>
+                <div><div class="pc-metric-l">Confidence</div><div class="pc-metric-v">84%</div></div>
+                <div><div class="pc-metric-l">Volatility</div><div class="pc-metric-v">±5%</div></div>
+                <div><div class="pc-metric-l">Momentum</div><div class="pc-metric-v">↑ Rising</div></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="share-trigger">
+            <span class="share-trigger-left">
+              <span class="trigger-dot"></span>
+              <span>Share this prediction</span>
+            </span>
+            <span class="trigger-arrow">›</span>
+          </button>
+
+          <div style="height:12px;"></div>
+        </div>
+
+        <!-- Action sheet -->
+        <div class="modal-sheet">
+          <div class="modal-handle"></div>
+
+          <!-- Inline card preview -->
+          <div class="modal-preview">
+            <div class="mp-top">
+              <div class="mp-logo-dot"></div>
+              <span class="mp-logo-name">VECTOR</span>
+            </div>
+            <div class="mp-teams">You / Alex Chen <span>vs</span> Jordan Lee / Sam Park</div>
+            <div class="mp-pct">73% <small>Ali / Sam favored</small></div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="ma-primary">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 2l4 4-4 4M14 6H6a4 4 0 000 8h2"/>
+              </svg>
+              Share via native sheet
+            </button>
+            <div class="ma-row">
+              <button class="ma-secondary">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="10" height="10" rx="1.5"/><path d="M2 12V2h10"/></svg>
+                Copy link
+              </button>
+              <button class="ma-secondary">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 4 3-4M2 14h12"/></svg>
+                Download PNG
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Col 2: Share image -->
+    <div class="col">
+      <p class="label">02 / Generated share image (Satori PNG)</p>
+
+      <div class="card-wrap">
+        <div class="share-card">
+          <div class="sc-header">
+            <div class="sc-logo">
+              <div class="sc-dot"></div>
+              <span class="sc-wordmark">Vector</span>
+            </div>
+            <div class="sc-meta">
+              <div class="sc-domain">vector.app</div>
+            </div>
+          </div>
+
+          <div class="sc-teams">
+            <div class="sc-t1">Ali Taha / Sam Chen</div>
+            <div class="sc-sep">
+              <div class="sc-sep-line"></div>
+              <span class="sc-sep-vs">VS</span>
+              <div class="sc-sep-line"></div>
+            </div>
+            <div class="sc-t2">Jordan Lee / Chris Park</div>
+          </div>
+
+          <div class="sc-prob">
+            <div class="sc-pct-block">
+              <div class="sc-pct">73%</div>
+              <div class="sc-pct-sub">↑ Ali / Sam favored</div>
+            </div>
+            <div class="sc-bar-group">
+              <div class="sc-bar-label">Ali / Sam</div>
+              <div class="sc-bar-track">
+                <div class="sc-bar-fill" style="width:73%;"></div>
+              </div>
+              <div class="sc-bar-label" style="margin-top:4px;">Jordan / Chris</div>
+              <div class="sc-bar-track opp">
+                <div class="sc-bar-fill opp" style="width:27%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sc-footer-stats">
+            <div class="sc-fstat">
+              <div class="sc-fstat-label">Δ Rating</div>
+              <div class="sc-fstat-val">+82</div>
+            </div>
+            <div class="sc-fstat">
+              <div class="sc-fstat-label">Line</div>
+              <div class="sc-fstat-val">−240</div>
+            </div>
+            <div class="sc-fstat">
+              <div class="sc-fstat-label">Momentum</div>
+              <div class="sc-fstat-val" style="font-size:14px;">↑ Rising</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Note on probability bars -->
+      <p class="label" style="color:#2d2d30;line-height:1.6;">Note: probability bars (73% vs 27%) are <br>derived from the snapshot — not extra data. <br>Adds instant visual clarity for group chat recipients.</p>
+    </div>
+
+    <!-- Col 3: Public page -->
+    <div class="col">
+      <p class="label">03 / Public share page /s/[token]</p>
+
+      <div class="pub-page">
+        <div class="pub-status"><span>9:41</span><span>⚡ 84%</span></div>
+
+        <div class="pub-header">
+          <div class="pub-logo">
+            <div class="pub-logo-dot"></div>
+            <span class="pub-logo-name">Vector</span>
+          </div>
+          <div class="pub-title">Matchup prediction</div>
+        </div>
+
+        <div class="pub-body">
+          <!-- Probability pill -->
+          <div class="pub-prob-pill">
+            <div class="pub-big-pct">73%</div>
+            <div class="pub-prob-right">
+              <div class="pub-favored-team">Ali / Sam</div>
+              <div class="pub-favored-label">win probability</div>
+              <div style="height:8px;"></div>
+              <div class="pub-prob-bar-row">
+                <div class="pub-bar-label">Ali / Sam — 73%</div>
+                <div class="pub-bar"><div class="pub-bar-fill" style="width:73%;"></div></div>
+              </div>
+              <div class="pub-prob-bar-row" style="margin-top:4px;">
+                <div class="pub-bar-label">Jordan / Chris — 27%</div>
+                <div class="pub-bar"><div class="pub-bar-fill opp" style="width:27%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Teams -->
+          <div class="pub-teams">
+            <div class="pub-team-row">
+              <div class="ptr-indicator fav"></div>
+              <span class="ptr-name">Ali Taha / Sam Chen</span>
+              <span class="ptr-label fav">Favored</span>
+            </div>
+            <div class="pub-team-row">
+              <div class="ptr-indicator dog"></div>
+              <span class="ptr-name">Jordan Lee / Chris Park</span>
+              <span class="ptr-label">Underdog</span>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="pub-stats">
+            <div class="pub-stat">
+              <div class="ps-l">Δ Rating</div>
+              <div class="ps-v">+82</div>
+            </div>
+            <div class="pub-stat">
+              <div class="ps-l">Line</div>
+              <div class="ps-v">−240</div>
+            </div>
+            <div class="pub-stat">
+              <div class="ps-l">Momentum</div>
+              <div class="ps-v" style="font-size:12px;">↑ Rising</div>
+            </div>
+          </div>
+
+          <!-- CTA -->
+          <div class="pub-cta-block">
+            <button class="pub-cta">See your own stats — join Vector</button>
+            <div class="pub-cta-sub">Already a member? <span>Sign in →</span></div>
+          </div>
+        </div>
+
+        <div class="pub-footer">Powered by Vector · vector.app</div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

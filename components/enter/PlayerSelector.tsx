@@ -13,7 +13,7 @@ interface Player {
 interface PlayerSelectorProps {
   label?: string;
   value: { id?: string; name?: string; rating?: number; matchCount?: number } | null;
-  onChange: (value: { id?: string; name?: string; rating?: number; matchCount?: number } | null) => void;
+  onChange: (value: { id?: string; name?: string; rating?: number; matchCount?: number; claimed?: boolean } | null) => void;
   /** Called when disambiguation state changes — true means "ok to proceed" */
   onDisambiguated?: (confirmed: boolean) => void;
   /** IDs of players already selected elsewhere (excluded from results) */
@@ -158,7 +158,7 @@ export default function PlayerSelector({
       setMatchWarning([]);
       setConfirmedNew(false);
       setInputValue(player.displayName);
-      onChange({ id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount });
+      onChange({ id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount, claimed: player.claimed });
       setOpen(false);
       onDisambiguated?.(true);
     },

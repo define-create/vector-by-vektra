@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Share Sheet — Before & After</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #08080a;
+      font-family: 'Syne', -apple-system, sans-serif;
+      color: #d4d4d8;
+      padding: 48px 24px 80px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+
+    /* page header */
+    .page-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #52525b;
+    }
+
+    /* layout */
+    .frames {
+      display: flex;
+      gap: 48px;
+      align-items: flex-start;
+    }
+
+    .frame-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .frame-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .frame-label.current  { color: #52525b; }
+    .frame-label.redesign { color: #34d399; }
+
+    /* phone shell */
+    .phone {
+      width: 300px;
+      background: #0d0d0f;
+      border-radius: 40px;
+      border: 1.5px solid #27272a;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notch-bar {
+      height: 44px;
+      background: #0d0d0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .notch-pill {
+      width: 88px;
+      height: 22px;
+      background: #000;
+      border-radius: 11px;
+    }
+
+    /* screen area */
+    .screen {
+      position: relative;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    /* ghost content — faint app context behind the sheet */
+    .ghost {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      opacity: 0.18;
+    }
+    .g-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: #3f3f46;
+    }
+    .g-card {
+      border-radius: 10px;
+      border: 1px solid #27272a;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    /* dim overlay */
+    .dim {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.62);
+    }
+
+    /* ─── bottom sheet ─── */
+    .sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      border-radius: 24px 24px 0 0;
+      padding: 0 16px 28px;
+    }
+    .sheet.current-sheet  { background: #111113; }
+    .sheet.new-sheet      { background: #111113; }
+
+    .handle {
+      width: 32px;
+      height: 4px;
+      background: #3f3f46;
+      border-radius: 2px;
+      margin: 12px auto 16px;
+    }
+
+    .sheet-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fafafa;
+      margin-bottom: 14px;
+    }
+
+
+    /* ══════════════════════════════
+       CURRENT — mini preview card
+    ══════════════════════════════ */
+
+    .mini-card {
+      background: linear-gradient(135deg, #141418, #0f0f11);
+      border: 1px solid #374155;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .mini-pct {
+      font-family: 'DM Mono', monospace;
+      font-size: 38px;
+      font-weight: 400;
+      color: #f4f4f5;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      flex-shrink: 0;
+    }
+    .mini-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .mini-team { font-size: 12px; font-weight: 500; color: #f4f4f5; }
+    .mini-opp  { font-size: 10px; color: #71717a; }
+    .mini-line {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: #34d399;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    /* current buttons */
+    .cur-btn-primary {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      background: #fafafa;
+      color: #0a0a0c;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+    .cur-btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    .cur-btn-sec {
+      flex: 1;
+      padding: 11px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid #27272a;
+      color: #d4d4d8;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+
+    /* ══════════════════════════════
+       REDESIGNED — hero card
+    ══════════════════════════════ */
+
+    .hero-card {
+      background: #0b1520;
+      border: 1px solid #1e3558;
+      border-radius: 16px;
+      padding: 16px 16px 14px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 0%, rgba(52,211,153,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse at 85% 100%, rgba(96,165,250,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* team names — left favored, right underdog */
+    .matchup-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .team-favored {
+      font-size: 11px;
+      font-weight: 700;
+      color: #f4f4f5;
+      letter-spacing: 0.01em;
+      max-width: 110px;
+      line-height: 1.25;
+    }
+    .vs-pill {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #52525b;
+      flex-shrink: 0;
+      padding: 0 6px;
+    }
+    .team-underdog {
+      font-size: 11px;
+      font-weight: 400;
+      color: #71717a;
+      text-align: right;
+      max-width: 110px;
+      line-height: 1.25;
+    }
+
+    /* probability split bar */
+    .split-track {
+      height: 3px;
+      border-radius: 2px;
+      background: #27272a;
+      margin-bottom: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    .split-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 54%;
+      background: #34d399;
+      border-radius: 2px;
+    }
+
+    /* big % number */
+    .hero-pct-block {
+      text-align: center;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-pct {
+      font-family: 'DM Mono', monospace;
+      font-size: 68px;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: #fafafa;
+    }
+    .hero-pct-sub {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #52525b;
+      margin-top: 3px;
+    }
+
+    /* favored badge */
+    .favored-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .favored-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(52,211,153,0.10);
+      border: 1px solid rgba(52,211,153,0.22);
+    }
+    .favored-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #34d399;
+      flex-shrink: 0;
+    }
+    .favored-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: #34d399;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .favored-ml {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: #52525b;
+    }
+
+    /* redesigned buttons */
+    .new-btn-primary {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      background: #fafafa;
+      color: #08080a;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      letter-spacing: 0.01em;
+    }
+    .new-btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    .new-btn-sec {
+      flex: 1;
+      padding: 11px 10px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid #27272a;
+      color: #d4d4d8;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .new-btn-sec.dim {
+      color: #52525b;
+    }
+
+
+    /* ── callout notes ── */
+    .callouts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      width: 100%;
+      max-width: 660px;
+    }
+    .callout-col { display: flex; flex-direction: column; gap: 7px; }
+    .col-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #27272a;
+    }
+    .col-label.cur { color: #52525b; }
+    .col-label.new { color: #34d399; }
+    .note {
+      font-size: 12px;
+      line-height: 1.5;
+      padding-left: 16px;
+      position: relative;
+      color: #52525b;
+    }
+    .note::before { content: attr(data-icon); position: absolute; left: 0; }
+    .note.con { color: #991b1b; }
+    .note.pro { color: #14532d; }
+  </style>
+</head>
+<body>
+
+  <p class="page-title">Share Sheet — Before &amp; After</p>
+
+  <div class="frames">
+
+    <!-- ══ CURRENT ══ -->
+    <div class="frame-wrap">
+      <span class="frame-label current">Current</span>
+      <div class="phone">
+        <div class="notch-bar"><div class="notch-pill"></div></div>
+        <div class="screen" style="min-height:420px; background:linear-gradient(180deg,#0f0f12,#0a0a0c);">
+          <div class="ghost">
+            <div class="g-bar" style="width:55%"></div>
+            <div class="g-bar" style="width:38%"></div>
+            <div class="g-card">
+              <div class="g-bar" style="width:75%"></div>
+              <div class="g-bar" style="width:55%"></div>
+            </div>
+            <div class="g-card">
+              <div class="g-bar" style="width:40%"></div>
+              <div class="g-bar" style="width:70%"></div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet current-sheet">
+            <div class="handle"></div>
+            <p class="sheet-title">Share prediction</p>
+
+            <div class="mini-card">
+              <span class="mini-pct">~54%</span>
+              <div class="mini-info">
+                <p class="mini-team">AT-gmail / Player3</p>
+                <p class="mini-opp">vs Edita / Eldi</p>
+                <p class="mini-line">↑ AT-gmail / Player3 favored · -115</p>
+              </div>
+            </div>
+
+            <button class="cur-btn-primary">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 2l4 4-4 4M14 6H6a4 4 0 000 8h2"/>
+              </svg>
+              Share via native sheet
+            </button>
+
+            <div class="cur-btn-row">
+              <div class="cur-btn-sec">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="4" y="4" width="10" height="10" rx="1.5"/>
+                  <path d="M2 12V2h10"/>
+                </svg>
+                Copy link
+              </div>
+              <div class="cur-btn-sec">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M8 2v8M5 7l3 4 3-4M2 14h12"/>
+                </svg>
+                Download PNG
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ REDESIGNED ══ -->
+    <div class="frame-wrap">
+      <span class="frame-label redesign">Redesigned</span>
+      <div class="phone">
+        <div class="notch-bar"><div class="notch-pill"></div></div>
+        <div class="screen" style="min-height:420px; background:linear-gradient(180deg,#0f0f12,#0a0a0c);">
+          <div class="ghost">
+            <div class="g-bar" style="width:55%"></div>
+            <div class="g-bar" style="width:38%"></div>
+            <div class="g-card">
+              <div class="g-bar" style="width:75%"></div>
+              <div class="g-bar" style="width:55%"></div>
+            </div>
+            <div class="g-card">
+              <div class="g-bar" style="width:40%"></div>
+              <div class="g-bar" style="width:70%"></div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet new-sheet">
+            <div class="handle"></div>
+            <p class="sheet-title">Share prediction</p>
+
+            <!-- hero card -->
+            <div class="hero-card">
+              <!-- team names left/right -->
+              <div class="matchup-row">
+                <div class="team-favored">AT-gmail / Player3</div>
+                <div class="vs-pill">vs</div>
+                <div class="team-underdog">Edita / Eldi</div>
+              </div>
+
+              <!-- probability split bar -->
+              <div class="split-track">
+                <div class="split-fill"></div>
+              </div>
+
+              <!-- hero percentage -->
+              <div class="hero-pct-block">
+                <div class="hero-pct">54%</div>
+                <div class="hero-pct-sub">win probability</div>
+              </div>
+
+              <!-- favored badge -->
+              <div class="favored-row">
+                <div class="favored-badge">
+                  <div class="favored-dot"></div>
+                  <span class="favored-label">AT-gmail / Player3 favored</span>
+                </div>
+                <span class="favored-ml">-115</span>
+              </div>
+            </div>
+
+            <!-- primary: Share -->
+            <div class="new-btn-primary">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M10 2l4 4-4 4M14 6H6a4 4 0 000 8h2"/>
+              </svg>
+              Share
+            </div>
+
+            <!-- secondary row: Copy link + Download Img -->
+            <div class="new-btn-row">
+              <div class="new-btn-sec">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="4" y="4" width="10" height="10" rx="1.5"/>
+                  <path d="M2 12V2h10"/>
+                </svg>
+                Copy link
+              </div>
+              <div class="new-btn-sec dim">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M8 2v8M5 7l3 4 3-4M2 14h12"/>
+                </svg>
+                Download Img
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /frames -->
+
+  <!-- change notes -->
+  <div class="callouts">
+    <div class="callout-col">
+      <div class="col-label cur">Current issues</div>
+      <p class="note con" data-icon="✕">54% buried in a small widget alongside text</p>
+      <p class="note con" data-icon="✕">Team names at 12px — barely readable</p>
+      <p class="note con" data-icon="✕">"Share via native sheet" — long utility copy</p>
+      <p class="note con" data-icon="✕">Copy link and Download PNG — identical visual weight</p>
+      <p class="note" data-icon="—">Mini card shows data, not a brag-worthy moment</p>
+    </div>
+    <div class="callout-col">
+      <div class="col-label new">Redesigned</div>
+      <p class="note pro" data-icon="✓">54% at 68px center — the whole point, front and center</p>
+      <p class="note pro" data-icon="✓">Split bar: favored team left (green), underdog right (gray)</p>
+      <p class="note pro" data-icon="✓">"Share" — one confident word, primary CTA</p>
+      <p class="note pro" data-icon="✓">Download Img dimmed — secondary to Copy link</p>
+      <p class="note pro" data-icon="✓">Favored badge with moneyline — scannable at a glance</p>
+    </div>
+  </div>
+
+</body>
+</html>

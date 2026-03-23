@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friend Invite — Option B: Personal Letter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #09090b;
+      --surface:   #111113;
+      --surface2:  #18181b;
+      --border:    #27272a;
+      --border-hi: #374155;
+      --t1:        #fafafa;
+      --t2:        #a1a1aa;
+      --t3:        #71717a;
+      --t4:        #52525b;
+      --t5:        #3f3f46;
+      --em:        #34d399;
+      --em-mid:    #10b981;
+      --em-glow:   rgba(52,211,153,0.10);
+      --em-subtle: rgba(52,211,153,0.05);
+      --rose:      #fb7185;
+      --amber:     #fbbf24;
+      --mono:      'DM Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #020204;
+      color: var(--t1);
+      font-family: var(--sans);
+      padding: 52px 32px 80px;
+      min-height: 100vh;
+    }
+
+    .page-header { max-width: 1380px; margin: 0 auto 52px; }
+    .ph-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t5); margin-bottom: 8px; }
+    .ph-title { font-size: 26px; font-weight: 700; color: var(--t1); letter-spacing: -0.02em; margin-bottom: 6px; }
+    .ph-desc { font-family: var(--mono); font-size: 12px; color: var(--t4); line-height: 1.6; max-width: 560px; }
+
+    .columns { max-width: 1380px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; align-items: start; }
+    .col-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t5); margin-bottom: 16px; }
+    .col-note { font-family: var(--mono); font-size: 10px; color: var(--t4); line-height: 1.7; margin-top: 12px; }
+
+    /* ─── Phone shell ─── */
+    .phone {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 28px; overflow: hidden;
+      box-shadow: 0 0 0 1px #000, 0 32px 64px rgba(0,0,0,0.6);
+    }
+    .phone-status { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 6px; font-family: var(--mono); font-size: 10px; color: var(--t4); }
+
+    /* ─── Nav ─── */
+    .nav-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+    .nav-logo { display: flex; align-items: center; gap: 7px; }
+    .nav-dot { width: 7px; height: 7px; background: var(--em); border-radius: 50%; }
+    .nav-wordmark { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--t1); letter-spacing: 0.04em; }
+    .nav-tag { font-family: var(--mono); font-size: 10px; color: var(--t3); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; }
+
+    /* ─── OPTION B: LANDING PAGE — Hero-first, personal tone ─── */
+
+    /* Hero block: inviter context front and center */
+    .hero-block {
+      padding: 28px 20px 24px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-block::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse 200px 120px at 20% 0%, rgba(52,211,153,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .inviter-card {
+      display: flex; align-items: center; gap: 11px; margin-bottom: 18px;
+    }
+    .inviter-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600; color: var(--em);
+      font-family: var(--mono); flex-shrink: 0;
+    }
+    .inviter-info {}
+    .inviter-name { font-size: 13px; font-weight: 600; color: var(--t1); }
+    .inviter-context { font-family: var(--mono); font-size: 10px; color: var(--t3); margin-top: 2px; }
+
+    .hero-headline {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.25; color: var(--t1);
+    }
+    .hero-headline em { font-style: normal; color: var(--em); }
+    .hero-sub { font-size: 13px; color: var(--t3); margin-top: 8px; line-height: 1.5; }
+
+    /* Player proof card */
+    .proof-card {
+      margin: 18px 20px;
+      background: var(--surface2); border: 1px solid var(--border-hi);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(52,211,153,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .proof-card-top {
+      padding: 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .proof-name { font-size: 16px; font-weight: 600; color: var(--t1); }
+    .proof-em-badge {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--em-glow); border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 20px; padding: 3px 9px;
+    }
+    .proof-em-dot { width: 5px; height: 5px; background: var(--em); border-radius: 50%; }
+    .proof-em-text { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: 0.08em; }
+
+    .proof-stats {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+    .proof-stat { padding: 14px 16px; border-right: 1px solid var(--border); }
+    .proof-stat:last-child { border-right: none; }
+    .proof-stat-val { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--t1); }
+    .proof-stat-val.em { color: var(--em); }
+    .proof-stat-lbl { font-family: var(--mono); font-size: 9px; color: var(--t4); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 3px; }
+
+    /* Sparkline-style win streak */
+    .proof-streak { padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+    .streak-label { font-family: var(--mono); font-size: 10px; color: var(--t4); }
+    .streak-dots { display: flex; gap: 4px; }
+    .streak-dot { width: 8px; height: 8px; border-radius: 2px; }
+    .streak-dot.w { background: var(--em-mid); }
+    .streak-dot.l { background: var(--rose); opacity: 0.7; }
+
+    /* Match history — card style, not raw rows */
+    .matches-section { padding: 0 20px 16px; }
+    .matches-title { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--t4); margin-bottom: 10px; padding-top: 4px; }
+
+    .match-tile {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .match-tile-result {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 11px; font-weight: 500;
+      flex-shrink: 0;
+    }
+    .match-tile-result.w { background: rgba(52,211,153,0.12); color: var(--em); border: 1px solid rgba(52,211,153,0.2); }
+    .match-tile-result.l { background: rgba(251,113,133,0.10); color: var(--rose); border: 1px solid rgba(251,113,133,0.18); }
+    .match-tile-info { flex: 1; min-width: 0; }
+    .match-tile-vs { font-size: 12px; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .match-tile-score { font-family: var(--mono); font-size: 10px; color: var(--t4); margin-top: 2px; }
+    .match-tile-meta { font-family: var(--mono); font-size: 10px; color: var(--t5); flex-shrink: 0; }
+
+    /* CTA */
+    .cta-block { padding: 4px 20px 24px; }
+    .btn-primary {
+      width: 100%; padding: 14px 16px; border-radius: 12px;
+      background: var(--t1); color: #09090b;
+      font-size: 14px; font-weight: 700; border: none; cursor: pointer; text-align: center;
+      letter-spacing: -0.01em;
+    }
+    .cta-or { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--t5); padding: 10px 0; }
+    .btn-secondary { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--t3); cursor: pointer; }
+    .btn-secondary span { color: var(--em-mid); }
+
+    /* ─── Col 2: In-app ─── */
+    .section-header { padding: 16px 20px 10px; border-bottom: 1px solid var(--border); }
+    .section-h-title { font-size: 15px; font-weight: 600; color: var(--t1); }
+    .section-h-sub { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-top: 3px; }
+
+    .search-bar {
+      margin: 14px 20px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 11px 14px;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .search-placeholder { font-size: 13px; color: var(--t4); }
+
+    /* Player card — richer for option B */
+    .player-card-b {
+      margin: 0 20px 10px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .pcb-inner { padding: 14px 16px 10px; }
+    .pcb-row { display: flex; align-items: flex-start; justify-content: space-between; }
+    .pcb-name { font-size: 14px; font-weight: 600; color: var(--t1); }
+    .pcb-meta { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-top: 3px; }
+    .pcb-played-badge {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--em-subtle); border: 1px solid rgba(52,211,153,0.15);
+      border-radius: 4px; padding: 2px 7px; margin-top: 2px;
+    }
+    .pcb-played-dot { width: 4px; height: 4px; background: var(--em); border-radius: 50%; }
+    .pcb-played-txt { font-family: var(--mono); font-size: 9px; color: var(--em); }
+    .pcb-actions { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .pcb-btn-me { flex: 1; padding: 9px; border-radius: 8px; background: var(--t1); color: #09090b; font-size: 12px; font-weight: 600; border: none; cursor: pointer; text-align: center; }
+    .pcb-btn-invite { flex: 1; padding: 9px; border-radius: 8px; background: var(--em-glow); color: var(--em); font-size: 12px; font-weight: 500; border: 1px solid rgba(52,211,153,0.22); cursor: pointer; text-align: center; }
+
+    /* Sheet */
+    .invite-sheet { border-top: 2px solid var(--border-hi); padding-top: 6px; }
+    .sheet-drag { padding: 10px; display: flex; justify-content: center; }
+    .sheet-handle { width: 36px; height: 3px; background: var(--t5); border-radius: 2px; }
+    .sheet-inner { padding: 4px 20px 24px; }
+    .sheet-h { font-size: 16px; font-weight: 600; color: var(--t1); }
+    .sheet-subh { font-family: var(--mono); font-size: 11px; color: var(--t3); margin-bottom: 16px; margin-top: 3px; }
+
+    .method-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+    .method-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .method-title { font-size: 13px; font-weight: 500; color: var(--t1); }
+    .method-tag { font-family: var(--mono); font-size: 9px; color: var(--em-mid); background: var(--em-glow); border-radius: 3px; padding: 2px 6px; }
+    .method-body { padding: 12px 16px; }
+    .link-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; margin-bottom: 8px; }
+    .link-url { font-family: var(--mono); font-size: 10px; color: var(--t3); }
+    .link-copy { font-family: var(--mono); font-size: 10px; color: var(--em-mid); cursor: pointer; }
+    .method-hint { font-family: var(--mono); font-size: 10px; color: var(--t4); }
+    .email-field { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; font-size: 13px; color: var(--t1); margin-bottom: 8px; }
+    .btn-email-send { width: 100%; padding: 10px; border-radius: 8px; background: var(--em-glow); color: var(--em); font-size: 13px; font-weight: 500; border: 1px solid rgba(52,211,153,0.22); cursor: pointer; text-align: center; }
+    .sheet-cancel { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--t4); margin-top: 12px; cursor: pointer; }
+
+    /* ─── Col 3: Email preview ─── */
+    .email-preview {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    }
+    .email-chrome {
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      padding: 14px 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .email-dot { width: 8px; height: 8px; background: var(--t5); border-radius: 50%; }
+    .email-subject { font-family: var(--mono); font-size: 10px; color: var(--t3); margin-left: 4px; }
+    .email-body { padding: 24px 20px 28px; }
+    .email-header-em { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .email-logo-dot { width: 8px; height: 8px; background: var(--em); border-radius: 50%; }
+    .email-logo-text { font-family: var(--mono); font-size: 12px; color: var(--t1); }
+    .email-h { font-size: 18px; font-weight: 700; color: var(--t1); line-height: 1.3; margin-bottom: 10px; letter-spacing: -0.02em; }
+    .email-h em { font-style: normal; color: var(--em); }
+    .email-p { font-size: 13px; color: var(--t3); line-height: 1.6; margin-bottom: 14px; }
+    .email-stats-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .email-stat { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; text-align: center; }
+    .email-stat-val { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--t1); }
+    .email-stat-val.em { color: var(--em); }
+    .email-stat-lbl { font-family: var(--mono); font-size: 9px; color: var(--t4); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+    .email-cta { display: block; width: 100%; padding: 13px; border-radius: 10px; background: var(--t1); color: #09090b; font-size: 14px; font-weight: 700; text-align: center; border: none; cursor: pointer; margin-bottom: 12px; }
+    .email-footer { font-family: var(--mono); font-size: 10px; color: var(--t5); line-height: 1.7; }
+
+    /* Inviter-claimed notification email */
+    .email-claimed { padding: 20px; }
+    .claimed-tag { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--em); background: var(--em-glow); border: 1px solid rgba(52,211,153,0.2); border-radius: 3px; padding: 3px 8px; display: inline-block; margin-bottom: 12px; }
+    .claimed-h { font-size: 16px; font-weight: 600; color: var(--t1); margin-bottom: 6px; }
+    .claimed-p { font-size: 12px; color: var(--t3); line-height: 1.6; }
+    .claimed-cta { margin-top: 14px; font-family: var(--mono); font-size: 11px; color: var(--em-mid); cursor: pointer; }
+
+    /* Footer */
+    .page-footer { padding: 14px 20px; border-top: 1px solid var(--border); text-align: center; }
+    .footer-text { font-family: var(--mono); font-size: 10px; color: var(--t5); }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="ph-eyebrow">Friend Invite — Option B</div>
+    <div class="ph-title">Personal Letter</div>
+    <div class="ph-desc">The inviter is the hook. Leading with "Ali Taha invited you" transforms a cold sign-up page into a personal message from someone you've played with — and the stats become proof of the claim, not the lead.</div>
+  </div>
+
+  <div class="columns">
+
+    <!-- ─── Col 1: Landing Page ─── -->
+    <div>
+      <div class="col-label">01 — Invite landing page · /invite/[token]</div>
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+        <div>
+
+          <div class="nav-bar">
+            <div class="nav-logo"><div class="nav-dot"></div><div class="nav-wordmark">Vector</div></div>
+            <div class="nav-tag">Your invite</div>
+          </div>
+
+          <!-- Hero: inviter context first -->
+          <div class="hero-block">
+            <div class="inviter-card">
+              <div class="inviter-avatar">AT</div>
+              <div class="inviter-info">
+                <div class="inviter-name">Ali Taha</div>
+                <div class="inviter-context">Played 4 matches with you · invited just now</div>
+              </div>
+            </div>
+            <div class="hero-headline">Your pickleball stats<br>are <em>already here</em>.</div>
+            <div class="hero-sub">Ali thinks this profile is yours. 14 matches. Real ratings. All tracked.</div>
+          </div>
+
+          <!-- Player proof -->
+          <div class="proof-card">
+            <div class="proof-card-top">
+              <div class="proof-name">Sam Taylor</div>
+              <div class="proof-em-badge">
+                <div class="proof-em-dot"></div>
+                <div class="proof-em-text">Unclaimed</div>
+              </div>
+            </div>
+            <div class="proof-stats">
+              <div class="proof-stat">
+                <div class="proof-stat-val">14</div>
+                <div class="proof-stat-lbl">Matches</div>
+              </div>
+              <div class="proof-stat">
+                <div class="proof-stat-val em">1,043</div>
+                <div class="proof-stat-lbl">Rating</div>
+              </div>
+              <div class="proof-stat">
+                <div class="proof-stat-val">58%</div>
+                <div class="proof-stat-lbl">Win rate</div>
+              </div>
+            </div>
+            <div class="proof-streak">
+              <div class="streak-label">Last 7 results —</div>
+              <div class="streak-dots">
+                <div class="streak-dot w"></div>
+                <div class="streak-dot w"></div>
+                <div class="streak-dot l"></div>
+                <div class="streak-dot w"></div>
+                <div class="streak-dot l"></div>
+                <div class="streak-dot w"></div>
+                <div class="streak-dot w"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Match tiles -->
+          <div class="matches-section">
+            <div class="matches-title">Recent matches</div>
+
+            <div class="match-tile">
+              <div class="match-tile-result w">W</div>
+              <div class="match-tile-info">
+                <div class="match-tile-vs">w/ Jordan vs Chris / Taylor</div>
+                <div class="match-tile-score">21–17, 18–21, 11–8</div>
+              </div>
+              <div class="match-tile-meta">Mar 18</div>
+            </div>
+
+            <div class="match-tile">
+              <div class="match-tile-result l">L</div>
+              <div class="match-tile-info">
+                <div class="match-tile-vs">w/ Mike vs Ali / Pat</div>
+                <div class="match-tile-score">15–21, 19–21</div>
+              </div>
+              <div class="match-tile-meta">Mar 12</div>
+            </div>
+
+            <div class="match-tile">
+              <div class="match-tile-result w">W</div>
+              <div class="match-tile-info">
+                <div class="match-tile-vs">w/ Chris vs Jordan / Lee</div>
+                <div class="match-tile-score">21–15, 21–18</div>
+              </div>
+              <div class="match-tile-meta">Mar 5</div>
+            </div>
+          </div>
+
+          <!-- CTAs -->
+          <div class="cta-block">
+            <div class="btn-primary">Create account to claim your stats →</div>
+            <div class="cta-or">or</div>
+            <div class="btn-secondary">Already a member? <span>Sign in →</span></div>
+          </div>
+
+          <div class="page-footer">
+            <div class="footer-text">Powered by Vector · vector.app</div>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-note">
+        → Inviter avatar + context ("Played 4 matches with you") establishes trust<br>
+        → Headline leads with the "wow" — stats as proof follow, not lead<br>
+        → Win streak dots add visual momentum and personality<br>
+        → Match tiles feel richer than plain rows; W/L badges with color blocks
+      </div>
+    </div>
+
+    <!-- ─── Col 2: In-App ─── -->
+    <div>
+      <div class="col-label">02 — In-app: ClaimProfilePrompt + invite sheet</div>
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+
+        <div class="nav-bar">
+          <div class="nav-logo"><div class="nav-dot"></div><div class="nav-wordmark">Vector</div></div>
+          <div class="nav-tag">Find profile</div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-h-title">Already played here?</div>
+          <div class="section-h-sub">Search for your shadow profile to claim it</div>
+        </div>
+
+        <div class="search-bar">
+          <div style="font-size: 14px; color: var(--t4);">⌕</div>
+          <div class="search-placeholder">Search players…</div>
+        </div>
+
+        <div style="padding: 0 20px 8px;">
+          <div style="font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--t5); margin-bottom: 6px;">Shadows you've played with</div>
+        </div>
+
+        <div class="player-card-b">
+          <div class="pcb-inner">
+            <div class="pcb-row">
+              <div>
+                <div class="pcb-name">Sam Taylor</div>
+                <div class="pcb-meta">14 matches · 1,043 rating</div>
+              </div>
+              <div class="pcb-played-badge">
+                <div class="pcb-played-dot"></div>
+                <div class="pcb-played-txt">Played together</div>
+              </div>
+            </div>
+          </div>
+          <div class="pcb-actions">
+            <div class="pcb-btn-me">This is me</div>
+            <div class="pcb-btn-invite">✦ Invite Sam</div>
+          </div>
+        </div>
+
+        <div class="player-card-b">
+          <div class="pcb-inner">
+            <div class="pcb-row">
+              <div>
+                <div class="pcb-name">Jordan Kim</div>
+                <div class="pcb-meta">8 matches · 998 rating</div>
+              </div>
+              <div class="pcb-played-badge">
+                <div class="pcb-played-dot"></div>
+                <div class="pcb-played-txt">Played together</div>
+              </div>
+            </div>
+          </div>
+          <div class="pcb-actions">
+            <div class="pcb-btn-me">This is me</div>
+            <div class="pcb-btn-invite">✦ Invite Jordan</div>
+          </div>
+        </div>
+
+        <div style="height: 1px; background: var(--border); margin: 12px 0;"></div>
+        <div style="padding: 0 20px; margin-bottom: 8px;"><div style="font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--em-mid);">↓ After tapping "Invite Sam"</div></div>
+
+        <!-- Invite sheet -->
+        <div class="invite-sheet">
+          <div class="sheet-drag"><div class="sheet-handle"></div></div>
+          <div class="sheet-inner">
+            <div class="sheet-h">Invite Sam Taylor</div>
+            <div class="sheet-subh">to join Vector and claim their stats</div>
+
+            <div class="method-card">
+              <div class="method-header">
+                <div class="method-title">Copy invite link</div>
+                <div class="method-tag">Recommended</div>
+              </div>
+              <div class="method-body">
+                <div class="link-row">
+                  <div class="link-url">vector.app/invite/a8f3c…</div>
+                  <div class="link-copy">Copy →</div>
+                </div>
+                <div class="method-hint">Paste into WhatsApp, iMessage, or any group chat</div>
+              </div>
+            </div>
+
+            <div class="method-card">
+              <div class="method-header">
+                <div class="method-title">Send by email</div>
+                <div style="font-family: var(--mono); font-size: 9px; color: var(--t4);">Optional</div>
+              </div>
+              <div class="method-body">
+                <input class="email-field" placeholder="sam@email.com" />
+                <div class="btn-email-send">Send invite email →</div>
+              </div>
+            </div>
+
+            <div class="sheet-cancel">Cancel</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="col-note">
+        → "Played together" badge on player cards makes eligibility immediately clear<br>
+        → "✦ Invite Sam" button uses the player's first name — feels targeted, personal<br>
+        → Sheet design matches app surface language with method cards<br>
+        → "Recommended" tag on copy-link nudges to primary action
+      </div>
+    </div>
+
+    <!-- ─── Col 3: Email Preview ─── -->
+    <div>
+      <div class="col-label">03 — Invite email · sent if email address provided</div>
+      <div class="phone">
+        <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+
+        <div class="nav-bar">
+          <div class="nav-logo"><div class="nav-dot"></div><div class="nav-wordmark">Vector</div></div>
+          <div class="nav-tag">Email preview</div>
+        </div>
+
+        <!-- Invite email -->
+        <div class="email-preview" style="margin: 16px; border-radius: 12px;">
+          <div class="email-chrome">
+            <div class="email-dot"></div>
+            <div class="email-dot"></div>
+            <div class="email-dot"></div>
+            <div class="email-subject">Ali Taha wants you to see your pickleball stats</div>
+          </div>
+          <div class="email-body">
+            <div class="email-header-em">
+              <div class="email-logo-dot"></div>
+              <div class="email-logo-text">Vector</div>
+            </div>
+
+            <div class="email-h">Hey Sam — your stats<br>are <em>already here</em>.</div>
+            <div class="email-p">Ali Taha played with you and entered the match into Vector. Your profile has 14 matches tracked — including your rating and win history.</div>
+
+            <div class="email-stats-row">
+              <div class="email-stat">
+                <div class="email-stat-val">14</div>
+                <div class="email-stat-lbl">Matches</div>
+              </div>
+              <div class="email-stat">
+                <div class="email-stat-val em">1,043</div>
+                <div class="email-stat-lbl">Rating</div>
+              </div>
+              <div class="email-stat">
+                <div class="email-stat-val">58%</div>
+                <div class="email-stat-lbl">Win rate</div>
+              </div>
+            </div>
+
+            <div class="email-cta">Claim your stats →</div>
+            <div class="email-footer">
+              This invite was sent by Ali Taha via Vector.<br>
+              Link expires in 30 days. — vector.app
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="padding: 12px 20px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--t5);">Claimed notification to inviter</div>
+
+        <!-- Claimed notification email -->
+        <div class="email-preview" style="margin: 0 16px 16px; border-radius: 12px;">
+          <div class="email-chrome">
+            <div class="email-dot"></div>
+            <div class="email-dot"></div>
+            <div class="email-dot"></div>
+            <div class="email-subject">Good news — Sam Taylor joined Vector!</div>
+          </div>
+          <div class="email-claimed">
+            <div class="claimed-tag">Invite claimed</div>
+            <div class="claimed-h">Sam Taylor claimed their profile.</div>
+            <div class="claimed-p">Sam joined Vector and linked the shadow profile you shared. You can now see their updated stats and run matchup predictions together.</div>
+            <div class="claimed-cta">View Sam's stats →</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="col-note">
+        → Invite email teases the stats without showing everything — just enough to make clicking feel urgent<br>
+        → Stats row in email echoes the app's own stat grid language<br>
+        → Claimed notification email is tight: one sentence, one CTA<br>
+        → Both emails follow app zinc palette so they feel like first-party communications
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

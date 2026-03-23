@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Share Placement — Options</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0b;
+      color: #e4e4e7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 40px 24px 80px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #71717a;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #52525b;
+      margin-bottom: 40px;
+      line-height: 1.5;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      max-width: 1000px;
+    }
+
+    .option { display: flex; flex-direction: column; gap: 12px; }
+
+    .opt-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .opt-label .pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .current .pill  { background: #1c1917; color: #78716c; }
+    .optA .pill     { background: #0c1a2e; color: #60a5fa; }
+    .optB .pill     { background: #0c1a2e; color: #60a5fa; }
+
+    /* ---- shared card base ---- */
+    .card {
+      border-radius: 12px;
+      border: 1px solid #374155;
+      overflow: hidden;
+    }
+
+    .card-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Teams block */
+    .teams { display: flex; flex-direction: column; gap: 2px; }
+    .team1 { font-size: 15px; font-weight: 500; color: #f4f4f5; }
+    .team2 { font-size: 15px; color: #71717a; }
+
+    /* Forecast row */
+    .forecast {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .pct-block { display: flex; flex-direction: column; flex-shrink: 0; }
+    .pct { font-size: 56px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: #f4f4f5; }
+    .ml  { font-size: 34px; font-weight: 700; line-height: 1; color: #e4e4e7; margin-top: 4px; }
+    .ml-label { font-size: 12px; color: #71717a; margin-top: 6px; }
+
+    .metrics {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-left: 12px;
+    }
+
+    .metric { display: flex; flex-direction: column; gap: 2px; }
+    .metric-label { font-size: 12px; color: #71717a; }
+    .metric-value { font-size: 14px; font-weight: 500; color: #f4f4f5; }
+
+    /* Card footer divider */
+    .card-divider { border-top: 1px solid #27272a; }
+
+    /* Share row — flat, inside card */
+    .share-row-flat {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      color: #d4d4d8;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      text-align: left;
+    }
+
+    .share-row-flat .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      flex-shrink: 0;
+    }
+
+    .chevron { color: #71717a; font-size: 16px; line-height: 1; }
+
+    /* Share icon button — top-right of card */
+    .card-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .share-icon-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid #3f3f46;
+      background: transparent;
+      color: #71717a;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .share-icon-btn svg { width: 13px; height: 13px; }
+
+    /* ---- standalone share button (current) ---- */
+    .share-btn-standalone {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      color: #d4d4d8;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .share-btn-standalone .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ---- invite section ---- */
+    .invite-card {
+      border-radius: 12px;
+      border: 1px solid #27272a;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .invite-standalone {
+      border-radius: 12px;
+      border: 1px solid #27272a;
+      overflow: hidden;
+    }
+
+    .invite-inner { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #52525b;
+    }
+
+    .player-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-info { flex: 1; min-width: 0; }
+
+    .player-name {
+      font-size: 13px;
+      color: #d4d4d8;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .player-sub { font-size: 11px; color: #3f3f46; margin-top: 1px; }
+
+    .invite-btn {
+      width: 96px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 6px 10px;
+      border-radius: 7px;
+      border: 1px solid #3f3f46;
+      background: transparent;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .gap { height: 10px; }
+
+    /* ---- pro/con notes ---- */
+    .notes {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .note {
+      font-size: 12px;
+      line-height: 1.4;
+      padding-left: 14px;
+      position: relative;
+      color: #52525b;
+    }
+
+    .note::before {
+      content: attr(data-icon);
+      position: absolute;
+      left: 0;
+    }
+
+    .note.pro  { color: #166534; }
+    .note.con  { color: #7f1d1d; }
+    .note.neu  { color: #4a4a52; }
+  </style>
+</head>
+<body>
+
+  <h1>Share Placement — Three Options</h1>
+  <p class="subtitle">Where should "Share this prediction" live?</p>
+
+  <div class="options">
+
+    <!-- CURRENT: standalone below projection card -->
+    <div class="option current">
+      <div class="opt-label"><span class="pill">Current</span></div>
+
+      <!-- Projection card -->
+      <div class="card">
+        <div class="card-body">
+          <div class="teams">
+            <p class="team1">Ali / Sam</p>
+            <p class="team2">vs Jordan / Chris</p>
+          </div>
+          <div class="forecast">
+            <div class="pct-block">
+              <span class="pct">73%</span>
+              <span class="ml">-180</span>
+              <span class="ml-label">Model Line</span>
+            </div>
+            <div class="metrics">
+              <div class="metric"><span class="metric-label">Δ Rating</span><span class="metric-value">+82.0</span></div>
+              <div class="metric"><span class="metric-label">Confidence</span><span class="metric-value">84%</span></div>
+              <div class="metric"><span class="metric-label">Momentum</span><span class="metric-value">↑ Rising (+12)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gap"></div>
+
+      <!-- standalone share button -->
+      <button class="share-btn-standalone">
+        <span class="left"><span class="dot"></span><span>Share this prediction</span></span>
+        <span class="chevron">›</span>
+      </button>
+
+      <div class="gap"></div>
+
+      <!-- invite card -->
+      <div class="invite-card">
+        <span class="section-label">Not on Vector yet</span>
+        <div class="player-row">
+          <div class="player-info"><p class="player-name">Jordan Smith</p><p class="player-sub">hasn't claimed their profile</p></div>
+          <button class="invite-btn">✦ Invite</button>
+        </div>
+      </div>
+
+      <div class="notes">
+        <p class="note neu" data-icon="—">Three separate blocks, two with identical borders</p>
+        <p class="note con" data-icon="✕">Share and Invite feel unrelated</p>
+        <p class="note con" data-icon="✕">Extra visual weight from duplicate card frames</p>
+      </div>
+    </div>
+
+    <!-- OPTION A: Share as footer row on the projection card -->
+    <div class="option optA">
+      <div class="opt-label"><span class="pill">Option A — Share inside ProjectionCard</span></div>
+
+      <!-- Projection card with share footer -->
+      <div class="card">
+        <div class="card-body">
+          <div class="teams">
+            <p class="team1">Ali / Sam</p>
+            <p class="team2">vs Jordan / Chris</p>
+          </div>
+          <div class="forecast">
+            <div class="pct-block">
+              <span class="pct">73%</span>
+              <span class="ml">-180</span>
+              <span class="ml-label">Model Line</span>
+            </div>
+            <div class="metrics">
+              <div class="metric"><span class="metric-label">Δ Rating</span><span class="metric-value">+82.0</span></div>
+              <div class="metric"><span class="metric-label">Confidence</span><span class="metric-value">84%</span></div>
+              <div class="metric"><span class="metric-label">Momentum</span><span class="metric-value">↑ Rising (+12)</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Share as footer row -->
+        <div class="card-divider"></div>
+        <button class="share-row-flat">
+          <span class="left"><span class="dot"></span><span>Share this prediction</span></span>
+          <span class="chevron">›</span>
+        </button>
+      </div>
+
+      <div class="gap"></div>
+
+      <!-- invite card — standalone, no need to group with share -->
+      <div class="invite-card">
+        <span class="section-label">Not on Vector yet</span>
+        <div class="player-row">
+          <div class="player-info"><p class="player-name">Jordan Smith</p><p class="player-sub">hasn't claimed their profile</p></div>
+          <button class="invite-btn">✦ Invite</button>
+        </div>
+      </div>
+
+      <div class="notes">
+        <p class="note pro" data-icon="✓">Share is contextually attached to the result it shares</p>
+        <p class="note pro" data-icon="✓">Reduces one card border from the scroll — cleaner</p>
+        <p class="note pro" data-icon="✓">Invite stands alone — its own card, easy to find</p>
+        <p class="note neu" data-icon="—">ProjectionCard grows a bit; needs footer divider added</p>
+      </div>
+    </div>
+
+    <!-- OPTION B: Share icon in top-right corner of card header -->
+    <div class="option optB">
+      <div class="opt-label"><span class="pill">Option B — Share icon in card header</span></div>
+
+      <!-- Projection card with share icon in header -->
+      <div class="card">
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="teams">
+              <p class="team1">Ali / Sam</p>
+              <p class="team2">vs Jordan / Chris</p>
+            </div>
+            <!-- Share icon button top-right -->
+            <button class="share-icon-btn">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M10 2l4 4-4 4M14 6H6a4 4 0 000 8h2" />
+              </svg>
+              Share
+            </button>
+          </div>
+          <div class="forecast">
+            <div class="pct-block">
+              <span class="pct">73%</span>
+              <span class="ml">-180</span>
+              <span class="ml-label">Model Line</span>
+            </div>
+            <div class="metrics">
+              <div class="metric"><span class="metric-label">Δ Rating</span><span class="metric-value">+82.0</span></div>
+              <div class="metric"><span class="metric-label">Confidence</span><span class="metric-value">84%</span></div>
+              <div class="metric"><span class="metric-label">Momentum</span><span class="metric-value">↑ Rising (+12)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gap"></div>
+
+      <!-- invite card — standalone -->
+      <div class="invite-card">
+        <span class="section-label">Not on Vector yet</span>
+        <div class="player-row">
+          <div class="player-info"><p class="player-name">Jordan Smith</p><p class="player-sub">hasn't claimed their profile</p></div>
+          <button class="invite-btn">✦ Invite</button>
+        </div>
+      </div>
+
+      <div class="notes">
+        <p class="note pro" data-icon="✓">Most compact — zero extra blocks in the scroll order</p>
+        <p class="note pro" data-icon="✓">Familiar pattern (share icon top-right is a universal convention)</p>
+        <p class="note con" data-icon="✕">Small target on mobile — harder to tap than a full-width row</p>
+        <p class="note con" data-icon="✕">Label competes with team names in the header row</p>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

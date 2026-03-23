@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Invite Sheet — Redesign Options</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #09090b;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #fafafa;
+    padding: 40px 16px 80px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #52525b;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .option {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .option-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #71717a;
+    text-align: center;
+  }
+
+  /* ── SHEET WRAPPER ── */
+  .sheet {
+    border-radius: 24px 24px 16px 16px;
+    padding: 0 0 32px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .handle {
+    width: 32px;
+    height: 4px;
+    border-radius: 9999px;
+    background: #3f3f46;
+    margin: 12px auto 20px;
+  }
+
+  /* ══════════════════════════════════════════════
+     OPTION A — Contrast-first
+     Two cards, proper contrast, legible sizes
+  ══════════════════════════════════════════════ */
+  .a .sheet {
+    background: #18181b;
+    border: 1px solid #27272a;
+  }
+
+  .a .sheet-inner { padding: 0 16px; }
+
+  .a .title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fafafa;
+    letter-spacing: -0.01em;
+  }
+
+  .a .subtitle {
+    font-size: 13px;
+    color: #71717a;
+    margin-top: 4px;
+    margin-bottom: 20px;
+  }
+
+  .a .method-card {
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .a .method-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    border-bottom: 1px solid #27272a;
+  }
+
+  .a .method-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e4e4e7;
+  }
+
+  .a .badge-rec {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #34d399;
+    background: rgba(52,211,153,0.15);
+    border: 1px solid rgba(52,211,153,0.30);
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+
+  .a .badge-opt {
+    font-size: 11px;
+    color: #52525b;
+  }
+
+  .a .method-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+  .a .url-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #27272a;
+    border-radius: 9px;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .a .url-text {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: #a1a1aa;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .a .copy-btn {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #34d399;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .a .hint {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    color: #52525b;
+  }
+
+  .a .email-input {
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 9px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #71717a;
+    width: 100%;
+  }
+
+  .a .send-btn {
+    width: 100%;
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.28);
+    border-radius: 9px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #34d399;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .a .cancel {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: #52525b;
+    text-align: center;
+    margin-top: 14px;
+    cursor: pointer;
+  }
+
+  /* ══════════════════════════════════════════════
+     OPTION B — Primary action elevated
+     Copy link = big white CTA, email = secondary below
+  ══════════════════════════════════════════════ */
+  .b .sheet {
+    background: #111113;
+    border: 1px solid #27272a;
+  }
+
+  .b .sheet-inner { padding: 0 16px; }
+
+  .b .title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fafafa;
+    letter-spacing: -0.02em;
+  }
+
+  .b .subtitle {
+    font-size: 12px;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    color: #52525b;
+    margin-top: 4px;
+    margin-bottom: 22px;
+    letter-spacing: 0.02em;
+  }
+
+  .b .primary-cta {
+    background: #fafafa;
+    color: #09090b;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  .b .primary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .b .primary-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #09090b;
+  }
+
+  .b .badge-rec-b {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #059669;
+    background: rgba(5,150,105,0.12);
+    border-radius: 5px;
+    padding: 2px 7px;
+  }
+
+  .b .url-row-b {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.08);
+    border-radius: 9px;
+    padding: 9px 12px;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .b .url-text-b {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: #3f3f46;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .b .copy-btn-b {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #09090b;
+    flex-shrink: 0;
+  }
+
+  .b .hint-b {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    color: #71717a;
+  }
+
+  .b .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 10px;
+  }
+
+  .b .divider-line {
+    flex: 1;
+    height: 1px;
+    background: #27272a;
+  }
+
+  .b .divider-text {
+    font-size: 11px;
+    color: #3f3f46;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .b .email-section { display: flex; flex-direction: column; gap: 8px; }
+
+  .b .email-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #71717a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .b .opt-tag {
+    font-size: 10px;
+    color: #3f3f46;
+    font-weight: 400;
+  }
+
+  .b .email-input-b {
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #52525b;
+    width: 100%;
+  }
+
+  .b .send-btn-b {
+    width: 100%;
+    background: rgba(52,211,153,0.10);
+    border: 1px solid rgba(52,211,153,0.22);
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #34d399;
+    text-align: center;
+  }
+
+  .b .cancel {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: #3f3f46;
+    text-align: center;
+    margin-top: 14px;
+  }
+
+  /* ══════════════════════════════════════════════
+     OPTION C — Minimal / content-first
+     No nested cards. Flat sections, clear labels,
+     generous spacing, maximum legibility.
+  ══════════════════════════════════════════════ */
+  .c .sheet {
+    background: #09090b;
+    border: 1px solid #27272a;
+  }
+
+  .c .sheet-inner { padding: 0 16px; }
+
+  .c .eyebrow {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #34d399;
+    margin-bottom: 6px;
+  }
+
+  .c .title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fafafa;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+  }
+
+  .c .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #52525b;
+    margin-bottom: 10px;
+  }
+
+  .c .copy-block {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+
+  .c .url-row-c {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .c .url-text-c {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: #71717a;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .c .copy-btn-c {
+    background: #fafafa;
+    color: #09090b;
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 7px;
+    padding: 5px 12px;
+    flex-shrink: 0;
+  }
+
+  .c .hint-c {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    color: #3f3f46;
+  }
+
+  .c .sep {
+    height: 1px;
+    background: #1c1c1f;
+    margin: 20px 0;
+  }
+
+  .c .email-input-c {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #52525b;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .c .send-btn-c {
+    width: 100%;
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #71717a;
+    text-align: center;
+  }
+
+  .c .cancel {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 11px;
+    color: #27272a;
+    text-align: center;
+    margin-top: 20px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; max-width: 380px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Invite Sheet — 3 Directions</h1>
+
+<div class="grid">
+
+  <!-- ── OPTION A: Contrast-first ── -->
+  <div class="option a">
+    <div class="option-label">A · Contrast-first</div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div class="sheet-inner">
+        <div class="title">Invite Cassey</div>
+        <div class="subtitle">to join Vector and claim their stats</div>
+
+        <div class="method-card">
+          <div class="method-header">
+            <span class="method-title">Copy invite link</span>
+            <span class="badge-rec">Recommended</span>
+          </div>
+          <div class="method-body">
+            <div class="url-row">
+              <span class="url-text">vector.app/invite/a3f8c2…</span>
+              <span class="copy-btn">Copy →</span>
+            </div>
+            <div class="hint">Paste into WhatsApp, iMessage, or any group chat</div>
+          </div>
+        </div>
+
+        <div class="method-card">
+          <div class="method-header">
+            <span class="method-title">Send by email</span>
+            <span class="badge-opt">Optional</span>
+          </div>
+          <div class="method-body">
+            <div class="email-input">their@email.com</div>
+            <div class="send-btn">Send invite email →</div>
+          </div>
+        </div>
+
+        <div class="cancel">Cancel</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#52525b;text-align:center;line-height:1.5">
+      Same structure, real contrast.<br>Darker bg → lighter cards → white text.
+    </p>
+  </div>
+
+  <!-- ── OPTION B: Primary action elevated ── -->
+  <div class="option b">
+    <div class="option-label">B · Primary elevated</div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div class="sheet-inner">
+        <div class="title">Invite Cassey</div>
+        <div class="subtitle">to join Vector and claim their stats</div>
+
+        <div class="primary-cta">
+          <div class="primary-top">
+            <span class="primary-label">Copy invite link</span>
+            <span class="badge-rec-b">Recommended</span>
+          </div>
+          <div class="url-row-b">
+            <span class="url-text-b">vector.app/invite/a3f8c2…</span>
+            <span class="copy-btn-b">Copy →</span>
+          </div>
+          <div class="hint-b">Paste into WhatsApp, iMessage, or any group chat</div>
+        </div>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-text">or</div>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="email-section">
+          <div class="email-label">
+            <span>Send by email</span>
+            <span class="opt-tag">Optional</span>
+          </div>
+          <div class="email-input-b">their@email.com</div>
+          <div class="send-btn-b">Send invite email →</div>
+        </div>
+
+        <div class="cancel">Cancel</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#52525b;text-align:center;line-height:1.5">
+      White card = unmistakable primary.<br>Email stays secondary, separated.
+    </p>
+  </div>
+
+  <!-- ── OPTION C: Minimal / content-first ── -->
+  <div class="option c">
+    <div class="option-label">C · Minimal / flat</div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div class="sheet-inner">
+        <div class="eyebrow">Invite</div>
+        <div class="title">Cassey</div>
+
+        <div class="section-label">Copy invite link</div>
+        <div class="copy-block">
+          <div class="url-row-c">
+            <span class="url-text-c">vector.app/invite/a3f8c2…</span>
+            <span class="copy-btn-c">Copy</span>
+          </div>
+          <div class="hint-c">Paste into WhatsApp, iMessage, or any group chat</div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="section-label">Send by email <span style="color:#3f3f46;text-transform:none;letter-spacing:0;font-weight:400">— optional</span></div>
+        <div class="email-input-c">their@email.com</div>
+        <div class="send-btn-c">Send invite email →</div>
+
+        <div class="cancel">Cancel</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#52525b;text-align:center;line-height:1.5">
+      No nested cards. Flat, spacious.<br>White pill "Copy" button does the heavy lifting.
+    </p>
+  </div>
+
+</div>
+
+</body>
+</html>

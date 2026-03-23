@@ -10,6 +10,7 @@
 // Each metric label has an ⓘ icon that opens a bottom-sheet explanation.
 // ---------------------------------------------------------------------------
 
+import type { ReactNode } from "react";
 import { MetricInfoSheet, type MetricInfo } from "@/components/command/MetricInfoSheet";
 
 // ---------------------------------------------------------------------------
@@ -63,6 +64,8 @@ interface ProjectionCardProps {
   players: Players;
   /** If provided, player1 is labelled "You" in the Teams Block. */
   myPlayerId?: string;
+  /** Optional footer rendered below a divider (e.g. ShareButton). */
+  footer?: ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -134,6 +137,7 @@ export default function ProjectionCard({
   expectationGapLowSample,
   players,
   myPlayerId,
+  footer,
 }: ProjectionCardProps) {
   const pct = Math.round(probability * 100);
   const lowConfidence = minConfidence < 0.40;
@@ -145,38 +149,47 @@ export default function ProjectionCard({
   const oppPair = `${players.player3.displayName} / ${players.player4.displayName}`;
 
   return (
-    <div className="rounded-xl border border-[#374155] p-5 flex flex-col gap-4">
-      {/* Teams Block */}
-      <div>
-        <p className="text-base font-medium text-zinc-50 leading-snug">{primaryPair}</p>
-        <p className="text-base text-zinc-500 leading-snug">vs {oppPair}</p>
-      </div>
-
-      {/* Forecast Block (left) + Metrics column (right) — side by side */}
-      <div className="flex items-start gap-5">
-        {/* Forecast Block */}
-        <div className="flex flex-col flex-none">
-          <span className={`text-[64px] font-bold tracking-tight leading-none tabular-nums ${lowConfidence ? "text-zinc-400" : "text-zinc-50"}`}>
-            {lowConfidence ? `~${pct}%` : `${pct}%`}
-          </span>
-          <span className="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
-            {formatMoneyline(moneyline)}
-          </span>
-          <span className="text-sm text-zinc-500 mt-2">Model Line</span>
+    <div className="rounded-xl border border-[#374155] overflow-hidden">
+      <div className="p-5 flex flex-col gap-4">
+        {/* Teams Block */}
+        <div>
+          <p className="text-base font-medium text-zinc-50 leading-snug">{primaryPair}</p>
+          <p className="text-base text-zinc-500 leading-snug">vs {oppPair}</p>
         </div>
 
-        {/* Structural Metrics — single column */}
-        <div className="flex-1 flex flex-col gap-3 pl-3">
-          <MetricCell label="Δ Rating"        value={signedNum(ratingDiff, 1)}            info={METRIC_INFO.ratingDiff} />
-          <MetricCell label="Confidence"      value={`${Math.round(confidence * 100)}%`}  info={METRIC_INFO.confidence} />
-          <MetricCell label="Volatility"      value={volatility}                           info={METRIC_INFO.volatility} />
-          <MetricCell label="Momentum"        value={formatMomentum(momentum)}             info={METRIC_INFO.momentum} />
-          <MetricCell label="Expectation Gap" value={signedNum(expectationGap, 1)}         info={METRIC_INFO.expectationGap} dimmed={expectationGapLowSample} />
+        {/* Forecast Block (left) + Metrics column (right) — side by side */}
+        <div className="flex items-start gap-5">
+          {/* Forecast Block */}
+          <div className="flex flex-col flex-none">
+            <span className={`text-[64px] font-bold tracking-tight leading-none tabular-nums ${lowConfidence ? "text-zinc-400" : "text-zinc-50"}`}>
+              {lowConfidence ? `~${pct}%` : `${pct}%`}
+            </span>
+            <span className="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
+              {formatMoneyline(moneyline)}
+            </span>
+            <span className="text-sm text-zinc-500 mt-2">Model Line</span>
+          </div>
+
+          {/* Structural Metrics — single column */}
+          <div className="flex-1 flex flex-col gap-3 pl-3">
+            <MetricCell label="Δ Rating"        value={signedNum(ratingDiff, 1)}            info={METRIC_INFO.ratingDiff} />
+            <MetricCell label="Confidence"      value={`${Math.round(confidence * 100)}%`}  info={METRIC_INFO.confidence} />
+            <MetricCell label="Volatility"      value={volatility}                           info={METRIC_INFO.volatility} />
+            <MetricCell label="Momentum"        value={formatMomentum(momentum)}             info={METRIC_INFO.momentum} />
+            <MetricCell label="Expectation Gap" value={signedNum(expectationGap, 1)}         info={METRIC_INFO.expectationGap} dimmed={expectationGapLowSample} />
+          </div>
         </div>
+
+        {lowConfidence && (
+          <p className="text-xs text-zinc-500">Low confidence — fewer than ~10 matches on record</p>
+        )}
       </div>
 
-      {lowConfidence && (
-        <p className="text-xs text-zinc-500">Low confidence — fewer than ~10 matches on record</p>
+      {footer && (
+        <>
+          <div className="border-t border-[#374155]" />
+          {footer}
+        </>
       )}
     </div>
   );

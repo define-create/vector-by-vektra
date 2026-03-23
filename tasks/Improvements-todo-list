@@ -61,12 +61,43 @@ All 104 tests are unit tests. No integration tests cover the API routes or the f
 
 
 
-Quick Wins
-The easiest things to fix right now:
+Stats → Matchup Projection Screen — Design Assessment
+Files: components/matchups/ProjectionCard.tsx, components/matchups/MatchupsClient.tsx, components/matchups/HistoryCard.tsx, components/matchups/PlayerPairSelector.tsx
 
-Set RESEND_API_KEY in Vercel env vars (or create a free Resend account)
-Verify which branch Vercel is auto-deploying from
-Add a simple note to the Enter page ("entered matches can only be corrected by an admin")
+High impact
+A. ProjectionCard does too much in one card
+The card combines: team framing, hero probability (64px), moneyline (40px), and 5 metric cells in a two-column layout. The two large stacked numbers (% and moneyline) compete visually. The win probability is the social hook and emotional centrepiece — it should be staged as a hero moment, not a data dump.
+Recommendation: split into a Hero card (teams + % + moneyline) and a collapsible Details card (Δ Rating, Confidence, Volatility, Momentum, Expectation Gap). The hero card should span full width with the probability front and centre.
+
+B. Team names are too quiet
+Team names render at text-base (16px) in zinc-50/zinc-500. The matchup pairing is the entire premise of the screen but it's styled at body-copy weight. Sports apps treat the team matchup as the visual anchor — here it's an afterthought above the big numbers.
+Recommendation: Larger, bolder team-vs-team presentation. Consider a split layout: "Ali / Sam" left-aligned, "Jordan / Chris" right-aligned, with the % bridging them. Or a probability bar spanning the two team names to show the 73/27 split visually.
+
+C. No transition on selector collapse
+The collapsible player selector snaps open/closed with no animation. The auto-collapse after all 4 players are selected is especially jarring — content disappears and results appear as a jump cut.
+Recommendation: CSS max-height transition (200ms ease-out) on the expandable body. Low effort, high polish payoff.
+
+Medium impact
+D. Loading state is too bare
+"Computing projection…" plain text appears after the selector collapses. The screen already knows all 4 player names at this point — it could show a skeleton card with team names pre-rendered and a pulsing placeholder where the % will appear.
+Recommendation: Skeleton ProjectionCard that shows team names immediately and pulses the % / moneyline areas while the fetch completes.
+
+E. Changing a player requires too many steps
+Collapsed state shows "Ali / Sam vs Jordan / Chris" — to swap one player: expand → find ✕ → clear → search or pick chip again. For a quick "what if?" swap this is 4 interactions.
+Recommendation: Tapping a player name in the collapsed summary could open just that slot for editing inline. Or show subtle per-name edit icons in the collapsed header.
+
+F. HistoryCard has no emotional punch
+Record "3–2 · Avg Margin +4.2" is a small-caps paragraph before a list of rows. Head-to-head record is psychologically meaningful — "you've won 5 in a row" is exciting — but the current treatment buries it.
+Recommendation: Show the record as a prominent stat (larger, coloured) before the row list. Add a mini 5-dot win/loss streak indicator (green/red circles) for instant pattern recognition.
+
+Lower impact
+G. Empty state below selector is wasted space
+Before any players are selected, the screen shows header + selector + blank space. First-time users have no preview of what they'll get.
+Recommendation: A faint preview illustration of the result card or a 3-stat explainer (Win %, Moneyline, Momentum) in the empty area.
+
+H. ShareButton and invite section are visually unrelated
+Both are social actions but they render as separate blocks separated in the scroll order. The invite section ("Not on Vector yet") is easily missed.
+Recommendation: Group Share + Invite into a single "Share & Invite" card after the ProjectionCard.
 
 
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import InviteButton from "@/components/players/InviteButton";
 
 interface Player {
   id: string;
@@ -10,6 +11,7 @@ interface Player {
   matchCount?: number;
   lastMatchDate?: string | null;
   winPct?: number | null;
+  playedWithMe?: boolean;
 }
 
 interface Props {
@@ -250,27 +252,44 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName, userEmail }
           {!searching && results.length > 0 && (
             <ul className="flex flex-col gap-2">
               {results.map((p) => (
-                <li key={p.id} className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900/60 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-zinc-100">{p.displayName}</p>
-                    <p className="text-xs text-zinc-500">
-                      {p.matchCount != null
-                        ? p.matchCount === 0
-                          ? "No matches yet"
-                          : `${p.matchCount} match${p.matchCount === 1 ? "" : "es"}`
-                        : `${Math.round(p.rating)} rating`}
-                      {p.lastMatchDate ? ` · ${formatLastPlayed(p.lastMatchDate)}` : ""}
-                      {p.winPct != null ? ` · ${Math.round(p.winPct * 100)}% wins` : ""}
-                    </p>
+                <li key={p.id} className="rounded-xl border border-zinc-700 bg-[#18181b] overflow-hidden">
+                  <div className="px-4 py-3 flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-zinc-100">{p.displayName}</p>
+                      <p className="font-mono text-[11px] text-zinc-400 mt-0.5">
+                        {p.matchCount != null
+                          ? p.matchCount === 0
+                            ? "No matches yet"
+                            : `${p.matchCount} match${p.matchCount === 1 ? "" : "es"}`
+                          : `${Math.round(p.rating)} rating`}
+                        {p.lastMatchDate ? ` · ${formatLastPlayed(p.lastMatchDate)}` : ""}
+                        {p.winPct != null ? ` · ${Math.round(p.winPct * 100)}% wins` : ""}
+                      </p>
+                    </div>
+                    {p.playedWithMe && (
+                      <div className="flex items-center gap-1 bg-emerald-400/5 border border-emerald-400/15 rounded px-2 py-1 mt-0.5 flex-shrink-0 ml-2">
+                        <div className="w-1 h-1 rounded-full bg-emerald-400" />
+                        <span className="font-mono text-[9px] text-emerald-400">Played together</span>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleClaim(p.id)}
-                    disabled={claimingId === p.id}
-                    className="rounded-lg bg-zinc-600 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-500 active:bg-zinc-400 disabled:opacity-50 transition-colors"
-                  >
-                    {claimingId === p.id ? "Claiming…" : "This is me"}
-                  </button>
+                  <div className="px-4 py-2.5 border-t border-zinc-800 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleClaim(p.id)}
+                      disabled={claimingId === p.id}
+                      className="flex-1 rounded-lg bg-zinc-100 text-zinc-900 py-2.5 text-xs font-semibold disabled:opacity-50 transition-colors hover:bg-white"
+                    >
+                      {claimingId === p.id ? "Claiming…" : "This is me"}
+                    </button>
+                    {p.playedWithMe && (
+                      <InviteButton
+                        playerId={p.id}
+                        playerName={p.displayName}
+                        playerFirstName={p.displayName.split(" ")[0] ?? p.displayName}
+                      />
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -333,14 +352,16 @@ export function ClaimProfilePrompt({ emailVerified, userDisplayName, userEmail }
                           : ""}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleClaim(p.id)}
-                      disabled={claimingId === p.id}
-                      className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 disabled:opacity-50"
-                    >
-                      {claimingId === p.id ? "Claiming…" : "This is me"}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleClaim(p.id)}
+                        disabled={claimingId === p.id}
+                        className="rounded-lg bg-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-100 hover:bg-zinc-600 disabled:opacity-50"
+                      >
+                        {claimingId === p.id ? "Claiming…" : "This is me"}
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -55,6 +55,8 @@ enum AuditActionType {
   rename_tag
   delete_player
   unclaim_profile
+  send_invite
+  claim_via_invite
 }
 
 enum AuditEntityType {
@@ -86,6 +88,9 @@ model User {
   player          Player?
   enteredMatches  Match[]
   auditEvents     AuditEvent[]
+  matchupShares   MatchupShare[]
+  invitesSent     InviteToken[]  @relation("InvitesSent")
+  invitesClaimed  InviteToken[]  @relation("InvitesClaimed")
 }
 
 // ---------------------------------------------------------------------------
@@ -110,6 +115,7 @@ model Player {
   user             User?              @relation(fields: [userId], references: [id])
   matchParticipants MatchParticipant[]
   ratingSnapshots  RatingSnapshot[]
+  inviteTokens     InviteToken[]
 
   @@index([displayName, deletedAt])
 }
@@ -238,4 +244,44 @@ model AuditEvent {
 
   // Relations
   admin        User?           @relation(fields: [adminUserId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// MatchupShare (shareable prediction card snapshots)
+// ---------------------------------------------------------------------------
+
+model MatchupShare {
+  id              String    @id @default(cuid())
+  tokenHash       String    @unique
+  createdByUserId String
+  snapshotJson    Json
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  viewCount       Int       @default(0)
+
+  // Relations
+  createdBy       User      @relation(fields: [createdByUserId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// InviteToken (friend invite to claim a shadow profile)
+// ---------------------------------------------------------------------------
+
+model InviteToken {
+  id              String    @id @default(cuid())
+  tokenHash       String    @unique
+  playerId        String
+  invitedByUserId String
+  invitedEmail    String?
+  expiresAt       DateTime
+  claimedAt       DateTime?
+  claimedByUserId String?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  player          Player    @relation(fields: [playerId], references: [id])
+  invitedBy       User      @relation("InvitesSent", fields: [invitedByUserId], references: [id])
+  claimedBy       User?     @relation("InvitesClaimed", fields: [claimedByUserId], references: [id])
+
+  @@index([playerId])
 }

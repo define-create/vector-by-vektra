@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friend Invite — Option A: Data First</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #09090b;
+      --surface:   #111113;
+      --surface2:  #18181b;
+      --border:    #27272a;
+      --border-hi: #374155;
+      --t1:        #fafafa;
+      --t2:        #a1a1aa;
+      --t3:        #71717a;
+      --t4:        #52525b;
+      --t5:        #3f3f46;
+      --em:        #34d399;
+      --em-mid:    #10b981;
+      --em-glow:   rgba(52,211,153,0.12);
+      --em-subtle: rgba(52,211,153,0.05);
+      --rose:      #fb7185;
+      --mono:      'DM Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #020204;
+      color: var(--t1);
+      font-family: var(--sans);
+      padding: 52px 32px 80px;
+      min-height: 100vh;
+    }
+
+    .page-header { max-width: 1380px; margin: 0 auto 52px; }
+    .ph-eyebrow {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--t5); margin-bottom: 8px;
+    }
+    .ph-title { font-size: 26px; font-weight: 700; color: var(--t1); letter-spacing: -0.02em; margin-bottom: 6px; }
+    .ph-desc { font-family: var(--mono); font-size: 12px; color: var(--t4); line-height: 1.6; max-width: 560px; }
+
+    .columns { max-width: 1380px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; align-items: start; }
+    .col-label {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--t5); margin-bottom: 16px;
+    }
+    .col-note { font-family: var(--mono); font-size: 10px; color: var(--t4); line-height: 1.7; margin-top: 12px; }
+
+    /* ─── Phone shell ─── */
+    .phone {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 0 1px #000, 0 32px 64px rgba(0,0,0,0.6);
+    }
+    .phone-status {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 20px 6px;
+      font-family: var(--mono); font-size: 10px; color: var(--t4);
+    }
+    .phone-content { padding: 0 0 32px; }
+
+    /* ─── Shared component atoms ─── */
+    .nav-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 7px; }
+    .nav-dot { width: 7px; height: 7px; background: var(--em); border-radius: 50%; }
+    .nav-wordmark { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--t1); letter-spacing: 0.04em; }
+    .nav-tag {
+      font-family: var(--mono); font-size: 10px; color: var(--t3);
+      border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px;
+    }
+
+    /* ─── OPTION A: LANDING PAGE ─── */
+    .invite-header { padding: 28px 20px 20px; border-bottom: 1px solid var(--border); }
+    .invite-from {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--em-mid); margin-bottom: 10px;
+    }
+    .invite-headline {
+      font-size: 19px; font-weight: 600; color: var(--t1); letter-spacing: -0.02em; line-height: 1.35;
+    }
+    .invite-sub { font-family: var(--mono); font-size: 12px; color: var(--t3); margin-top: 6px; }
+
+    /* Stats card — all numbers, data-forward */
+    .stats-card {
+      margin: 20px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .stats-card-header {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .stats-player-name { font-size: 15px; font-weight: 600; color: var(--t1); }
+    .stats-badge {
+      font-family: var(--mono); font-size: 9px; color: var(--t4);
+      border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .stat-cell {
+      padding: 14px 16px; border-right: 1px solid var(--border);
+    }
+    .stat-cell:last-child { border-right: none; }
+    .stat-val { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--t1); }
+    .stat-val.em { color: var(--em); }
+    .stat-lbl { font-family: var(--mono); font-size: 9px; color: var(--t4); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* Match history */
+    .section-label {
+      padding: 16px 20px 8px;
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--t4);
+    }
+    .match-row {
+      padding: 11px 20px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .match-row:last-child { border-bottom: none; }
+    .match-result {
+      font-family: var(--mono); font-size: 11px; font-weight: 500;
+      min-width: 16px;
+    }
+    .match-result.w { color: var(--em); }
+    .match-result.l { color: var(--rose); }
+    .match-info { flex: 1; min-width: 0; }
+    .match-vs { font-size: 12px; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .match-score { font-family: var(--mono); font-size: 10px; color: var(--t4); margin-top: 2px; }
+    .match-date { font-family: var(--mono); font-size: 10px; color: var(--t5); }
+
+    /* CTAs */
+    .cta-block { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .btn-primary {
+      width: 100%; padding: 13px 16px; border-radius: 10px;
+      background: var(--t1); color: #09090b;
+      font-family: var(--sans); font-size: 14px; font-weight: 600;
+      border: none; cursor: pointer; text-align: center;
+    }
+    .btn-secondary {
+      text-align: center; font-family: var(--mono); font-size: 11px;
+      color: var(--t3); cursor: pointer;
+    }
+    .btn-secondary span { color: var(--em-mid); }
+
+    /* ─── OPTION A: IN-APP CLAIM PROMPT ─── */
+    .search-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .search-bar {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .search-icon { font-size: 14px; color: var(--t4); }
+    .search-placeholder { font-size: 13px; color: var(--t4); }
+
+    .player-card {
+      margin: 12px 20px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .player-card-inner { padding: 14px 16px; }
+    .player-card-name { font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 3px; }
+    .player-card-meta { font-family: var(--mono); font-size: 11px; color: var(--t3); }
+    .player-card-actions {
+      padding: 10px 16px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px;
+    }
+    .btn-sm-primary {
+      flex: 1; padding: 8px 12px; border-radius: 7px;
+      background: var(--t1); color: #09090b;
+      font-size: 12px; font-weight: 600; border: none; cursor: pointer; text-align: center;
+    }
+    .btn-sm-outline {
+      flex: 1; padding: 8px 12px; border-radius: 7px;
+      background: transparent; color: var(--em);
+      font-size: 12px; font-weight: 500; border: 1px solid var(--em-mid);
+      cursor: pointer; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .invite-dot { width: 5px; height: 5px; background: var(--em); border-radius: 50%; }
+
+    /* ─── OPTION A: INVITE SHEET ─── */
+    .sheet-overlay {
+      background: var(--bg);
+    }
+    .sheet-handle-area { padding: 12px; display: flex; justify-content: center; }
+    .sheet-handle { width: 36px; height: 3px; background: var(--t5); border-radius: 2px; }
+    .sheet-content { padding: 0 20px 28px; }
+    .sheet-title {
+      font-size: 16px; font-weight: 600; color: var(--t1); margin-bottom: 3px;
+    }
+    .sheet-player { font-family: var(--mono); font-size: 12px; color: var(--em); margin-bottom: 20px; }
+
+    .invite-method {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; margin-bottom: 12px;
+    }
+    .invite-method-header {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .invite-method-title { font-size: 13px; font-weight: 500; color: var(--t1); }
+    .invite-method-body { padding: 14px 16px; }
+
+    .link-preview {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; margin-bottom: 10px;
+      font-family: var(--mono); font-size: 10px; color: var(--t3);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .link-copy { font-size: 10px; color: var(--em-mid); cursor: pointer; }
+
+    .email-input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;
+      font-family: var(--sans); font-size: 13px; color: var(--t1);
+    }
+    .btn-send {
+      width: 100%; padding: 11px 16px; border-radius: 8px;
+      background: var(--em-glow); color: var(--em);
+      font-size: 13px; font-weight: 500; border: 1px solid rgba(52,211,153,0.25);
+      cursor: pointer; text-align: center;
+    }
+    .sheet-dismiss { text-align: center; margin-top: 14px; font-family: var(--mono); font-size: 11px; color: var(--t4); }
+
+    /* ─── Rating bar ─── */
+    .rating-bar-wrap { margin-top: 10px; }
+    .rating-bar-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .rating-bar-lbl { font-family: var(--mono); font-size: 10px; color: var(--t4); }
+    .rating-bar-val { font-family: var(--mono); font-size: 11px; color: var(--em); }
+    .rating-bar-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .rating-bar-fill { height: 100%; background: var(--em); border-radius: 2px; width: 58%; }
+
+    /* Footer */
+    .page-footer { padding: 16px 20px; border-top: 1px solid var(--border); text-align: center; }
+    .footer-text { font-family: var(--mono); font-size: 10px; color: var(--t5); }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <div class="ph-eyebrow">Friend Invite — Option A</div>
+    <div class="ph-title">Data First</div>
+    <div class="ph-desc">Zero embellishment. The player's actual stats are the hook. Same zinc palette and type treatment as the app — the recipient's data is the only thing doing the persuading.</div>
+  </div>
+
+  <div class="columns">
+
+    <!-- ─── Col 1: Landing Page ─── -->
+    <div>
+      <div class="col-label">01 — Invite landing page · /invite/[token]</div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span><span>●●●</span>
+        </div>
+        <div class="phone-content">
+
+          <!-- Nav -->
+          <div class="nav-bar">
+            <div class="nav-logo">
+              <div class="nav-dot"></div>
+              <div class="nav-wordmark">Vector</div>
+            </div>
+            <div class="nav-tag">Invite</div>
+          </div>
+
+          <!-- Invite header -->
+          <div class="invite-header">
+            <div class="invite-from">From Ali Taha</div>
+            <div class="invite-headline">Your pickleball stats are already here.</div>
+            <div class="invite-sub">Ali thinks you should see this.</div>
+          </div>
+
+          <!-- Stats card -->
+          <div class="stats-card">
+            <div class="stats-card-header">
+              <div class="stats-player-name">Sam Taylor</div>
+              <div class="stats-badge">Unclaimed</div>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-cell">
+                <div class="stat-val">14</div>
+                <div class="stat-lbl">Matches</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-val em">1,043</div>
+                <div class="stat-lbl">Rating</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-val">58%</div>
+                <div class="stat-lbl">Win rate</div>
+              </div>
+            </div>
+            <div style="padding: 0 16px 14px;">
+              <div class="rating-bar-wrap">
+                <div class="rating-bar-row">
+                  <div class="rating-bar-lbl">Win rate vs group</div>
+                  <div class="rating-bar-val">58%</div>
+                </div>
+                <div class="rating-bar-track"><div class="rating-bar-fill"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent matches -->
+          <div class="section-label">Recent Matches</div>
+          <div>
+            <div class="match-row">
+              <div class="match-result w">W</div>
+              <div class="match-info">
+                <div class="match-vs">w/ Jordan vs Chris / Taylor</div>
+                <div class="match-score">21–17, 18–21, 11–8</div>
+              </div>
+              <div class="match-date">Mar 18</div>
+            </div>
+            <div class="match-row">
+              <div class="match-result l">L</div>
+              <div class="match-info">
+                <div class="match-vs">w/ Mike vs Ali / Pat</div>
+                <div class="match-score">15–21, 19–21</div>
+              </div>
+              <div class="match-date">Mar 12</div>
+            </div>
+            <div class="match-row">
+              <div class="match-result w">W</div>
+              <div class="match-info">
+                <div class="match-vs">w/ Chris vs Jordan / Lee</div>
+                <div class="match-score">21–15, 21–18</div>
+              </div>
+              <div class="match-date">Mar 5</div>
+            </div>
+          </div>
+
+          <!-- CTAs -->
+          <div class="cta-block">
+            <div class="btn-primary">Create account to claim your stats →</div>
+            <div class="btn-secondary">Already a member? <span>Sign in →</span></div>
+          </div>
+
+          <div class="page-footer">
+            <div class="footer-text">Powered by Vector · vector.app</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-note">
+        → Stats card leads: three headline numbers + win-rate bar give instant credibility<br>
+        → Match history anchors it ("that game on Mar 18 — that's really in there")<br>
+        → No decorative graphics — the data does 100% of the work<br>
+        → Identical visual grammar to the app's own stats displays
+      </div>
+    </div>
+
+    <!-- ─── Col 2: In-App Invite Button ─── -->
+    <div>
+      <div class="col-label">02 — In-app: ClaimProfilePrompt + invite sheet</div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span><span>●●●</span>
+        </div>
+        <div class="phone-content">
+
+          <!-- Nav -->
+          <div class="nav-bar">
+            <div class="nav-logo">
+              <div class="nav-dot"></div>
+              <div class="nav-wordmark">Vector</div>
+            </div>
+            <div class="nav-tag">Find profile</div>
+          </div>
+
+          <!-- Search bar -->
+          <div class="search-header">
+            <div class="search-bar">
+              <div class="search-icon">⌕</div>
+              <div class="search-placeholder">Search players…</div>
+            </div>
+          </div>
+
+          <!-- Result cards -->
+          <div style="padding-top: 4px;">
+
+            <div style="padding: 10px 20px 4px;">
+              <div style="font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--t5);">Matching shadows</div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-card-inner">
+                <div class="player-card-name">Sam Taylor</div>
+                <div class="player-card-meta">14 matches · 1,043 rating · played together</div>
+              </div>
+              <div class="player-card-actions">
+                <div class="btn-sm-primary">This is me</div>
+                <div class="btn-sm-outline">
+                  <div class="invite-dot"></div>
+                  Invite
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div class="player-card-inner">
+                <div class="player-card-name">Jordan Kim</div>
+                <div class="player-card-meta">8 matches · 998 rating · played together</div>
+              </div>
+              <div class="player-card-actions">
+                <div class="btn-sm-primary">This is me</div>
+                <div class="btn-sm-outline">
+                  <div class="invite-dot"></div>
+                  Invite
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card" style="opacity: 0.45;">
+              <div class="player-card-inner">
+                <div class="player-card-name">Casey Park</div>
+                <div class="player-card-meta" style="color: var(--t4);">11 matches · 1,021 rating · not played together</div>
+              </div>
+              <div class="player-card-actions">
+                <div class="btn-sm-primary" style="opacity: 0.5;">This is me</div>
+                <div style="flex: 1; padding: 8px 12px; font-family: var(--mono); font-size: 10px; color: var(--t5); text-align: center;">Must play together to invite</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Divider -->
+          <div style="height: 1px; background: var(--border); margin: 16px 0;"></div>
+
+          <!-- Sheet preview header -->
+          <div style="padding: 0 20px; margin-bottom: 8px;">
+            <div style="font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--em-mid);">↓ After tapping Invite</div>
+          </div>
+
+          <!-- Invite sheet -->
+          <div class="sheet-overlay" style="border-top: 1px solid var(--border); margin: 0 0; padding-top: 4px;">
+            <div class="sheet-handle-area"><div class="sheet-handle"></div></div>
+            <div class="sheet-content">
+              <div class="sheet-title">Invite Sam Taylor</div>
+              <div class="sheet-player">to join Vector</div>
+
+              <!-- Copy link method -->
+              <div class="invite-method">
+                <div class="invite-method-header">
+                  <div class="invite-method-title">Copy invite link</div>
+                  <div style="font-family: var(--mono); font-size: 10px; color: var(--t4);">Primary</div>
+                </div>
+                <div class="invite-method-body">
+                  <div class="link-preview">
+                    <span>vector.app/invite/a8f3c…</span>
+                    <span class="link-copy">Copy</span>
+                  </div>
+                  <div style="font-family: var(--mono); font-size: 10px; color: var(--t4);">Paste into WhatsApp, iMessage, etc.</div>
+                </div>
+              </div>
+
+              <!-- Email method -->
+              <div class="invite-method">
+                <div class="invite-method-header">
+                  <div class="invite-method-title">Send by email</div>
+                  <div style="font-family: var(--mono); font-size: 10px; color: var(--t4);">Optional</div>
+                </div>
+                <div class="invite-method-body">
+                  <input class="email-input" placeholder="sam@email.com" type="email" />
+                  <div class="btn-send">Send invite →</div>
+                </div>
+              </div>
+
+              <div class="sheet-dismiss">Cancel</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-note">
+        → "Invite" button only shows if current user has played with that shadow<br>
+        → Grayed-out card shows ineligible state ("Must play together to invite")<br>
+        → Sheet presents two methods clearly: link-first (primary), email-optional<br>
+        → Link preview shows truncated token for visual confidence
+      </div>
+    </div>
+
+    <!-- ─── Col 3: Authenticated Claim State ─── -->
+    <div>
+      <div class="col-label">03 — /invite/[token] · returning after registration</div>
+      <div class="phone">
+        <div class="phone-status">
+          <span>9:41</span><span>●●●</span>
+        </div>
+        <div class="phone-content">
+
+          <!-- Nav -->
+          <div class="nav-bar">
+            <div class="nav-logo">
+              <div class="nav-dot"></div>
+              <div class="nav-wordmark">Vector</div>
+            </div>
+            <div class="nav-tag">Claim profile</div>
+          </div>
+
+          <!-- Authenticated claim state -->
+          <div style="padding: 24px 20px 16px; border-bottom: 1px solid var(--border);">
+            <div style="font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--em); margin-bottom: 8px;">Session detected</div>
+            <div style="font-size: 18px; font-weight: 600; color: var(--t1); letter-spacing: -0.02em; line-height: 1.35;">
+              Is this you?
+            </div>
+            <div style="font-family: var(--mono); font-size: 12px; color: var(--t3); margin-top: 5px;">
+              Ali Taha thinks this profile belongs to you.
+            </div>
+          </div>
+
+          <!-- Profile to claim -->
+          <div class="stats-card">
+            <div class="stats-card-header">
+              <div class="stats-player-name">Sam Taylor</div>
+              <div class="stats-badge">Unclaimed</div>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-cell">
+                <div class="stat-val">14</div>
+                <div class="stat-lbl">Matches</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-val em">1,043</div>
+                <div class="stat-lbl">Rating</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-val">58%</div>
+                <div class="stat-lbl">Win rate</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini match list -->
+          <div>
+            <div class="match-row" style="padding: 10px 20px;">
+              <div class="match-result w">W</div>
+              <div class="match-info">
+                <div class="match-vs">w/ Jordan vs Chris / Taylor</div>
+                <div class="match-score">21–17, 18–21, 11–8</div>
+              </div>
+            </div>
+            <div class="match-row" style="padding: 10px 20px;">
+              <div class="match-result l">L</div>
+              <div class="match-info">
+                <div class="match-vs">w/ Mike vs Ali / Pat</div>
+                <div class="match-score">15–21, 19–21</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Claim CTA -->
+          <div class="cta-block" style="padding: 20px;">
+            <div style="background: var(--em-glow); border: 1px solid rgba(52,211,153,0.2); border-radius: 12px; padding: 14px 16px; margin-bottom: 2px;">
+              <div style="font-family: var(--mono); font-size: 10px; color: var(--em-mid); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">One-click claim</div>
+              <div style="font-size: 13px; color: var(--t1); line-height: 1.4;">Claim Sam Taylor's profile — link it to your account permanently.</div>
+            </div>
+            <div class="btn-primary" style="margin-top: 10px;">Claim Profile →</div>
+            <div class="btn-secondary">Not me — dismiss</div>
+          </div>
+
+          <!-- Edge: already claimed state (shown as callout) -->
+          <div style="margin: 0 20px 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;">
+            <div style="font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--t5); margin-bottom: 6px;">Edge state: already claimed</div>
+            <div style="font-size: 12px; color: var(--t3);">This profile has already been claimed.</div>
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--em-mid); margin-top: 6px; cursor: pointer;">Register anyway →</div>
+          </div>
+
+        </div>
+      </div>
+      <div class="col-note">
+        → After registration + sign-in, localStorage bridge redirects here<br>
+        → One-click claim CTA is prominent; stats confirm this is their data<br>
+        → Edge state shown: "already claimed" with fallback to /register<br>
+        → "Not me — dismiss" prevents accidental claims
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

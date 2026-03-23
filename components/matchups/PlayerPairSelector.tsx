@@ -14,6 +14,7 @@ interface RecentPlayer {
 export interface SlotPlayer {
   id: string;
   name: string;
+  claimed?: boolean;
 }
 
 interface PlayerPairSelectorProps {
@@ -31,8 +32,10 @@ interface PlayerPairSelectorProps {
   }) => void;
 }
 
-function toSlot(v: { id?: string; name?: string } | null): SlotPlayer | null {
-  if (v?.id && v.name) return { id: v.id, name: v.name };
+type SlotValue = { id?: string; name?: string; claimed?: boolean } | null;
+
+function toSlot(v: SlotValue): SlotPlayer | null {
+  if (v?.id && v.name) return { id: v.id, name: v.name, claimed: v.claimed };
   return null;
 }
 
@@ -45,25 +48,12 @@ export default function PlayerPairSelector({
   initialOpp2 = null,
   onChange,
 }: PlayerPairSelectorProps) {
-  const [player1, setPlayer1] = useState<{ id?: string; name?: string } | null>(
-    initialPlayer1,
-  );
-  const [partner, setPartner] = useState<{ id?: string; name?: string } | null>(
-    initialPartner,
-  );
-  const [opp1, setOpp1] = useState<{ id?: string; name?: string } | null>(
-    initialOpp1,
-  );
-  const [opp2, setOpp2] = useState<{ id?: string; name?: string } | null>(
-    initialOpp2,
-  );
+  const [player1, setPlayer1] = useState<SlotValue>(initialPlayer1);
+  const [partner, setPartner] = useState<SlotValue>(initialPartner);
+  const [opp1, setOpp1] = useState<SlotValue>(initialOpp1);
+  const [opp2, setOpp2] = useState<SlotValue>(initialOpp2);
 
-  function notify(
-    p1: typeof player1,
-    p: typeof partner,
-    o1: typeof opp1,
-    o2: typeof opp2,
-  ) {
+  function notify(p1: SlotValue, p: SlotValue, o1: SlotValue, o2: SlotValue) {
     onChange({
       player1: toSlot(p1),
       partner: toSlot(p),
@@ -72,21 +62,21 @@ export default function PlayerPairSelector({
     });
   }
 
-  function handlePlayer1(v: { id?: string; name?: string } | null) {
-    setPlayer1(v);
-    notify(v, partner, opp1, opp2);
-  }
-  function handlePartner(v: { id?: string; name?: string } | null) {
-    setPartner(v);
-    notify(player1, v, opp1, opp2);
-  }
-  function handleOpp1(v: { id?: string; name?: string } | null) {
-    setOpp1(v);
-    notify(player1, partner, v, opp2);
-  }
-  function handleOpp2(v: { id?: string; name?: string } | null) {
-    setOpp2(v);
-    notify(player1, partner, opp1, v);
+  function handlePlayer1(v: SlotValue) { setPlayer1(v); notify(v, partner, opp1, opp2); }
+  function handlePartner(v: SlotValue) { setPartner(v); notify(player1, v, opp1, opp2); }
+  function handleOpp1(v: SlotValue) { setOpp1(v); notify(player1, partner, v, opp2); }
+  function handleOpp2(v: SlotValue) { setOpp2(v); notify(player1, partner, opp1, v); }
+
+  function assignChip(p: RecentPlayer) {
+    const val = { id: p.id, name: p.displayName, claimed: p.claimed };
+    if (adminMode) {
+      if (!player1?.id && !player1?.name) { setPlayer1(val); notify(val, partner, opp1, opp2); return; }
+      if (!partner?.id && !partner?.name) { setPartner(val); notify(player1, val, opp1, opp2); return; }
+    } else {
+      if (!partner?.id && !partner?.name) { setPartner(val); notify(player1, val, opp1, opp2); return; }
+    }
+    if (!opp1?.id && !opp1?.name) { setOpp1(val); notify(player1, partner, val, opp2); return; }
+    if (!opp2?.id && !opp2?.name) { setOpp2(val); notify(player1, partner, opp1, val); return; }
   }
 
   const adminIds = adminMode ? [player1?.id] : [];
@@ -95,8 +85,27 @@ export default function PlayerPairSelector({
   const excludeOpp1 = [...adminIds, partner?.id, opp2?.id].filter(Boolean) as string[];
   const excludeOpp2 = [...adminIds, partner?.id, opp1?.id].filter(Boolean) as string[];
 
+  const selectedIds = new Set([player1?.id, partner?.id, opp1?.id, opp2?.id].filter(Boolean) as string[]);
+  const availableChips = recentPlayers.filter((p) => !selectedIds.has(p.id));
+
   return (
     <div className="flex flex-col gap-5">
+      {/* Recent players chip strip */}
+      {availableChips.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {availableChips.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => assignChip(p)}
+              className="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200 hover:bg-zinc-600 active:bg-zinc-500 transition-colors"
+            >
+              {p.displayName}
+            </button>
+          ))}
+        </div>
+      )}
+
       {adminMode && (
         <div className="max-w-xs">
           <PlayerSelector

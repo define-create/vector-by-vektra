@@ -103,12 +103,12 @@ export default async function StatsPage({
     recentOpponents = await getRecentOpponents(myPlayer.id);
 
     const idsToFetch = [p2Id, p3Id, p4Id].filter(Boolean) as string[];
-    const playerMap = new Map<string, { id: string; displayName: string }>();
+    const playerMap = new Map<string, { id: string; displayName: string; claimed: boolean }>();
 
     if (idsToFetch.length > 0) {
       const players = await prisma.player.findMany({
         where: { id: { in: idsToFetch }, deletedAt: null },
-        select: { id: true, displayName: true },
+        select: { id: true, displayName: true, claimed: true },
       });
       for (const p of players) playerMap.set(p.id, p);
     }
@@ -116,7 +116,7 @@ export default async function StatsPage({
     function toSlot(id: string | undefined): SlotPlayer | null {
       if (!id) return null;
       const p = playerMap.get(id);
-      return p ? { id: p.id, name: p.displayName } : null;
+      return p ? { id: p.id, name: p.displayName, claimed: p.claimed } : null;
     }
 
     initialPartner = toSlot(p2Id);
