@@ -42,7 +42,9 @@
       "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components -type f -name *.tsx)",
       "Bash(find d:DEVClaudeCodeVektraVectorvector-by-vektra -maxdepth 2 -type f \\\\\\(-name vercel.json -o -name next.config.* -o -name *backup* -o -name *cron* -o -name docker* -o -name .env* \\\\\\))",
       "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -maxdepth 1 -type f -name README* -o -name *.md)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run:*)"
     ]
   }
 }
