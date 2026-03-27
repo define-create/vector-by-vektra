@@ -37,7 +37,12 @@
       "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/.next -name *geist* -o -name *Geist*)",
       "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/node_modules -name *.ttf)",
       "Bash(curl -s \"https://fonts.googleapis.com/css2?family=Geist:wght@400&display=swap\")",
-      "Bash(curl -sL \"https://fonts.gstatic.com/s/geist/v4/gyBhhwUxId8gMGYQMKR3pzfaWI_RnOM4nQ.ttf\" -o \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/public/fonts/geist-400.ttf\")"
+      "Bash(curl -sL \"https://fonts.gstatic.com/s/geist/v4/gyBhhwUxId8gMGYQMKR3pzfaWI_RnOM4nQ.ttf\" -o \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/public/fonts/geist-400.ttf\")",
+      "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -name *rating* -type f)",
+      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components -type f -name *.tsx)",
+      "Bash(find d:DEVClaudeCodeVektraVectorvector-by-vektra -maxdepth 2 -type f \\\\\\(-name vercel.json -o -name next.config.* -o -name *backup* -o -name *cron* -o -name docker* -o -name .env* \\\\\\))",
+      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -maxdepth 1 -type f -name README* -o -name *.md)",
+      "WebSearch"
     ]
   }
 }

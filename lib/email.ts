@@ -19,9 +19,9 @@ export async function sendInviteEmail(
   await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "Vector by Vektra <noreply@yourdomain.com>",
     to: recipientEmail,
-    subject: `${inviterName} wants you to see your pickleball stats`,
+    subject: `${inviterName} invites you to join Vector and see your pickleball stats`,
     html: `
-      <p>${inviterName} played with you and entered the match into Vector.</p>
+      <p>${inviterName} played with you and entered the match into Vector app.</p>
       <p>${shadowPlayerName}'s profile has ${matchCount} match${matchCount === 1 ? "" : "es"} tracked — including rating and win history.</p>
       <p><a href="${inviteUrl}">Claim your stats →</a></p>
       <p style="font-size:12px;color:#71717a;">This invite was sent by ${inviterName} via Vector. Link expires in 30 days. — vector.app</p>
@@ -52,7 +52,7 @@ export async function sendInviteClaimedEmail(
     subject: `Good news — ${claimedPlayerName} joined Vector!`,
     html: `
       <p>${claimedPlayerName} claimed their profile.</p>
-      <p>${claimedPlayerName} joined Vector and linked the shadow profile you shared. You can now see their updated stats and run matchup predictions together.</p>
+      <p>${claimedPlayerName} joined Vector and linked the shadow profile you shared. Thank you!</p>
       <p><a href="${baseUrl}/command">View stats →</a></p>
     `,
   });

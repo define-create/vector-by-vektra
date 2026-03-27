@@ -256,13 +256,6 @@ export default async function InvitePage(
             playerName={player.displayName}
             matchCount={matchCount}
           />
-          <PlayerProofCard
-            player={{ ...player, matchCount, winPct }}
-            last7Results={last7Results}
-          />
-          {recentMatches.length > 0 && (
-            <MatchesSection matches={recentMatches} />
-          )}
           <div className="flex flex-col gap-3 pb-2">
             <p className="font-mono text-xs text-zinc-400 text-center">
               Is <span className="text-zinc-200">{player.displayName}</span>&apos;s profile yours?
@@ -275,6 +268,14 @@ export default async function InvitePage(
               Not me — dismiss
             </Link>
           </div>
+          <PlayerProofCard
+            player={{ ...player, matchCount, winPct }}
+            last7Results={last7Results}
+          />
+          {recentMatches.length > 0 && (
+            <MatchesSection matches={recentMatches} />
+          )}
+          
         </div>
         <Footer />
       </div>
@@ -293,16 +294,7 @@ export default async function InvitePage(
           matchCount={matchCount}
         />
 
-        <PlayerProofCard
-          player={{ ...player, matchCount, winPct }}
-          last7Results={last7Results}
-        />
-
-        {recentMatches.length > 0 && (
-          <MatchesSection matches={recentMatches} />
-        )}
-
-        {/* CTA */}
+         {/* CTA */}
         <div className="flex flex-col gap-3 pt-1 pb-2">
           <Link
             href={`/register?inviteToken=${token}`}
@@ -321,6 +313,18 @@ export default async function InvitePage(
             </Link>
           </p>
         </div>
+        
+
+        <PlayerProofCard
+          player={{ ...player, matchCount, winPct }}
+          last7Results={last7Results}
+        />
+
+        {recentMatches.length > 0 && (
+          <MatchesSection matches={recentMatches} />
+        )}
+
+       
       </div>
       <Footer />
     </div>

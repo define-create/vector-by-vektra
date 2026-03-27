@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { match: { matchDate: "desc" } },
+      orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
       take: 10,
     });
   } else {
@@ -68,14 +68,16 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { match: { matchDate: "desc" } },
+      orderBy: [{ match: { matchDate: "desc" } }, { match: { createdAt: "desc" } }],
     });
   }
 
-  // Sort ascending for chart
-  const sorted = [...matchParticipations].sort(
-    (a, b) => a.match.matchDate.getTime() - b.match.matchDate.getTime(),
-  );
+  // Sort ascending for chart, using createdAt as tiebreaker for same-day matches
+  const sorted = [...matchParticipations].sort((a, b) => {
+    const dateDiff = a.match.matchDate.getTime() - b.match.matchDate.getTime();
+    if (dateDiff !== 0) return dateDiff;
+    return a.match.createdAt.getTime() - b.match.createdAt.getTime();
+  });
 
   // -------------------------------------------------------------------------
   // Fetch rating snapshots for the same matches

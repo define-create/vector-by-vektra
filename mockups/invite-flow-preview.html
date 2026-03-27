@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Invite Flow — Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1f; font-family: system-ui, -apple-system, sans-serif; color: #f4f4f5; padding: 40px 24px; }
+
+  h1 { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #71717a; margin-bottom: 32px; }
+  .section-label {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #52525b;
+    font-family: monospace; margin-bottom: 12px; margin-top: 48px;
+  }
+  .state-label { font-family: monospace; font-size: 10px; color: #52525b; margin-bottom: 8px; }
+
+  .cols { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+  .col { flex: 1; min-width: 320px; max-width: 440px; }
+
+  /* ── Shell ── */
+  .shell {
+    background: #09090b; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 24px 64px rgba(0,0,0,0.6);
+  }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; border-bottom: 1px solid #27272a;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; }
+  .brand-text { font-family: monospace; font-size: 14px; font-weight: 600; color: #fafafa; letter-spacing: 0.08em; }
+  .nav-badge { font-family: monospace; font-size: 10px; border: 1px solid #3f3f46; border-radius: 4px; padding: 2px 8px; color: #a1a1aa; }
+
+  /* ── Email ── */
+  .email-shell {
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.4);
+    overflow: hidden; max-width: 480px;
+  }
+  .email-header { background: #f4f4f5; padding: 14px 20px; border-bottom: 1px solid #e4e4e7; }
+  .email-meta { font-size: 11px; color: #71717a; line-height: 1.8; }
+  .email-meta strong { color: #18181b; }
+  .email-body { padding: 24px 24px 20px; background: #fff; }
+  .email-body p { font-size: 14px; color: #27272a; line-height: 1.7; margin-bottom: 14px; }
+  .email-body a { color: #16a34a; font-weight: 600; text-decoration: none; }
+  .email-footer { padding: 0 24px 18px; }
+  .email-footer p { font-size: 11px; color: #a1a1aa; }
+
+  /* ── Page body ── */
+  .page-body { padding: 24px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ── Hero ── */
+  .hero-card {
+    position: relative; border-radius: 16px; overflow: hidden;
+    background: #0f0f11; border: 1px solid #3f3f46; padding: 20px;
+  }
+  .hero-glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 200px 120px at 20% 0%, rgba(52,211,153,0.07) 0%, transparent 70%);
+  }
+  .inviter-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; position: relative; z-index: 1; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #27272a; border: 1px solid #3f3f46;
+    display: flex; align-items: center; justify-content: center;
+    font-family: monospace; font-size: 13px; font-weight: 600; color: #34d399; flex-shrink: 0;
+  }
+  .inviter-name { font-size: 14px; font-weight: 600; color: #f4f4f5; }
+  .inviter-sub { font-family: monospace; font-size: 10px; color: #71717a; margin-top: 2px; }
+  .headline { position: relative; z-index: 1; }
+  .headline h1 { font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; color: #fafafa; margin-bottom: 8px; }
+  .headline h1 span { color: #34d399; }
+  .headline p { font-size: 14px; color: #a1a1aa; line-height: 1.6; }
+
+  /* ── CTA block ── */
+  .cta-block { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 8px; }
+  .cta-primary {
+    display: block; width: 100%; text-align: center;
+    background: #fafafa; color: #09090b; font-weight: 600; font-size: 14px;
+    padding: 16px; border-radius: 12px; text-decoration: none; border: none; cursor: pointer;
+  }
+  .cta-or { text-align: center; font-family: monospace; font-size: 12px; color: #52525b; }
+  .cta-meta { text-align: center; font-family: monospace; font-size: 12px; color: #a1a1aa; }
+  .cta-meta a { color: #34d399; text-decoration: none; }
+
+  /* ── Claim CTA (logged in, no player) ── */
+  .claim-question { font-family: monospace; font-size: 12px; color: #a1a1aa; text-align: center; }
+  .claim-question span { color: #fafafa; }
+  .btn-claim-large {
+    display: block; width: 100%; text-align: center;
+    background: #fafafa; color: #09090b; font-weight: 600; font-size: 14px;
+    padding: 16px; border-radius: 12px; border: none; cursor: pointer;
+  }
+  .claim-dismiss { text-align: center; font-family: monospace; font-size: 12px; color: #71717a; cursor: pointer; }
+
+  /* ── Proof card ── */
+  .proof-card {
+    border-radius: 16px; border: 1px solid #374155; overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(52,211,153,0.08), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .proof-header {
+    background: #18181b; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #27272a;
+  }
+  .proof-name { font-size: 15px; font-weight: 600; color: #fafafa; }
+  .unclaimed-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 100px; padding: 4px 10px;
+  }
+  .unclaimed-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; }
+  .unclaimed-text { font-family: monospace; font-size: 9px; color: #34d399; letter-spacing: 0.05em; }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid #27272a; background: #111113;
+  }
+  .stat-cell { padding: 14px 16px; border-right: 1px solid #27272a; }
+  .stat-cell:last-child { border-right: none; }
+  .stat-val { font-family: monospace; font-size: 20px; font-weight: 500; color: #fafafa; }
+  .stat-val.accent { color: #34d399; }
+  .stat-label { font-family: monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #71717a; margin-top: 2px; }
+  .streak-row { background: #111113; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .streak-label { font-family: monospace; font-size: 10px; color: #71717a; }
+  .streak-dots { display: flex; gap: 4px; }
+  .streak-dot { width: 8px; height: 8px; border-radius: 2px; }
+  .streak-dot.win { background: #10b981; }
+  .streak-dot.loss { background: rgba(251,113,133,0.7); }
+
+  /* ── Recent matches ── */
+  .section-title { font-family: monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #71717a; margin-bottom: 8px; }
+  .match-row {
+    display: flex; align-items: center; gap: 12px;
+    background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .match-row:last-child { margin-bottom: 0; }
+  .result-badge {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: monospace; font-size: 11px; font-weight: 600; flex-shrink: 0;
+  }
+  .result-badge.win { background: rgba(52,211,153,0.1); color: #34d399; border: 1px solid rgba(52,211,153,0.2); }
+  .result-badge.loss { background: rgba(251,113,133,0.1); color: #fb7185; border: 1px solid rgba(251,113,133,0.15); }
+  .match-info { flex: 1; min-width: 0; }
+  .match-vs { font-size: 12px; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .match-score { font-family: monospace; font-size: 10px; color: #71717a; margin-top: 2px; }
+  .match-date { font-family: monospace; font-size: 10px; color: #52525b; flex-shrink: 0; }
+
+  /* ── Already-has-player notice ── */
+  .notice-box { border-radius: 12px; border: 1px solid #27272a; background: #111113; padding: 16px; font-size: 13px; color: #a1a1aa; line-height: 1.6; }
+  .notice-box span { color: #e4e4e7; font-weight: 500; }
+
+  /* ── Terminal states ── */
+  .terminal-box { padding: 64px 16px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .check-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #34d399;
+  }
+  .terminal-text { font-size: 14px; font-weight: 500; color: #e4e4e7; text-align: center; }
+  .terminal-link { font-size: 13px; color: #34d399; text-decoration: underline; text-underline-offset: 2px; }
+  .terminal-muted { font-size: 14px; color: #71717a; text-align: center; }
+  .terminal-name { color: #d4d4d8; }
+
+  /* ── Claim profile prompt ── */
+  .prompt-body { padding: 28px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .prompt-header h2 { font-size: 17px; font-weight: 600; color: #f4f4f5; }
+  .prompt-header p { font-size: 13px; color: #a1a1aa; margin-top: 4px; line-height: 1.5; }
+  .card-block { border-radius: 12px; border: 1px solid #3f3f46; background: rgba(39,39,42,0.6); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .card-step-row { display: flex; align-items: flex-start; gap: 12px; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: #e4e4e7; color: #09090b; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-title { font-size: 13px; font-weight: 600; color: #f4f4f5; }
+  .step-sub { font-size: 12px; color: #71717a; margin-top: 2px; line-height: 1.4; }
+  .card-divider { border: none; border-top: 1px solid rgba(63,63,70,0.5); }
+  .text-input { width: 100%; border-radius: 8px; border: 1px solid #52525b; background: #09090b; padding: 12px 16px; color: #fafafa; font-size: 14px; font-family: inherit; }
+  .result-item { border-radius: 12px; border: 1px solid #3f3f46; background: #18181b; overflow: hidden; }
+  .result-top { padding: 12px 16px; display: flex; align-items: flex-start; justify-content: space-between; }
+  .result-name { font-size: 13px; font-weight: 600; color: #f4f4f5; }
+  .result-meta { font-family: monospace; font-size: 11px; color: #a1a1aa; margin-top: 2px; }
+  .played-badge { display: flex; align-items: center; gap: 4px; background: rgba(52,211,153,0.05); border: 1px solid rgba(52,211,153,0.15); border-radius: 4px; padding: 4px 8px; flex-shrink: 0; margin-left: 8px; margin-top: 2px; }
+  .played-dot { width: 4px; height: 4px; border-radius: 50%; background: #34d399; }
+  .played-text { font-family: monospace; font-size: 9px; color: #34d399; }
+  .result-actions { padding: 10px 16px; border-top: 1px solid #27272a; display: flex; gap: 8px; }
+  .btn-this-is-me { flex: 1; border-radius: 8px; background: #f4f4f5; color: #09090b; padding: 10px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-invite-sm { border-radius: 8px; background: transparent; color: #a1a1aa; padding: 10px 14px; font-size: 12px; font-weight: 500; border: 1px solid #3f3f46; cursor: pointer; }
+  .or-divider { display: flex; align-items: center; }
+  .or-line { flex: 1; border-top: 1px solid #52525b; }
+  .or-pill { margin: 0 12px; border: 1px solid rgba(245,158,11,0.6); background: rgba(120,53,15,0.6); color: #fcd34d; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; border-radius: 100px; padding: 8px 20px; box-shadow: 0 0 12px 0 rgba(180,100,0,0.25); }
+  .btn-create { width: 100%; border-radius: 8px; background: #3f3f46; color: #f4f4f5; padding: 12px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; }
+
+  /* ── Page footer ── */
+  .page-footer { text-align: center; padding: 16px; border-top: 1px solid #18181b; font-family: monospace; font-size: 10px; letter-spacing: 0.1em; color: #3f3f46; }
+</style>
+</head>
+<body>
+
+<h1>Invite Flow — HTML Preview</h1>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- 1. EMAILS -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<p class="section-label">1 · Invite email — sent to the invited player (lib/email.ts → sendInviteEmail)</p>
+<div class="email-shell">
+  <div class="email-header">
+    <div class="email-meta">
+      <div><strong>From:</strong> Vector by Vektra &lt;noreply@vector.app&gt;</div>
+      <div><strong>To:</strong> tarik@email.com</div>
+      <div><strong>Subject:</strong> <strong>Almir wants you to see your pickleball stats</strong></div>
+    </div>
+  </div>
+  <div class="email-body">
+    <p>Almir played with you and entered the match into Vector.</p>
+    <p>Tarik's profile has 14 matches tracked — including rating and win history.</p>
+    <p><a href="#">Claim your stats →</a></p>
+  </div>
+  <div class="email-footer">
+    <p>This invite was sent by Almir via Vector. Link expires in 30 days. — vector.app</p>
+  </div>
+</div>
+
+<p class="section-label">1b · "Profile claimed" notification — sent back to the inviter (sendInviteClaimedEmail)</p>
+<div class="email-shell">
+  <div class="email-header">
+    <div class="email-meta">
+      <div><strong>From:</strong> Vector by Vektra &lt;noreply@vector.app&gt;</div>
+      <div><strong>To:</strong> almir@email.com</div>
+      <div><strong>Subject:</strong> <strong>Good news — Tarik joined Vector!</strong></div>
+    </div>
+  </div>
+  <div class="email-body">
+    <p>Tarik claimed their profile.</p>
+    <p>Tarik joined Vector and linked the shadow profile you shared. You can now see their updated stats and run matchup predictions together.</p>
+    <p><a href="#">View stats →</a></p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- 2. INVITE LANDING PAGE -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<p class="section-label">2 · Invite landing page (app/invite/[token]/page.tsx)</p>
+
+<div class="cols">
+
+  <!-- State: Unauthenticated (active invite) -->
+  <div class="col">
+    <div class="state-label">State: not logged in — active invite</div>
+    <div class="shell">
+      <div class="nav">
+        <div class="nav-brand"><div class="dot"></div><span class="brand-text">Vector</span></div>
+        <span class="nav-badge">Your invite</span>
+      </div>
+      <div class="page-body">
+
+        <!-- 1. Hero -->
+        <div class="hero-card">
+          <div class="hero-glow"></div>
+          <div class="inviter-row">
+            <div class="avatar">AL</div>
+            <div>
+              <div class="inviter-name">Almir</div>
+              <div class="inviter-sub">Played 3 matches with you · invited you</div>
+            </div>
+          </div>
+          <div class="headline">
+            <h1>Your pickleball stats<br>are <span>already here</span>.</h1>
+            <p>Almir thinks this profile is yours. 14 matches. Real ratings. All tracked.</p>
+          </div>
+        </div>
+
+        <!-- 2. CTA — now directly after hero -->
+        <div class="cta-block">
+          <button class="cta-primary">Create account to claim your stats →</button>
+          <div class="cta-or">or</div>
+          <div class="cta-meta">Already a member? <a href="#">Sign in →</a></div>
+        </div>
+
+        <!-- 3. Proof card -->
+        <div class="proof-card">
+          <div class="proof-header">
+            <span class="proof-name">Tarik</span>
+            <div class="unclaimed-badge"><div class="unclaimed-dot"></div><span class="unclaimed-text">Unclaimed</span></div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-cell"><div class="stat-val">14</div><div class="stat-label">Matches</div></div>
+            <div class="stat-cell"><div class="stat-val accent">1,182</div><div class="stat-label">Rating</div></div>
+            <div class="stat-cell"><div class="stat-val">60%</div><div class="stat-label">Win rate</div></div>
+          </div>
+          <div class="streak-row">
+            <span class="streak-label">Last 7 results —</span>
+            <div class="streak-dots">
+              <div class="streak-dot win"></div><div class="streak-dot loss"></div>
+              <div class="streak-dot win"></div><div class="streak-dot win"></div>
+              <div class="streak-dot loss"></div><div class="streak-dot win"></div>
+              <div class="streak-dot win"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Recent matches -->
+        <div>
+          <div class="section-title">Recent matches</div>
+          <div class="match-row">
+            <div class="result-badge win">W</div>
+            <div class="match-info"><div class="match-vs">w/ Haris vs Kenan / Edin</div><div class="match-score">11–7, 11–9</div></div>
+            <span class="match-date">Mar 23</span>
+          </div>
+          <div class="match-row">
+            <div class="result-badge loss">L</div>
+            <div class="match-info"><div class="match-vs">w/ Edin vs Almir / Kenan</div><div class="match-score">8–11, 7–11</div></div>
+            <span class="match-date">Mar 23</span>
+          </div>
+          <div class="match-row">
+            <div class="result-badge win">W</div>
+            <div class="match-info"><div class="match-vs">w/ Almir vs Haris / Edin</div><div class="match-score">11–8, 11–6</div></div>
+            <span class="match-date">Mar 23</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="page-footer">Powered by Vector · vector.app</div>
+    </div>
+  </div>
+
+  <!-- State: Logged in, no player yet -->
+  <div class="col">
+    <div class="state-label">State: logged in, no player yet → one-click claim</div>
+    <div class="shell">
+      <div class="nav">
+        <div class="nav-brand"><div class="dot"></div><span class="brand-text">Vector</span></div>
+        <span class="nav-badge">Your invite</span>
+      </div>
+      <div class="page-body">
+
+        <div class="hero-card">
+          <div class="hero-glow"></div>
+          <div class="inviter-row">
+            <div class="avatar">AL</div>
+            <div>
+              <div class="inviter-name">Almir</div>
+              <div class="inviter-sub">Played 3 matches with you · invited you</div>
+            </div>
+          </div>
+          <div class="headline">
+            <h1>Your pickleball stats<br>are <span>already here</span>.</h1>
+            <p>Almir thinks this profile is yours. 14 matches. Real ratings. All tracked.</p>
+          </div>
+        </div>
+
+        <!-- Claim CTA -->
+        <div class="cta-block">
+          <p class="claim-question">Is <span>Tarik</span>'s profile yours?</p>
+          <button class="btn-claim-large">Claim as me</button>
+          <div class="claim-dismiss">Not me — dismiss</div>
+        </div>
+
+        <div class="proof-card">
+          <div class="proof-header">
+            <span class="proof-name">Tarik</span>
+            <div class="unclaimed-badge"><div class="unclaimed-dot"></div><span class="unclaimed-text">Unclaimed</span></div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-cell"><div class="stat-val">14</div><div class="stat-label">Matches</div></div>
+            <div class="stat-cell"><div class="stat-val accent">1,182</div><div class="stat-label">Rating</div></div>
+            <div class="stat-cell"><div class="stat-val">60%</div><div class="stat-label">Win rate</div></div>
+          </div>
+          <div class="streak-row">
+            <span class="streak-label">Last 7 results —</span>
+            <div class="streak-dots">
+              <div class="streak-dot win"></div><div class="streak-dot loss"></div>
+              <div class="streak-dot win"></div><div class="streak-dot win"></div>
+              <div class="streak-dot loss"></div><div class="streak-dot win"></div>
+              <div class="streak-dot win"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Recent matches</div>
+          <div class="match-row">
+            <div class="result-badge win">W</div>
+            <div class="match-info"><div class="match-vs">w/ Haris vs Kenan / Edin</div><div class="match-score">11–7, 11–9</div></div>
+            <span class="match-date">Mar 23</span>
+          </div>
+          <div class="match-row">
+            <div class="result-badge loss">L</div>
+            <div class="match-info"><div class="match-vs">w/ Edin vs Almir / Kenan</div><div class="match-score">8–11, 7–11</div></div>
+            <span class="match-date">Mar 23</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="page-footer">Powered by Vector · vector.app</div>
+    </div>
+  </div>
+
+  <!-- State: Logged in, already has a player -->
+  <div class="col">
+    <div class="state-label">State: logged in, already has a player</div>
+    <div class="shell">
+      <div class="nav">
+        <div class="nav-brand"><div class="dot"></div><span class="brand-text">Vector</span></div>
+        <span class="nav-badge">Your invite</span>
+      </div>
+      <div class="page-body" style="padding-top:32px;">
+        <div class="notice-box">
+          You already have a profile (<span>Almir</span>).
+          If you think this invite is for you, contact your group admin.
+        </div>
+        <div class="proof-card">
+          <div class="proof-header">
+            <span class="proof-name">Tarik</span>
+            <div class="unclaimed-badge"><div class="unclaimed-dot"></div><span class="unclaimed-text">Unclaimed</span></div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-cell"><div class="stat-val">14</div><div class="stat-label">Matches</div></div>
+            <div class="stat-cell"><div class="stat-val accent">1,182</div><div class="stat-label">Rating</div></div>
+            <div class="stat-cell"><div class="stat-val">60%</div><div class="stat-label">Win rate</div></div>
+          </div>
+          <div class="streak-row">
+            <span class="streak-label">Last 7 results —</span>
+            <div class="streak-dots">
+              <div class="streak-dot win"></div><div class="streak-dot loss"></div>
+              <div class="streak-dot win"></div><div class="streak-dot win"></div>
+              <div class="streak-dot loss"></div><div class="streak-dot win"></div>
+              <div class="streak-dot win"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-footer">Powered by Vector · vector.app</div>
+    </div>
+  </div>
+
+  <!-- State: Claimed -->
+  <div class="col">
+    <div class="state-label">State: already claimed</div>
+    <div class="shell">
+      <div class="nav">
+        <div class="nav-brand"><div class="dot"></div><span class="brand-text">Vector</span></div>
+        <span class="nav-badge">Your invite</span>
+      </div>
+      <div class="terminal-box">
+        <div class="check-circle">✓</div>
+        <p class="terminal-text">This profile has already been claimed.</p>
+        <a class="terminal-link" href="#">Create your own account →</a>
+      </div>
+      <div class="page-footer">Powered by Vector · vector.app</div>
+    </div>
+  </div>
+
+  <!-- State: Expired -->
+  <div class="col">
+    <div class="state-label">State: expired</div>
+    <div class="shell">
+      <div class="nav">
+        <div class="nav-brand"><div class="dot"></div><span class="brand-text">Vector</span></div>
+        <span class="nav-badge">Your invite</span>
+      </div>
+      <div class="terminal-box">
+        <p class="terminal-muted">This invite link has expired.</p>
+        <p class="terminal-muted" style="font-size:13px;">Ask <span class="terminal-name">Almir</span> to send a new one.</p>
+      </div>
+      <div class="page-footer">Powered by Vector · vector.app</div>
+    </div>
+  </div>
+
+</div><!-- /cols -->
+
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- 3. CLAIM PROFILE PROMPT (Command screen) -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<p class="section-label">3 · Claim profile prompt — Command screen (components/command/ClaimProfilePrompt.tsx)</p>
+
+<div class="cols">
+
+  <!-- Email verified -->
+  <div class="col">
+    <div class="state-label">State: email verified, no player yet</div>
+    <div class="shell">
+      <div class="prompt-body">
+        <div class="prompt-header">
+          <h2>Set up your profile</h2>
+          <p>If you've played in any tracked matches, your stats are already recorded.</p>
+        </div>
+
+        <div class="card-block">
+          <div class="card-step-row">
+            <div class="step-num">1</div>
+            <div><div class="step-title">Already played here</div><div class="step-sub">Find your stats from past matches</div></div>
+          </div>
+          <hr class="card-divider" />
+          <input class="text-input" type="text" value="Tarik" readonly />
+          <div class="result-item">
+            <div class="result-top">
+              <div>
+                <div class="result-name">Tarik</div>
+                <div class="result-meta">14 matches · Last played Mar 2026 · 60% wins</div>
+              </div>
+              <div class="played-badge"><div class="played-dot"></div><span class="played-text">Played together</span></div>
+            </div>
+            <div class="result-actions">
+              <button class="btn-this-is-me">This is me</button>
+              <button class="btn-invite-sm">Invite</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="or-divider">
+          <div class="or-line"></div>
+          <span class="or-pill">OR</span>
+          <div class="or-line"></div>
+        </div>
+
+        <div class="card-block">
+          <div class="card-step-row">
+            <div class="step-num">2</div>
+            <div><div class="step-title">New here</div><div class="step-sub">Haven't played in any tracked matches yet? Create a fresh profile.</div></div>
+          </div>
+          <hr class="card-divider" />
+          <input class="text-input" type="text" value="Tarik" readonly />
+          <button class="btn-create">Create Profile</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email NOT verified -->
+  <div class="col">
+    <div class="state-label">State: email NOT verified</div>
+    <div class="shell">
+      <div class="prompt-body" style="padding-top:40px;">
+        <div class="card-block">
+          <p style="font-size:13px;color:#d4d4d8;line-height:1.6;">
+            Your stats will appear here once your profile is set up.
+            To proceed, verify your email — check your inbox before continuing.
+          </p>
+        </div>
+        <div class="card-block">
+          <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.12em;color:#71717a;">Verify Your Email</div>
+          <p style="font-size:13px;color:#a1a1aa;line-height:1.6;">
+            We sent a verification link when you registered. Check your inbox and click the link, then return here to set up your profile.
+          </p>
+          <input class="text-input" type="email" value="tarik@email.com" readonly />
+          <button class="btn-create">Resend verification email</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

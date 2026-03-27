@@ -83,7 +83,7 @@ function UnverifiedState({ userEmail }: { userEmail?: string }) {
         </p>
 
         {sent ? (
-          <p className="text-sm text-zinc-300">Check your inbox for a new verification link.</p>
+          <p className="text-sm text-zinc-300">Check your inbox for a new verification link. NOTE: Check your spam folder if you don't see it.</p>
         ) : (
           <form onSubmit={handleResend} className="flex flex-col gap-2">
             <input

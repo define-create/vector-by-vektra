@@ -218,9 +218,11 @@ export const getCommandData = unstable_cache(
     const snap = p.match.ratingSnapshots[0];
     if (snap) snapshotRatingByMatchId.set(p.match.id, snap.rating);
   }
-  const histAsc = [...historyParticipants].sort(
-    (a, b) => a.match.matchDate.getTime() - b.match.matchDate.getTime(),
-  );
+  const histAsc = [...historyParticipants].sort((a, b) => {
+    const dateDiff = a.match.matchDate.getTime() - b.match.matchDate.getTime();
+    if (dateDiff !== 0) return dateDiff;
+    return a.match.createdAt.getTime() - b.match.createdAt.getTime();
+  });
   // ratingHistory — chronological, from histAsc + snapshotRatingByMatchId
   const ratingHistory: CommandData["ratingHistory"] = histAsc
     .map((p) => {
