@@ -34,7 +34,7 @@ export async function GET() {
   // Group by lowercase displayName in JS
   const grouped = new Map<string, typeof shadows>();
   for (const p of shadows) {
-    const key = p.displayName.toLowerCase().trim();
+    const key = p.displayName.toLowerCase().trim().replace(/\s+/g, " ");
     const existing = grouped.get(key) ?? [];
     existing.push(p);
     grouped.set(key, existing);

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json() as { displayName?: unknown };
-    const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "";
+    const displayName = typeof body.displayName === "string" ? body.displayName.trim().replace(/\s+/g, " ") : "";
     if (!displayName) {
       return NextResponse.json({ error: "Display name is required" }, { status: 400 });
     }

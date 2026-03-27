@@ -11,24 +11,27 @@ Fix: replace router.refresh() with router.push('/command') in both handleCreate 
 3. ClaimProfilePrompt: "Find Your Stats" search returns no results
 Search hits /api/players/search?unclaimed=true — only returns players where userId IS NULL. Needs investigation: confirm whether the shadow profile for the test user existed and was truly unclaimed, or whether the search filter itself is too strict (e.g. claimed=false vs userId=null mismatch).
 
-4. No rate limiting on API routes
-/api/matches (match entry), /api/auth, /api/admin/* — all unprotected. A bad actor could flood match entries or hammer the auth endpoint. Vercel's built-in DDoS protection helps, but there's no app-level throttle.
+4. ~~No rate limiting on API routes~~ ✓ RESOLVED — Upstash Redis rate limiting added via proxy.ts (sliding window: 5 req/60s on auth mutations, 10 req/60s on sign-in, 30 req/60s on match entry). middleware.ts migrated to proxy.ts per Next.js 16 convention.
 
 3. JWT role changes aren't immediate
 Auth.js uses JWT-only sessions (no DB sessions). If you change a user's role from user to admin (or revoke admin), the change won't take effect until their JWT expires. Depending on session maxAge, that could be hours or days.
+Not a current concern (no plans to add admins). Becomes relevant when Stripe (phase 2) introduces paid/free tiers — a user upgrading to pro expects new features immediately after payment.
+Recommended approach (Option C): do not store plan/tier in the JWT. After Stripe webhook confirms payment and updates the DB, feature-gated pages/routes do a lightweight DB check (SELECT plan FROM users WHERE id = ?) only on screens that require it. Avoids JWT complexity and keeps extra DB queries scoped to gated routes only — acceptable given connection_limit=10.
 
-4. Rating ELO is global, not per-tournament
-Tournament wins/losses affect the player's global ELO rating. A player who plays a casual tournament will have their global rating changed by those results. Whether this is intentional or a design gap is worth confirming.
+4. ~~Rating ELO is global, not per-tournament~~ ✓ BY DESIGN — The app is a personal/social intelligence tool, not a tournament management system. Global ELO across all matches is intentional. For formal tournament ratings, players rely on DUPR.
 
 
 
 
 Medium Priority
 5. Recompute scales linearly with all-time match history
-replay.ts replays every match ever, in chronological order, to recompute ratings. Fine at 100 matches; starts to feel it at 10,000+. No incremental recompute exists.
+replay.ts replays every match ever, in chronological order, to recompute ratings. Auto-recompute on every match entry is intentional — instant rating updates are a requirement.
+Optimizations applied (feature/improvements-03):
+  a) ✓ Player updates replaced from prisma.$transaction (N serial queries) → Promise.all (N parallel queries, capped by connection_limit=10). Recompute time drops from O(N × round-trip) to O(⌈N/10⌉ × round-trip) — ~10x faster at 30–50 players.
+  b) ✓ Snapshot metric loop pre-indexes snapshots by playerId (Map<id, snapshots[]>) before iterating players, eliminating O(players × snapshots) repeated scanning.
+  c) If replay ever becomes slow at 10,000+ matches, an incremental recompute (replay only from the new match forward) could be introduced — but this adds complexity and is not needed now.
 
-6. connection_limit=1 in DATABASE_URL
-This is the Supabase pgbouncer workaround. Under concurrent load (multiple users submitting matches simultaneously), connections queue. For a small group this is fine, but it's a hard ceiling.
+6. ~~connection_limit in DATABASE_URL~~ ✓ RESOLVED — Updated from 1 to 10. Sufficient for current scale.
 
 7. No match dispute mechanism for players
 Regular players can't flag an incorrect match — they have to contact an admin to void it. If the person entering matches (especially in admin mode) makes an error, there's no self-service remedy.

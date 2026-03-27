@@ -103,12 +103,21 @@ export async function runRecompute(
       }
     }
 
+    // Pre-index snapshots by playerId so metric functions don't scan the full array per player
+    const snapshotsByPlayer = new Map<string, typeof snapshots>();
+    for (const s of snapshots) {
+      const arr = snapshotsByPlayer.get(s.playerId) ?? [];
+      arr.push(s);
+      snapshotsByPlayer.set(s.playerId, arr);
+    }
+
     // Update all players: rating, confidence, volatility, winPct
     const allPlayerIds = [...finalRatings.keys()];
     const playerUpdates = allPlayerIds.map((playerId) => {
       const rating = finalRatings.get(playerId)!;
-      const ratingConfidence = computeRatingConfidence(playerId, matchRecords, snapshots);
-      const ratingVolatility = computeRatingVolatility(playerId, snapshots);
+      const playerSnaps = snapshotsByPlayer.get(playerId) ?? [];
+      const ratingConfidence = computeRatingConfidence(playerId, matchRecords, playerSnaps);
+      const ratingVolatility = computeRatingVolatility(playerId, playerSnaps);
       const total = totalCount.get(playerId) ?? 0;
       const wins = winCount.get(playerId) ?? 0;
       const winPct = total >= 3 ? wins / total : null;
@@ -117,7 +126,7 @@ export async function runRecompute(
         data: { rating, ratingConfidence, ratingVolatility, winPct },
       });
     });
-    await prisma.$transaction(playerUpdates);
+    await Promise.all(playerUpdates);
 
     // Upsert CommunityStats singleton (id=1)
     const ratings = [...finalRatings.values()];

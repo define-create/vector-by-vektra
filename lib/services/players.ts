@@ -50,7 +50,7 @@ export async function findOrCreateShadowPlayer(
   displayName: string,
   prisma: PrismaClient,
 ) {
-  const normalised = displayName.trim();
+  const normalised = displayName.trim().replace(/\s+/g, " ");
 
   const existing = await prisma.player.findFirst({
     where: {
