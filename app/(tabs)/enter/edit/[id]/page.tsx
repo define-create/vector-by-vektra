@@ -30,7 +30,7 @@ export default async function EditMatchPage({
   if (!match) redirect("/command");
   if (match.enteredByUserId !== session.user.id) redirect("/command");
 
-  const editExpiresAt = new Date(match.createdAt.getTime() + 60 * 60 * 1000);
+  const editExpiresAt = new Date(match.createdAt.getTime() + 20 * 60 * 1000);
   if (new Date() > editExpiresAt) redirect("/command");
 
   const team1 = match.participants

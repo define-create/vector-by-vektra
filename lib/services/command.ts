@@ -92,7 +92,7 @@ export const getCommandData = unstable_cache(
   if (!myPlayer) return { ...empty, hasPlayer: false, emailVerified, userDisplayName };
 
   const now = new Date();
-  const sixtyMinutesAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const twentyMinutesAgo = new Date(now.getTime() - 20 * 60 * 1000);
 
   // Build the match filter clause based on the active filter
   // Always exclude voided matches
@@ -159,7 +159,7 @@ export const getCommandData = unstable_cache(
     prisma.match.findFirst({
       where: {
         enteredByUserId: userId,
-        createdAt: { gt: sixtyMinutesAgo },
+        createdAt: { gt: twentyMinutesAgo },
         voidedAt: null,
       },
       orderBy: { createdAt: "desc" },
@@ -385,7 +385,7 @@ export const getCommandData = unstable_cache(
 
   // Edit timer — always unfiltered
   const editExpiresAt = editableMatch
-    ? new Date(editableMatch.createdAt.getTime() + 60 * 60 * 1000).toISOString()
+    ? new Date(editableMatch.createdAt.getTime() + 20 * 60 * 1000).toISOString()
     : null;
 
   // Upcoming probability — always unfiltered (forward-looking)

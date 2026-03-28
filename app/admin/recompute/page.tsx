@@ -14,6 +14,8 @@ interface RatingRun {
   startedAt: string;
   finishedAt: string | null;
   notes: string | null;
+  replayScope: string;
+  fromMatchId: string | null;
 }
 
 interface LastRunsData {
@@ -124,7 +126,7 @@ export default function AdminRecomputePage() {
         <table className="w-full text-sm">
           <thead className="border-b border-zinc-800 bg-zinc-900">
             <tr>
-              {["Started", "Type", "Status", "Duration", "Notes"].map((h) => (
+              {["Started", "Type", "Scope", "Status", "Duration", "From Match", "Notes"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-medium text-zinc-500">
                   {h}
                 </th>
@@ -134,13 +136,13 @@ export default function AdminRecomputePage() {
           <tbody>
             {loading && runs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
                   Loading…
                 </td>
               </tr>
             ) : runs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
                   No runs yet
                 </td>
               </tr>
@@ -151,11 +153,22 @@ export default function AdminRecomputePage() {
                     {formatDate(run.startedAt)}
                   </td>
                   <td className="px-4 py-3 text-zinc-400">{run.runType}</td>
+                  <td className="px-4 py-3 text-zinc-400">{run.replayScope}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={run.status} />
                   </td>
                   <td className="px-4 py-3 text-zinc-400">
                     {duration(run.startedAt, run.finishedAt)}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono text-xs">
+                    {run.fromMatchId ? (
+                      <a
+                        href={`/admin/matches/${run.fromMatchId}`}
+                        className="text-zinc-400 underline hover:text-zinc-200"
+                      >
+                        {run.fromMatchId.slice(0, 8)}…
+                      </a>
+                    ) : "—"}
                   </td>
                   <td className="px-4 py-3 text-zinc-400">{run.notes ?? "—"}</td>
                 </tr>

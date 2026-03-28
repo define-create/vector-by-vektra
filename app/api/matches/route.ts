@@ -253,9 +253,9 @@ export async function POST(req: NextRequest) {
       return created;
     });
 
-    await runRecompute("admin");
+    const recomputeResult = await runRecompute("admin", "auto: new match", matchDate);
 
-    const editExpiresAt = new Date(match.createdAt.getTime() + 60 * 60 * 1000);
+    const editExpiresAt = new Date(match.createdAt.getTime() + 20 * 60 * 1000);
 
     revalidateTag("command", "default");
     if (tag) {
@@ -265,6 +265,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         ok: true,
+        ratingsDeferred: recomputeResult.ratingsDeferred ?? false,
         match: {
           id: match.id,
           matchDate: match.matchDate,

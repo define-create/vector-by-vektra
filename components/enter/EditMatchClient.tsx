@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import GameScoreInput, { type GameScore } from "@/components/enter/GameScoreInput";
 import EditTimer from "@/components/command/EditTimer";
@@ -34,6 +34,14 @@ export default function EditMatchClient({
   const [tag, setTag] = useState(initialTag);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deferredNotice, setDeferredNotice] = useState(false);
+
+  // After showing the deferred notice for 2 seconds, navigate to /command
+  useEffect(() => {
+    if (!deferredNotice) return;
+    const t = setTimeout(() => router.push("/command"), 2000);
+    return () => clearTimeout(t);
+  }, [deferredNotice, router]);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -52,7 +60,12 @@ export default function EditMatchClient({
         }),
       });
       if (res.ok) {
-        router.push("/command");
+        const data = (await res.json().catch(() => ({}))) as { ratingsDeferred?: boolean };
+        if (data.ratingsDeferred) {
+          setDeferredNotice(true); // navigate after 2s via useEffect
+        } else {
+          router.push("/command");
+        }
         return;
       }
       const data = await res.json().catch(() => ({})) as { error?: string };
@@ -122,12 +135,17 @@ export default function EditMatchClient({
         <EditTimer expiresAt={expiresAt} />
       </div>
 
+      {deferredNotice && (
+        <p className="text-sm text-amber-400">
+          Scores updated. Ratings are updating in the background.
+        </p>
+      )}
       {error && <p className="text-sm text-amber-400">{error}</p>}
 
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={submitting || games.length === 0}
+        disabled={submitting || games.length === 0 || deferredNotice}
         className="w-full rounded-xl bg-zinc-100 px-4 py-3.5 text-sm font-semibold text-zinc-900 hover:bg-white active:bg-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         {submitting ? "Saving…" : "Save Changes"}

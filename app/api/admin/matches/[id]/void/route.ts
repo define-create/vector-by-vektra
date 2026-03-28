@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { writeAuditEvent } from "@/lib/services/audit";
+import { runRecompute } from "@/lib/services/recompute";
 
 // ---------------------------------------------------------------------------
 // POST /api/admin/matches/[id]/void
@@ -21,7 +23,10 @@ export async function POST(
 
   const { id } = await params;
 
-  const match = await prisma.match.findUnique({ where: { id } });
+  const match = await prisma.match.findUnique({
+    where: { id },
+    select: { id: true, voidedAt: true, tag: true },
+  });
   if (!match) {
     return NextResponse.json({ error: "Match not found" }, { status: 404 });
   }
@@ -44,5 +49,20 @@ export async function POST(
     prisma,
   );
 
-  return NextResponse.json({ ok: true, match: updated });
+  // Trigger full recompute after void — void changes the replay from that match forward.
+  // Failure must not affect the void response; errors are logged server-side.
+  let ratingsDeferred = false;
+  try {
+    const result = await runRecompute("admin", "auto: match void");
+    ratingsDeferred = result.ratingsDeferred ?? false;
+  } catch (err) {
+    console.error(`[POST /api/admin/matches/${id}/void] Recompute failed:`, err);
+  }
+
+  revalidateTag("command", "default");
+  if (match.tag) {
+    revalidateTag("tournament", "default");
+  }
+
+  return NextResponse.json({ ok: true, match: updated, ratingsDeferred });
 }

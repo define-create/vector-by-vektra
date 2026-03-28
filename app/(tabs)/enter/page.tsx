@@ -68,6 +68,7 @@ export default function EnterPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [submittedMatchId, setSubmittedMatchId] = useState<string | null>(null);
+  const [ratingsDeferred, setRatingsDeferred] = useState(false);
 
   // Flash slot for chip-tap feedback
   const [flashSlot, setFlashSlot] = useState<"team1Player1" | "partner" | "opponent1" | "opponent2" | null>(null);
@@ -306,12 +307,14 @@ export default function EnterPage() {
         ok?: boolean;
         error?: string;
         match?: { id: string };
+        ratingsDeferred?: boolean;
       };
 
       if (!res.ok) {
         setSubmitError(data.error ?? "Something went wrong");
       } else {
         setSubmittedMatchId(data.match?.id ?? null);
+        setRatingsDeferred(data.ratingsDeferred ?? false);
         setSuccess(true);
         router.refresh();
       }
@@ -332,11 +335,17 @@ export default function EnterPage() {
         <div className="text-5xl">✓</div>
         <h2 className="text-2xl font-bold text-zinc-50">Match Recorded</h2>
         <p className="text-zinc-400">Match saved. Ratings have been updated.</p>
+        {ratingsDeferred && (
+          <p className="text-sm text-amber-400">
+            Ratings are updating in the background — check back in a moment.
+          </p>
+        )}
         <button
           type="button"
           onClick={() => {
             setSuccess(false);
             setSubmittedMatchId(null);
+            setRatingsDeferred(false);
             setTeam1Player1(null);
             setPartner(null);
             setOpponent1(null);

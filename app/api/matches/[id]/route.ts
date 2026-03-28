@@ -76,11 +76,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Enforce 60-minute edit window
-    const editExpiresAt = new Date(match.createdAt.getTime() + 60 * 60 * 1000);
+    // Enforce 20-minute edit window
+    const editExpiresAt = new Date(match.createdAt.getTime() + 20 * 60 * 1000);
     if (new Date() > editExpiresAt) {
       return NextResponse.json(
-        { error: "Match is locked — 60-minute edit window has expired" },
+        { error: "Match is locked — 20-minute edit window has expired" },
         { status: 403 },
       );
     }
@@ -115,11 +115,12 @@ export async function PATCH(
       });
     });
 
-    await runRecompute("admin");
+    const recomputeResult = await runRecompute("admin", "auto: score edit", match.matchDate);
     revalidateTag("command", "default");
 
     return NextResponse.json({
       ok: true,
+      ratingsDeferred: recomputeResult.ratingsDeferred ?? false,
       match: {
         id: updated!.id,
         matchDate: updated!.matchDate,

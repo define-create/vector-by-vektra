@@ -61,6 +61,26 @@ Matches have voidedAt. Players don't — a "deleted" player would need to be man
 14. No end-to-end tests
 All 104 tests are unit tests. No integration tests cover the API routes or the full auth flow.
 
+18. Think About: match entry abuse prevention
+A motivated bad actor could spam POST /api/matches to inflate or tank player ratings. The existing rate limiter allows 30 match submissions per 60s per user — high enough to be ineffective against deliberate abuse.
+Options to consider:
+  a) Tighten the rate limit (e.g. 5–10 matches per hour per user) — simple but may frustrate admins entering a full tournament day.
+  b) Admin-only match entry (non-admin users can only enter matches for themselves and only as a participant) — architectural, requires role-aware entry flow.
+  c) Require both teams to confirm a match before it counts toward ratings — adds friction but makes stuffing impossible.
+  d) Anomaly detection: flag users who enter >N matches in a session for admin review without blocking them.
+No immediate action needed — worth revisiting when the user base grows or if rating manipulation is observed.
+
+17. Feedback / Contact button for app users
+Add a way for logged-in users to send feedback or contact support. A button (e.g. in the nav, settings, or a dedicated Help screen) opens a simple form (subject + message). On submit, sends an email to vectorbyvektra@gmail.com via the existing Resend integration. No new email provider needed — just a new API route (e.g. POST /api/feedback) that calls Resend with the user's email as reply-to so responses go directly to them.
+
+16. Score Edit UX: edit button should be inline on each match row, not a separate bottom row
+Currently the edit affordance appears as a separate row at the bottom of the Recent Matches list and only works for the last match entered. It should instead render as an inline edit button (or icon) on each match row in the list, visible only within the 20-minute edit window. This allows a user who entered multiple matches in quick succession to edit any of them, not just the most recent.
+Affected files: likely components/command/RecentMatches or similar; the command data service already filters editable matches by createdAt > twentyMinutesAgo — the UI just needs to apply that per-row rather than showing a single trailing row.
+
+15. Admin match detail page missing
+No app/admin/matches/[id]/ route exists. The From Match links on /admin/recompute currently 404.
+Build a detail page showing: match date, tag, entered-by user, team 1 vs team 2 participants with scores per game, voided status (voidedAt + who voided if tracked), and a Void button (calling the existing POST /api/admin/matches/[id]/void). Useful for auditing incremental recompute runs and investigating disputed matches.
+
 
 
 

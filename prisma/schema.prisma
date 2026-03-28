@@ -181,15 +181,17 @@ model Game {
 // ---------------------------------------------------------------------------
 
 model RatingRun {
-  id         String          @id @default(cuid())
-  runType    RatingRunType
-  startedAt  DateTime        @default(now())
-  finishedAt DateTime?
-  status     RatingRunStatus @default(running)
-  notes      String?         // max 120 chars enforced at API layer
+  id          String          @id @default(cuid())
+  runType     RatingRunType
+  startedAt   DateTime        @default(now())
+  finishedAt  DateTime?
+  status      RatingRunStatus @default(running)
+  notes       String?         // max 120 chars enforced at API layer
+  replayScope String          @default("full")  // "full" | "incremental"
+  fromMatchId String?         // earliest match replayed (incremental runs only)
 
   // Relations
-  snapshots  RatingSnapshot[]
+  snapshots   RatingSnapshot[]
 
   @@index([status, startedAt])
 }
