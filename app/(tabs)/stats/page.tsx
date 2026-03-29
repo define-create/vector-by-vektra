@@ -89,6 +89,25 @@ export default async function StatsPage({
     select: { id: true },
   });
 
+  const tagMatchRows = await prisma.match.findMany({
+    where: {
+      voidedAt: null,
+      tag: { not: null },
+      ...(isAdmin ? {} : myPlayer ? { participants: { some: { playerId: myPlayer.id } } } : { id: "none" }),
+    },
+    select: { tag: true, matchDate: true },
+    orderBy: [{ matchDate: "desc" }, { tag: "asc" }],
+  });
+  // Deduplicate preserving first-seen order: latest match date first, then alphabetical
+  const seenTags = new Set<string>();
+  const tournamentTags: string[] = [];
+  for (const m of tagMatchRows) {
+    if (m.tag && !seenTags.has(m.tag)) {
+      seenTags.add(m.tag);
+      tournamentTags.push(m.tag);
+    }
+  }
+
   const params = await searchParams;
   const p2Id = typeof params.player2 === "string" ? params.player2 : undefined;
   const p3Id = typeof params.player3 === "string" ? params.player3 : undefined;
@@ -133,6 +152,7 @@ export default async function StatsPage({
       initialOpp2={initialOpp2}
       initialTab={p2Id || p3Id || p4Id ? "matchup" : "stats"}
       isAdmin={isAdmin}
+      eventTags={tournamentTags}
     />
   );
 }

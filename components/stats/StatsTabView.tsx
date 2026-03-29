@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TrajectorySection } from "@/components/trajectory/TrajectorySection";
 import MatchupsClient from "@/components/matchups/MatchupsClient";
+import EventsTab from "@/components/stats/EventsTab";
 import { type SlotPlayer } from "@/components/matchups/PlayerPairSelector";
 
 interface RecentPlayer {
@@ -21,6 +22,7 @@ interface StatsTabViewProps {
   initialOpp2: SlotPlayer | null;
   initialTab?: "stats" | "matchup";
   isAdmin: boolean;
+  eventTags: string[];
 }
 
 export default function StatsTabView({
@@ -31,8 +33,9 @@ export default function StatsTabView({
   initialOpp2,
   initialTab = "stats",
   isAdmin,
+  eventTags,
 }: StatsTabViewProps) {
-  const [tab, setTab] = useState<"stats" | "matchup">(initialTab);
+  const [tab, setTab] = useState<"stats" | "matchup" | "events">(initialTab);
 
   return (
     <div className="flex h-full flex-col">
@@ -64,6 +67,19 @@ export default function StatsTabView({
             <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t bg-emerald-500" />
           )}
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("events")}
+          className={[
+            "flex-1 py-3 text-sm font-semibold transition-colors relative",
+            tab === "events" ? "text-zinc-50" : "text-zinc-500 hover:text-zinc-300",
+          ].join(" ")}
+        >
+          Events
+          {tab === "events" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t bg-emerald-500" />
+          )}
+        </button>
       </div>
 
       {/* Tab content */}
@@ -85,6 +101,9 @@ export default function StatsTabView({
               <p className="text-sm text-zinc-500">No matches yet. Enter a match first.</p>
             </div>
           )
+        )}
+        {tab === "events" && (
+          <EventsTab initialTags={eventTags} />
         )}
       </div>
     </div>

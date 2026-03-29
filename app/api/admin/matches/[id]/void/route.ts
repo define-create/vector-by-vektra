@@ -61,7 +61,7 @@ export async function POST(
 
   revalidateTag("command", "default");
   if (match.tag) {
-    revalidateTag("tournament", "default");
+    revalidateTag("event", "default");
   }
 
   return NextResponse.json({ ok: true, match: updated, ratingsDeferred });

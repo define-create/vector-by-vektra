@@ -1,6 +1,6 @@
 /**
- * Tournament service — leaderboard ranking algorithm and match data assembly.
- * Used by GET /api/admin/tournament.
+ * Events service — leaderboard ranking algorithm and match data assembly.
+ * Used by GET /api/events and GET /api/admin/tournament.
  */
 
 import { unstable_cache } from "next/cache";
@@ -10,7 +10,7 @@ import { prisma } from "@/lib/db";
 // Public interfaces
 // ---------------------------------------------------------------------------
 
-export interface TournamentPlayer {
+export interface EventPlayer {
   id: string;
   displayName: string;
   rating: number;
@@ -19,7 +19,7 @@ export interface TournamentPlayer {
   rank: number;
 }
 
-export interface TournamentMatch {
+export interface EventMatch {
   id: string;
   matchDate: string; // ISO string
   team1Names: string[];
@@ -28,9 +28,9 @@ export interface TournamentMatch {
   score: string; // e.g. "11–6, 9–11, 11–8"
 }
 
-export interface TournamentData {
-  leaderboard: TournamentPlayer[];
-  matches: TournamentMatch[];
+export interface EventData {
+  leaderboard: EventPlayer[];
+  matches: EventMatch[];
 }
 
 // ---------------------------------------------------------------------------
@@ -157,13 +157,13 @@ function breakTie(group: PlayerEntry[], matches: MatchRow[]): PlayerEntry[][] {
  * Tiebreakers: H2H wins → H2H point diff → persistent tie (shared rank).
  * Shared ranks: two tied 2nds means next player is 4th.
  */
-function rankPlayers(players: PlayerEntry[], matches: MatchRow[]): TournamentPlayer[] {
+function rankPlayers(players: PlayerEntry[], matches: MatchRow[]): EventPlayer[] {
   if (players.length === 0) return [];
 
   // Sort by wins descending
   const sorted = [...players].sort((a, b) => b.wins - a.wins);
 
-  const result: TournamentPlayer[] = [];
+  const result: EventPlayer[] = [];
   let rank = 1;
   let i = 0;
 
@@ -196,11 +196,11 @@ function rankPlayers(players: PlayerEntry[], matches: MatchRow[]): TournamentPla
 }
 
 // ---------------------------------------------------------------------------
-// getTournamentData — main export
+// getEventData — main export
 // ---------------------------------------------------------------------------
 
-export const getTournamentData = unstable_cache(
-  async (tag: string): Promise<TournamentData> => {
+export const getEventData = unstable_cache(
+  async (tag: string): Promise<EventData> => {
   // Fetch all non-voided matches for this tag
   const matches = (await prisma.match.findMany({
     where: {
@@ -286,7 +286,7 @@ export const getTournamentData = unstable_cache(
   const leaderboard = rankPlayers(playerEntries, matches);
 
   // Build match list (already sorted desc by matchDate from DB query)
-  const matchList: TournamentMatch[] = matches.map((match) => {
+  const matchList: EventMatch[] = matches.map((match) => {
     const team1Participants = match.participants
       .filter((p) => p.team === 1)
       .map((p) => p.player.displayName);
@@ -310,9 +310,9 @@ export const getTournamentData = unstable_cache(
 
   return { leaderboard, matches: matchList };
   },
-  ["tournament-data"],
+  ["event-data"],
   {
-    tags: ["tournament"],
+    tags: ["event"],
     revalidate: 60, // 60-second fallback
   }
 );

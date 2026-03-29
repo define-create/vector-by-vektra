@@ -259,7 +259,7 @@ export async function POST(req: NextRequest) {
 
     revalidateTag("command", "default");
     if (tag) {
-      revalidateTag("tournament", "default");
+      revalidateTag("event", "default");
     }
 
     return NextResponse.json(

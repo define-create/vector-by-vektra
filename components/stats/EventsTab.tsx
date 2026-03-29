@@ -7,7 +7,11 @@ import { LeaderboardTable } from "@/components/events/LeaderboardTable";
 import { EventMatchList } from "@/components/events/EventMatchList";
 import { type EventData } from "@/lib/services/events";
 
-export default function TournamentPage() {
+interface EventsTabProps {
+  initialTags: string[];
+}
+
+export default function EventsTab({ initialTags }: EventsTabProps) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [data, setData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,12 +27,10 @@ export default function TournamentPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/admin/tournament?tag=${encodeURIComponent(tag)}`,
-      );
+      const res = await fetch(`/api/events?tag=${encodeURIComponent(tag)}`);
       if (!res.ok) {
         const body = (await res.json()) as { error?: string };
-        setError(body.error ?? "Failed to load tournament data");
+        setError(body.error ?? "Failed to load event data");
         setData(null);
       } else {
         const json = (await res.json()) as EventData;
@@ -43,16 +45,9 @@ export default function TournamentPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold text-zinc-50 mb-1">Tournament</h1>
-        <p className="text-sm text-zinc-500">
-          Select an event tag to view standings and match results.
-        </p>
-      </div>
-
-      {/* Tag selector */}
-      <TagSelector value={selectedTag} onChange={loadTag} />
+    <div className="flex flex-col gap-8 p-5 pb-24">
+      {/* Tag selector — uses server-provided tags, no fetch */}
+      <TagSelector value={selectedTag} onChange={loadTag} tags={initialTags} />
 
       {/* Empty state */}
       {!selectedTag && (
@@ -71,18 +66,13 @@ export default function TournamentPage() {
         <p className="text-sm text-rose-400">{error}</p>
       )}
 
-      {/* Tournament content */}
+      {/* Event content */}
       {data && !loading && (
         <div className="flex flex-col gap-8">
-          {/* Podium — only when at least one match */}
           {data.matches.length > 0 && (
             <Podium top3={data.leaderboard.slice(0, 3)} />
           )}
-
-          {/* Leaderboard */}
           <LeaderboardTable players={data.leaderboard} />
-
-          {/* Match list — full-page scroll, no nested widget */}
           <EventMatchList matches={data.matches} />
         </div>
       )}

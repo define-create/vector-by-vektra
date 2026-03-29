@@ -92,13 +92,15 @@ export default function EnterPage() {
       .catch(() => {});
   }, []);
 
+  function fetchTags() {
+    fetch("/api/tags")
+      .then((r) => r.json())
+      .then((data: { tags: string[] }) => setTagSuggestions(data.tags ?? []))
+      .catch(() => {});
+  }
+
   useEffect(() => {
-    if (tagSuggestions.length === 0) {
-      fetch("/api/tags")
-        .then((r) => r.json())
-        .then((data: { tags: string[] }) => setTagSuggestions(data.tags ?? []))
-        .catch(() => {});
-    }
+    fetchTags();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clear flash slot after animation duration
@@ -316,6 +318,7 @@ export default function EnterPage() {
         setSubmittedMatchId(data.match?.id ?? null);
         setRatingsDeferred(data.ratingsDeferred ?? false);
         setSuccess(true);
+        fetchTags();
         router.refresh();
       }
     } catch {

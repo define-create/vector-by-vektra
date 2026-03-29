@@ -46,7 +46,11 @@
       "WebFetch(domain:github.com)",
       "Bash(npm run:*)",
       "Bash(grep '\"\"next\"\"' package.json)",
-      "Bash(find \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\))"
+      "Bash(find \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\))",
+      "Bash(find \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/admin/tournament\" \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/stats\" \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components/admin/tournament\" \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components/stats\" -type f)",
+      "Bash(find \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/stats\" -type f)",
+      "Bash(rm lib/services/tournament.ts lib/services/tournament.test.ts components/stats/TournamentTab.tsx app/api/tournament/route.ts components/tournament/TagSelector.tsx components/tournament/Podium.tsx components/tournament/LeaderboardTable.tsx components/tournament/TournamentMatchList.tsx)",
+      "Bash(rmdir components/tournament app/api/tournament)"
     ]
   }
 }

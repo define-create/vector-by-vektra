@@ -1,9 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { getEventData } from "@/lib/services/events";
 
-// Middleware at middleware.ts already guards all /api/admin/* routes.
+// Public (auth-required) event data endpoint — no admin role check.
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const tag = req.nextUrl.searchParams.get("tag");
 
   if (!tag || tag.trim() === "") {
