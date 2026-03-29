@@ -4,6 +4,7 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DisplayNameEdit } from "@/components/command/DisplayNameEdit";
+import { OptOutPredictionsToggle } from "./OptOutPredictionsToggle";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { SignOutButton } from "./SignOutButton";
 
@@ -18,7 +19,7 @@ export default async function ProfilePage() {
 
   const myPlayer = await prisma.player.findFirst({
     where: { userId: session.user.id, deletedAt: null },
-    select: { displayName: true },
+    select: { displayName: true, optOutPredictions: true },
   });
 
   const displayName = myPlayer?.displayName ?? user?.displayName ?? "";
@@ -40,6 +41,13 @@ export default async function ProfilePage() {
         <span className="text-sm text-zinc-400">Display name</span>
         <DisplayNameEdit displayName={displayName} />
       </div>
+
+      {/* Prediction opt-in */}
+      {myPlayer && (
+        <div className="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3">
+          <OptOutPredictionsToggle optOutPredictions={myPlayer.optOutPredictions} />
+        </div>
+      )}
 
       {/* Change Password */}
       <div className="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-4">

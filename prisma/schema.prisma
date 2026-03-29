@@ -107,8 +107,9 @@ model Player {
   rating           Float      @default(1000)
   ratingConfidence Float      @default(0)
   ratingVolatility Float      @default(0)
-  winPct           Float?
-  createdAt        DateTime   @default(now())
+  winPct            Float?
+  optOutPredictions Boolean    @default(false)
+  createdAt         DateTime   @default(now())
   deletedAt        DateTime?
 
   // Relations

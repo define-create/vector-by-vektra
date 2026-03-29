@@ -146,8 +146,11 @@ export default function MatchupsClient({
     setError(null);
 
     fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error(`Request failed (${r.status})`);
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({})) as { error?: string };
+          throw new Error(body.error ?? `Request failed (${r.status})`);
+        }
         return r.json() as Promise<MatchupResponse>;
       })
       .then((d) => {

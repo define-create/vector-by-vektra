@@ -39,7 +39,7 @@ export function MetricInfoSheet({ metric }: Props) {
 
       {/* Bottom sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 border-t border-zinc-700 rounded-t-2xl px-6 pt-5 pb-24 transition-transform duration-200 ${
+        className={`fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-zinc-900 border-t border-zinc-700 rounded-t-2xl px-6 pt-5 pb-24 transition-transform duration-200 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         role="dialog"

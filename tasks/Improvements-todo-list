@@ -24,20 +24,14 @@ Recommended approach (Option C): do not store plan/tier in the JWT. After Stripe
 
 
 Medium Priority
-5. Recompute scales linearly with all-time match history
-replay.ts replays every match ever, in chronological order, to recompute ratings. Auto-recompute on every match entry is intentional — instant rating updates are a requirement.
-Optimizations applied (feature/improvements-03):
-  a) ✓ Player updates replaced from prisma.$transaction (N serial queries) → Promise.all (N parallel queries, capped by connection_limit=10). Recompute time drops from O(N × round-trip) to O(⌈N/10⌉ × round-trip) — ~10x faster at 30–50 players.
-  b) ✓ Snapshot metric loop pre-indexes snapshots by playerId (Map<id, snapshots[]>) before iterating players, eliminating O(players × snapshots) repeated scanning.
-  c) If replay ever becomes slow at 10,000+ matches, an incremental recompute (replay only from the new match forward) could be introduced — but this adds complexity and is not needed now.
+5. ~~Recompute scales linearly with all-time match history~~ ✓ RESOLVED — Incremental recompute implemented (feature/incremental-recompute). Auto-triggered recomputes on match entry, score edit, and void now replay only from the affected match date forward using stored RatingSnapshots as starting state. Full recompute retained for nightly cron and manual admin triggers.
 
 6. ~~connection_limit in DATABASE_URL~~ ✓ RESOLVED — Updated from 1 to 10. Sufficient for current scale.
 
 7. No match dispute mechanism for players
 Regular players can't flag an incorrect match — they have to contact an admin to void it. If the person entering matches (especially in admin mode) makes an error, there's no self-service remedy.
 
-8. Shadow profile name collisions
-If two admins enter "John Smith" and "John  Smith" (extra space), two separate shadow profiles are created. The admin merge tool resolves this but it's manual, not preventative.
+8. ~~Shadow profile name collisions~~ ✓ RESOLVED — findOrCreateShadowPlayer in lib/services/players.ts normalizes displayName (trim + collapse whitespace) and does a case-insensitive lookup before creating, preventing new duplicates. Existing duplicates in DB can be resolved via the admin merge tool.
 
 9. Tournament match list has no upper bound
 getTournamentData fetches ALL matches for a tag with no pagination. A tag with 500 matches sends all 500 to the client in one response.
@@ -52,8 +46,7 @@ The multi-step Enter form uses local React state. Navigating away mid-entry lose
 11. publish/vercel branch is stale
 From the git graph, publish/vercel diverged from an older commit (before tasks 9–12). If Vercel is deploying from that branch, the live app is missing the last 4 features. Worth verifying which branch Vercel is tracking.
 
-12. Tag matching is case-sensitive and exact
-where: { tag } is an exact Prisma match. "Tag1" vs "tag1" are separate tags. Nothing prevents this at entry time — the admin Tags rename tool fixes it after the fact, but the UX could make this easy to get wrong.
+12. ~~Tag matching is case-sensitive and exact~~ ✓ RESOLVED — Tags are now normalized at write time (trim + collapse whitespace + toLowerCase) in POST /api/matches, PATCH /api/matches/[id], and POST /api/admin/tags (rename destination). New tags will never produce case or whitespace duplicates. Existing mixed-case tags in DB can be cleaned up via the admin rename tool.
 
 13. No soft-delete for players
 Matches have voidedAt. Players don't — a "deleted" player would need to be manually handled. The merge tool is the closest thing.
@@ -72,6 +65,15 @@ No immediate action needed — worth revisiting when the user base grows or if r
 
 17. Feedback / Contact button for app users
 Add a way for logged-in users to send feedback or contact support. A button (e.g. in the nav, settings, or a dedicated Help screen) opens a simple form (subject + message). On submit, sends an email to vectorbyvektra@gmail.com via the existing Resend integration. No new email provider needed — just a new API route (e.g. POST /api/feedback) that calls Resend with the user's email as reply-to so responses go directly to them.
+
+19. ~~Player prediction opt-out~~ ✓ RESOLVED — Players can opt out of being included in others' Matchup Predictions via Profile screen checkbox ("Include me in predictions", default on). Schema: Player.optOutPredictions Boolean @default(false). API: PATCH /api/players/me/preferences. Opted-out players appear in search but are disabled (unselectable) in the PlayerSelector dropdown and excluded from the recent opponents chip strip.
+
+20. Privacy model: shadow profile consent
+Shadow profiles (unclaimed players with userId IS NULL) have match history and ratings visible to all authenticated users. They never signed up or consented. At current scale this is a non-issue; at growth scale, especially with EU users, this may require action.
+Options: (a) Show shadow profiles only to players who share at least one match; (b) Allow unclaiming/removal request via admin; (c) Explicit consent on claim flow.
+No immediate action needed — revisit before any public launch or if app expands outside current community.
+
+21. ~~Privacy model: update onboarding/marketing framing~~ ✓ RESOLVED — Marketing copy updated to reflect accurate framing: "visible only within Vector, never to the public internet — not indexed, not searchable, not shared beyond the platform." Removed false "visible only within your network / people you play with" claims.
 
 16. Score Edit UX: edit button should be inline on each match row, not a separate bottom row
 Currently the edit affordance appears as a separate row at the bottom of the Recent Matches list and only works for the last match entered. It should instead render as an inline edit button (or icon) on each match row in the list, visible only within the 20-minute edit window. This allows a user who entered multiple matches in quick succession to edit any of them, not just the most recent.

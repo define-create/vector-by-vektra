@@ -35,6 +35,7 @@ async function getRecentOpponents(myPlayerId: string): Promise<RecentPlayer[]> {
                   displayName: true,
                   rating: true,
                   claimed: true,
+                  optOutPredictions: true,
                   _count: { select: { matchParticipants: true } },
                 },
               },
@@ -53,7 +54,7 @@ async function getRecentOpponents(myPlayerId: string): Promise<RecentPlayer[]> {
   for (const participation of participations) {
     for (const p of participation.match.participants) {
       if (p.playerId === myPlayerId) continue;
-      if (!seen.has(p.player.id) && opponents.length < 8) {
+      if (!p.player.optOutPredictions && !seen.has(p.player.id) && opponents.length < 8) {
         seen.add(p.player.id);
         opponents.push({
           id: p.player.id,

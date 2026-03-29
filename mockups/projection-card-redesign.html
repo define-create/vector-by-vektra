@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProjectionCard — Option B Variations</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0c;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #f4f4f5;
+      padding: 32px 24px 80px;
+    }
+
+    h1 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #52525b;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .page-sub {
+      font-size: 12px;
+      color: #3f3f46;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    .approach { display: flex; flex-direction: column; gap: 10px; }
+
+    .approach-label {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .approach-tag {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .approach-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e4e4e7;
+    }
+    .approach-desc {
+      font-size: 11px;
+      color: #52525b;
+      line-height: 1.6;
+    }
+
+    /* Shared */
+    .card { border-radius: 16px; overflow: hidden; }
+
+    .annotation {
+      font-size: 11px;
+      color: #52525b;
+      line-height: 1.6;
+      border-left: 2px solid #27272a;
+      padding-left: 10px;
+      margin-top: 2px;
+    }
+    .annotation strong { color: #71717a; font-weight: 600; }
+
+    /* ════════════════════════════════════════
+       B0 — CURRENT (as implemented)
+       Monochrome zinc reference
+    ════════════════════════════════════════ */
+
+    .b0 { background: #18181b; border: 1px solid #27272a; }
+    .b0 .inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Shared duel layout */
+    .duel { display: flex; align-items: flex-start; }
+    .team-left { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .team-right { flex: 1; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+    .team-name-l { font-size: 13px; font-weight: 600; line-height: 1.3; }
+    .team-name-r { font-size: 13px; font-weight: 500; line-height: 1.3; text-align: right; }
+    .vs-badge { padding: 0 12px; padding-top: 2px; flex-shrink: 0; font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #3f3f46; }
+
+    .pct-l, .pct-r { font-size: 36px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.02em; }
+
+    /* Bar */
+    .bar-wrap { display: flex; flex-direction: column; gap: 5px; }
+    .bar-track { height: 8px; border-radius: 99px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 99px; }
+    .bar-caption { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; }
+
+    /* Moneyline */
+    .ml-row { display: flex; align-items: center; gap: 8px; }
+    .ml-pill { border-radius: 99px; padding: 4px 12px; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .ml-label { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; }
+
+    /* Divider */
+    .div-line { border: none; border-top: 1px solid #27272a; }
+
+    /* Chips */
+    .chips { display: flex; flex-direction: column; gap: 8px; }
+    .chip-row { display: flex; gap: 8px; }
+    .chip { flex: 1; border-radius: 10px; padding: 9px 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .chip-lbl { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chip-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    /* B0 specific */
+    .b0 .team-name-l { color: #f4f4f5; }
+    .b0 .team-name-r { color: #71717a; }
+    .b0 .pct-l { color: #f4f4f5; }
+    .b0 .pct-r { color: #52525b; }
+    .b0 .bar-track { background: #27272a; }
+    .b0 .bar-fill { background: #d4d4d8; }
+    .b0 .bar-caption { color: #52525b; }
+    .b0 .ml-pill { background: #27272a; color: #a1a1aa; }
+    .b0 .ml-label { color: #3f3f46; }
+    .b0 .chip { background: #1f1f23; border: 1px solid #27272a; }
+    .b0 .chip-lbl { color: #52525b; }
+    .b0 .chip-val { color: #e4e4e7; }
+    .b0 .chip-val.pos { color: #34d399; }
+
+    /* ════════════════════════════════════════
+       B1 — SKY BLUE
+       Your team in sky blue, clean & confident
+    ════════════════════════════════════════ */
+
+    .b1 { background: #18181b; border: 1px solid #27272a; }
+    .b1 .inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .b1 .team-name-l { color: #7dd3fc; }   /* sky-300 */
+    .b1 .team-name-r { color: #52525b; }
+    .b1 .pct-l { color: #38bdf8; }          /* sky-400 */
+    .b1 .pct-r { color: #3f3f46; }
+    .b1 .bar-track { background: #1e2a33; }
+    .b1 .bar-fill { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+    .b1 .bar-caption { color: #38bdf8; opacity: 0.5; }
+    .b1 .ml-pill { background: #0c1e2b; color: #38bdf8; border: 1px solid #0369a1; }
+    .b1 .ml-label { color: #3f3f46; }
+    .b1 .chip { background: #0c1a22; border: 1px solid #0c2d3f; }
+    .b1 .chip-lbl { color: #1d6a8a; }
+    .b1 .chip-val { color: #e4e4e7; }
+    .b1 .chip-val.pos { color: #34d399; }
+    .b1 .div-line { border-color: #0c2d3f; }
+
+    /* ════════════════════════════════════════
+       B2 — EMERALD WINNER
+       Green = winning, feels positive & victorious
+    ════════════════════════════════════════ */
+
+    .b2 { background: #111714; border: 1px solid #1a2e22; }
+    .b2 .inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .b2 .team-name-l { color: #6ee7b7; }    /* emerald-300 */
+    .b2 .team-name-r { color: #3f4741; }
+    .b2 .pct-l {
+      color: #34d399;                          /* emerald-400 */
+      filter: drop-shadow(0 0 12px rgba(52,211,153,0.4));
+    }
+    .b2 .pct-r { color: #2a3830; }
+    .b2 .bar-track { background: #1a2e22; }
+    .b2 .bar-fill {
+      background: linear-gradient(90deg, #059669, #34d399);
+      box-shadow: 0 0 8px rgba(52,211,153,0.35);
+    }
+    .b2 .bar-caption { color: #34d399; opacity: 0.4; }
+    .b2 .ml-pill { background: #0d2119; color: #34d399; border: 1px solid #064e35; }
+    .b2 .ml-label { color: #2a3830; }
+    .b2 .chip { background: #0d1f17; border: 1px solid #1a3326; }
+    .b2 .chip-lbl { color: #2a5940; }
+    .b2 .chip-val { color: #d1fae5; }
+    .b2 .chip-val.pos { color: #34d399; }
+    .b2 .div-line { border-color: #1a3326; }
+
+    /* ════════════════════════════════════════
+       B3 — AMBER FIRE
+       Warm, energetic, aggressive — like sports betting
+    ════════════════════════════════════════ */
+
+    .b3 { background: #171108; border: 1px solid #2e2010; }
+    .b3 .inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .b3 .team-name-l { color: #fcd34d; }    /* amber-300 */
+    .b3 .team-name-r { color: #44372a; }
+    .b3 .pct-l {
+      color: #fbbf24;                          /* amber-400 */
+      filter: drop-shadow(0 0 14px rgba(251,191,36,0.45));
+    }
+    .b3 .pct-r { color: #3a2c1a; }
+    .b3 .bar-track { background: #2e1f0a; }
+    .b3 .bar-fill {
+      background: linear-gradient(90deg, #d97706, #fbbf24);
+      box-shadow: 0 0 8px rgba(251,191,36,0.3);
+    }
+    .b3 .bar-caption { color: #fbbf24; opacity: 0.35; }
+    .b3 .ml-pill { background: #1f1508; color: #fbbf24; border: 1px solid #6b3f10; }
+    .b3 .ml-label { color: #44372a; }
+    .b3 .chip { background: #1a1208; border: 1px solid #332007; }
+    .b3 .chip-lbl { color: #6b4a1c; }
+    .b3 .chip-val { color: #fef3c7; }
+    .b3 .chip-val.pos { color: #fbbf24; }
+    .b3 .div-line { border-color: #332007; }
+
+    /* ════════════════════════════════════════
+       B4 — SPLIT GRADIENT (Team Rivalry)
+       Your color vs their color on the bar.
+       Most "matchup" feel — like ESPN or ESPN.
+    ════════════════════════════════════════ */
+
+    .b4 { background: #13121a; border: 1px solid #1e1c2e; }
+    .b4 .inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .b4 .team-name-l { color: #c4b5fd; }    /* violet-300 */
+    .b4 .team-name-r { color: #fca5a5; }    /* red-300 */
+    .b4 .pct-l {
+      color: #a78bfa;                          /* violet-400 */
+    }
+    .b4 .pct-r {
+      color: #f87171;                          /* red-400 */
+      opacity: 0.6;
+    }
+    /* Gradient bar that transitions from violet (left) → red (right) */
+    .b4 .bar-track {
+      background: #27252e;
+      position: relative;
+    }
+    .b4 .bar-fill-split {
+      height: 8px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 40%, #e879f9 60%, #f87171 100%);
+      width: 73%;
+    }
+    .b4 .bar-caption-split {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .b4 .bar-cap-l { color: #7c3aed; opacity: 0.6; }
+    .b4 .bar-cap-r { color: #ef4444; opacity: 0.4; }
+    .b4 .ml-pill { background: #1a1828; color: #c4b5fd; border: 1px solid #312b5a; }
+    .b4 .ml-label { color: #3a3650; }
+    .b4 .chip { background: #161424; border: 1px solid #211e38; }
+    .b4 .chip-lbl { color: #4a3d7a; }
+    .b4 .chip-val { color: #e9d5ff; }
+    .b4 .chip-val.pos { color: #a78bfa; }
+    .b4 .div-line { border-color: #211e38; }
+
+    /* ════════════════════════════════════════
+       B5 — NEON CYAN (Electric / Night Mode)
+       Single electric accent, ultra dark background
+       Feels premium, like a pro analytics tool
+    ════════════════════════════════════════ */
+
+    .b5 { background: #080c10; border: 1px solid #0e1f2b; }
+    .b5 .inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .b5 .team-name-l { color: #67e8f9; }    /* cyan-300 */
+    .b5 .team-name-r { color: #1e3a47; }
+    .b5 .pct-l {
+      color: #22d3ee;                          /* cyan-400 */
+      filter: drop-shadow(0 0 16px rgba(34,211,238,0.5));
+    }
+    .b5 .pct-r { color: #0e2533; }
+    .b5 .bar-track { background: #0a1a22; }
+    .b5 .bar-fill {
+      background: linear-gradient(90deg, #0e7490, #22d3ee);
+      box-shadow: 0 0 10px rgba(34,211,238,0.4), 0 0 24px rgba(34,211,238,0.15);
+    }
+    .b5 .bar-caption { color: #22d3ee; opacity: 0.35; }
+    .b5 .ml-pill { background: #081420; color: #22d3ee; border: 1px solid #0e4f63; }
+    .b5 .ml-label { color: #0e2533; }
+    .b5 .chip { background: #080f17; border: 1px solid #0e2a38; }
+    .b5 .chip-lbl { color: #104e66; }
+    .b5 .chip-val { color: #cffafe; }
+    .b5 .chip-val.pos { color: #22d3ee; }
+    .b5 .div-line { border-color: #0e2a38; }
+
+    /* ════════════════════════════════════════
+       B6 — ROSE / BOLD CONTRAST
+       High drama. Deep black + hot pink/rose.
+       Premium sports broadcast aesthetic.
+    ════════════════════════════════════════ */
+
+    .b6 { background: #110a0e; border: 1px solid #2a141e; }
+    .b6 .inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .b6 .team-name-l { color: #fda4af; }    /* rose-300 */
+    .b6 .team-name-r { color: #3a1f27; }
+    .b6 .pct-l {
+      color: #fb7185;                          /* rose-400 */
+      filter: drop-shadow(0 0 14px rgba(251,113,133,0.45));
+    }
+    .b6 .pct-r { color: #2a141e; }
+    .b6 .bar-track { background: #22101a; }
+    .b6 .bar-fill {
+      background: linear-gradient(90deg, #be123c, #fb7185);
+      box-shadow: 0 0 8px rgba(251,113,133,0.3);
+    }
+    .b6 .bar-caption { color: #fb7185; opacity: 0.35; }
+    .b6 .ml-pill { background: #190a10; color: #fb7185; border: 1px solid #6b1031; }
+    .b6 .ml-label { color: #3a1f27; }
+    .b6 .chip { background: #140a10; border: 1px solid #2a1320; }
+    .b6 .chip-lbl { color: #6b1f35; }
+    .b6 .chip-val { color: #ffe4e6; }
+    .b6 .chip-val.pos { color: #fb7185; }
+    .b6 .div-line { border-color: #2a1320; }
+
+  </style>
+</head>
+<body>
+
+<h1>Option B — Duel Bar Variations</h1>
+<p class="page-sub">Same layout, different color treatments. Current implementation shown as reference.</p>
+
+<div class="grid">
+
+  <!-- ═══════════════════ B0 — CURRENT ═══════════════════ -->
+  <div class="approach">
+    <div class="approach-label">
+      <span class="approach-tag" style="background:#27272a; color:#a1a1aa;">B0</span>
+      <span class="approach-name">Current</span>
+    </div>
+    <p class="approach-desc">What's live. Zinc monochrome — clean but low energy.</p>
+    <div class="card b0">
+      <div class="inner">
+        <div class="duel">
+          <div class="team-left">
+            <div class="team-name-l">You / Sam Carter</div>
+            <div class="pct-l">73%</div>
+          </div>
+          <div class="vs-badge">vs</div>
+          <div class="team-right">
+            <div class="team-name-r">Jordan / Chris Lee</div>
+            <div class="pct-r">27%</div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track b0" style="background:#27272a;">
+            <div class="bar-fill" style="width:73%; background:#d4d4d8;"></div>
+          </div>
+          <span class="bar-caption" style="color:#52525b;">Win probability</span>
+        </div>
+        <div class="ml-row">
+          <span class="ml-pill b0">−270</span>
+          <span class="ml-label" style="color:#3f3f46;">Model Line</span>
+        </div>
+        <hr class="div-line">
+        <div class="chips">
+          <div class="chip-row">
+            <div class="chip b0"><div class="chip-lbl">Δ Rating</div><div class="chip-val pos">+42.3</div></div>
+            <div class="chip b0"><div class="chip-lbl">Confidence</div><div class="chip-val">87%</div></div>
+            <div class="chip b0"><div class="chip-lbl">Volatility</div><div class="chip-val">±12%</div></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip b0"><div class="chip-lbl">Momentum</div><div class="chip-val">↑↑ Hot</div></div>
+            <div class="chip b0"><div class="chip-lbl">Exp. Gap</div><div class="chip-val pos">+8.5</div></div>
+            <div style="flex:1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="annotation"><strong>Reference:</strong> What's deployed today.</p>
+  </div>
+
+  <!-- ═══════════════════ B1 — SKY BLUE ═══════════════════ -->
+  <div class="approach">
+    <div class="approach-label">
+      <span class="approach-tag" style="background:#0c2d3f; color:#38bdf8;">B1</span>
+      <span class="approach-name">Sky Blue</span>
+    </div>
+    <p class="approach-desc">Confident, clean. Your team in sky blue — trustworthy and readable.</p>
+    <div class="card b1">
+      <div class="inner">
+        <div class="duel">
+          <div class="team-left">
+            <div class="team-name-l" style="color:#7dd3fc;">You / Sam Carter</div>
+            <div class="pct-l" style="color:#38bdf8;">73%</div>
+          </div>
+          <div class="vs-badge">vs</div>
+          <div class="team-right">
+            <div class="team-name-r" style="color:#52525b;">Jordan / Chris Lee</div>
+            <div class="pct-r" style="color:#1e3d52;">27%</div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track" style="background:#0f2030; height:8px; border-radius:99px; overflow:hidden;">
+            <div class="bar-fill" style="width:73%; background:linear-gradient(90deg,#0284c7,#38bdf8);"></div>
+          </div>
+          <span class="bar-caption" style="color:#0ea5e9; opacity:0.5;">Win probability</span>
+        </div>
+        <div class="ml-row">
+          <span class="ml-pill" style="background:#0c1e2b; color:#38bdf8; border:1px solid #0369a1;">−270</span>
+          <span class="ml-label" style="color:#3f3f46;">Model Line</span>
+        </div>
+        <hr style="border:none; border-top:1px solid #0c2d3f;">
+        <div class="chips">
+          <div class="chip-row">
+            <div class="chip" style="background:#0c1a22; border:1px solid #0c2d3f;"><div class="chip-lbl" style="color:#1d6a8a;">Δ Rating</div><div class="chip-val pos" style="color:#34d399;">+42.3</div></div>
+            <div class="chip" style="background:#0c1a22; border:1px solid #0c2d3f;"><div class="chip-lbl" style="color:#1d6a8a;">Confidence</div><div class="chip-val" style="color:#e4e4e7;">87%</div></div>
+            <div class="chip" style="background:#0c1a22; border:1px solid #0c2d3f;"><div class="chip-lbl" style="color:#1d6a8a;">Volatility</div><div class="chip-val" style="color:#e4e4e7;">±12%</div></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" style="background:#0c1a22; border:1px solid #0c2d3f;"><div class="chip-lbl" style="color:#1d6a8a;">Momentum</div><div class="chip-val" style="color:#e4e4e7;">↑↑ Hot</div></div>
+            <div class="chip" style="background:#0c1a22; border:1px solid #0c2d3f;"><div class="chip-lbl" style="color:#1d6a8a;">Exp. Gap</div><div class="chip-val pos" style="color:#34d399;">+8.5</div></div>
+            <div style="flex:1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="annotation"><strong>Vibe:</strong> Trustworthy, clean, sports-app blue. Reads fast. Low drama.</p>
+  </div>
+
+  <!-- ═══════════════════ B2 — EMERALD ═══════════════════ -->
+  <div class="approach">
+    <div class="approach-label">
+      <span class="approach-tag" style="background:#064e35; color:#34d399;">B2</span>
+      <span class="approach-name">Emerald Win</span>
+    </div>
+    <p class="approach-desc">Green = winning. Feels victorious and positive. Subtle glow on the %. </p>
+    <div class="card b2">
+      <div class="inner">
+        <div class="duel">
+          <div class="team-left">
+            <div class="team-name-l" style="color:#6ee7b7;">You / Sam Carter</div>
+            <div class="pct-l" style="color:#34d399; filter:drop-shadow(0 0 12px rgba(52,211,153,0.4));">73%</div>
+          </div>
+          <div class="vs-badge">vs</div>
+          <div class="team-right">
+            <div class="team-name-r" style="color:#3f4741;">Jordan / Chris Lee</div>
+            <div class="pct-r" style="color:#1e2e26;">27%</div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track" style="background:#1a2e22; height:8px; border-radius:99px; overflow:hidden;">
+            <div class="bar-fill" style="width:73%; background:linear-gradient(90deg,#059669,#34d399); box-shadow:0 0 8px rgba(52,211,153,0.35);"></div>
+          </div>
+          <span class="bar-caption" style="color:#34d399; opacity:0.4;">Win probability</span>
+        </div>
+        <div class="ml-row">
+          <span class="ml-pill" style="background:#0d2119; color:#34d399; border:1px solid #064e35;">−270</span>
+          <span class="ml-label" style="color:#2a3830;">Model Line</span>
+        </div>
+        <hr style="border:none; border-top:1px solid #1a3326;">
+        <div class="chips">
+          <div class="chip-row">
+            <div class="chip" style="background:#0d1f17; border:1px solid #1a3326;"><div class="chip-lbl" style="color:#2a5940;">Δ Rating</div><div class="chip-val" style="color:#34d399;">+42.3</div></div>
+            <div class="chip" style="background:#0d1f17; border:1px solid #1a3326;"><div class="chip-lbl" style="color:#2a5940;">Confidence</div><div class="chip-val" style="color:#d1fae5;">87%</div></div>
+            <div class="chip" style="background:#0d1f17; border:1px solid #1a3326;"><div class="chip-lbl" style="color:#2a5940;">Volatility</div><div class="chip-val" style="color:#d1fae5;">±12%</div></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" style="background:#0d1f17; border:1px solid #1a3326;"><div class="chip-lbl" style="color:#2a5940;">Momentum</div><div class="chip-val" style="color:#d1fae5;">↑↑ Hot</div></div>
+            <div class="chip" style="background:#0d1f17; border:1px solid #1a3326;"><div class="chip-lbl" style="color:#2a5940;">Exp. Gap</div><div class="chip-val" style="color:#34d399;">+8.5</div></div>
+            <div style="flex:1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="annotation"><strong>Vibe:</strong> Victorious, positive. The glow adds just enough energy without being loud.</p>
+  </div>
+
+  <!-- ═══════════════════ B3 — AMBER FIRE ═══════════════════ -->
+  <div class="approach">
+    <div class="approach-label">
+      <span class="approach-tag" style="background:#6b3f10; color:#fbbf24;">B3</span>
+      <span class="approach-name">Amber Fire</span>
+    </div>
+    <p class="approach-desc">Warm, energetic, competitive. Sports-betting aesthetic — high adrenaline.</p>
+    <div class="card b3">
+      <div class="inner">
+        <div class="duel">
+          <div class="team-left">
+            <div class="team-name-l" style="color:#fcd34d;">You / Sam Carter</div>
+            <div class="pct-l" style="color:#fbbf24; filter:drop-shadow(0 0 14px rgba(251,191,36,0.45));">73%</div>
+          </div>
+          <div class="vs-badge">vs</div>
+          <div class="team-right">
+            <div class="team-name-r" style="color:#44372a;">Jordan / Chris Lee</div>
+            <div class="pct-r" style="color:#2a1e0e;">27%</div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track" style="background:#2e1f0a; height:8px; border-radius:99px; overflow:hidden;">
+            <div class="bar-fill" style="width:73%; background:linear-gradient(90deg,#d97706,#fbbf24); box-shadow:0 0 8px rgba(251,191,36,0.3);"></div>
+          </div>
+          <span class="bar-caption" style="color:#fbbf24; opacity:0.35;">Win probability</span>
+        </div>
+        <div class="ml-row">
+          <span class="ml-pill" style="background:#1f1508; color:#fbbf24; border:1px solid #6b3f10;">−270</span>
+          <span class="ml-label" style="color:#44372a;">Model Line</span>
+        </div>
+        <hr style="border:none; border-top:1px solid #332007;">
+        <div class="chips">
+          <div class="chip-row">
+            <div class="chip" style="background:#1a1208; border:1px solid #332007;"><div class="chip-lbl" style="color:#6b4a1c;">Δ Rating</div><div class="chip-val" style="color:#fbbf24;">+42.3</div></div>
+            <div class="chip" style="background:#1a1208; border:1px solid #332007;"><div class="chip-lbl" style="color:#6b4a1c;">Confidence</div><div class="chip-val" style="color:#fef3c7;">87%</div></div>
+            <div class="chip" style="background:#1a1208; border:1px solid #332007;"><div class="chip-lbl" style="color:#6b4a1c;">Volatility</div><div class="chip-val" style="color:#fef3c7;">±12%</div></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" style="background:#1a1208; border:1px solid #332007;"><div class="chip-lbl" style="color:#6b4a1c;">Momentum</div><div class="chip-val" style="color:#fbbf24;">↑↑ Hot</div></div>
+            <div class="chip" style="background:#1a1208; border:1px solid #332007;"><div class="chip-lbl" style="color:#6b4a1c;">Exp. Gap</div><div class="chip-val" style="color:#fbbf24;">+8.5</div></div>
+            <div style="flex:1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="annotation"><strong>Vibe:</strong> High energy, aggressive. Great for competitive players. May feel too "casino" for casual users.</p>
+  </div>
+
+  <!-- ═══════════════════ B4 — SPLIT GRADIENT ═══════════════════ -->
+  <div class="approach">
+    <div class="approach-label">
+      <span class="approach-tag" style="background:#1e1a36; color:#a78bfa;">B4</span>
+      <span class="approach-name">Split Rivalry</span>
+    </div>
+    <p class="approach-desc">Each team has its own color. The bar visually shows the contest between them. Most "true matchup" feel.</p>
+    <div class="card b4">
+      <div class="inner">
+        <div class="duel">
+          <div class="team-left">
+            <div class="team-name-l" style="color:#c4b5fd;">You / Sam Carter</div>
+            <div class="pct-l" style="color:#a78bfa;">73%</div>
+          </div>
+          <div class="vs-badge">vs</div>
+          <div class="team-right">
+            <div class="team-name-r" style="color:#fca5a5;">Jordan / Chris Lee</div>
+            <div class="pct-r" style="color:#f87171; opacity:0.55;">27%</div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <!-- Full gradient bar, clipped to 73% to show just the winning side filled -->
+          <div style="height:8px; border-radius:99px; background:#1e1c2e; overflow:hidden; position:relative;">
+            <!-- Background: full gradient (both team colors across 100%) -->
+            <div style="position:absolute; inset:0; background:linear-gradient(90deg, #6d28d9 0%, #a78bfa 35%, #e879f9 55%, #ef4444 80%, #7f1d1d 100%); opacity:0.25;"></div>
+            <!-- Foreground: your team fill to 73% -->
+            <div style="position:relative; width:73%; height:100%; background:linear-gradient(90deg,#6d28d9,#a78bfa 60%,#e879f9);"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="font-size:10px; letter-spacing:0.07em; text-transform:uppercase; color:#7c3aed; opacity:0.6;">Your team</span>
+            <span style="font-size:10px; letter-spacing:0.07em; text-transform:uppercase; color:#ef4444; opacity:0.4;">Opponents</span>
+          </div>
+        </div>
+        <div class="ml-row">
+          <span class="ml-pill" style="background:#1a1828; color:#c4b5fd; border:1px solid #312b5a;">−270</span>
+          <span class="ml-label" style="color:#3a3650;">Model Line</span>
+        </div>
+        <hr style="border:none; border-top:1px solid #211e38;">
+        <div class="chips">
+          <div class="chip-row">
+            <div class="chip" style="background:#161424; border:1px solid #211e38;"><div class="chip-lbl" style="color:#4a3d7a;">Δ Rating</div><div class="chip-val" style="color:#a78bfa;">+42.3</div></div>
+            <div class="chip" style="background:#161424; border:1px solid #211e38;"><div class="chip-lbl" style="color:#4a3d7a;">Confidence</div><div class="chip-val" style="color:#e9d5ff;">87%</div></div>
+            <div class="chip" style="background:#161424; border:1px solid #211e38;"><div class="chip-lbl" style="color:#4a3d7a;">Volatility</div><div class="chip-val" style="color:#e9d5ff;">±12%</div></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" style="background:#161424; border:1px solid #211e38;"><div class="chip-lbl" style="color:#4a3d7a;">Momentum</div><div class="chip-val" style="color:#e9d5ff;">↑↑ Hot</div></div>
+            <div class="chip" style="background:#161424; border:1px solid #211e38;"><div class="chip-lbl" style="color:#4a3d7a;">Exp. Gap</div><div class="chip-val" style="color:#a78bfa;">+8.5</div></div>
+            <div style="flex:1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="annotation"><strong>Vibe:</strong> ESPN/broadcast matchup feel. The most visually storytelling — two forces competing. Complex but striking.</p>
+  </div>
+
+  <!-- ═══════════════════ B5 — NEON CYAN ═══════════════════ -->
+  <div class="approach">
+    <div class="approach-label">
+      <span class="approach-tag" style="background:#0a2535; color:#22d3ee;">B5</span>
+      <span class="approach-name">Neon Cyan</span>
+    </div>
+    <p class="approach-desc">Ultra dark + electric single accent. Premium analytics tool aesthetic. Maximum contrast.</p>
+    <div class="card b5">
+      <div class="inner">
+        <div class="duel">
+          <div class="team-left">
+            <div class="team-name-l" style="color:#67e8f9;">You / Sam Carter</div>
+            <div class="pct-l" style="color:#22d3ee; filter:drop-shadow(0 0 16px rgba(34,211,238,0.5));">73%</div>
+          </div>
+          <div class="vs-badge">vs</div>
+          <div class="team-right">
+            <div class="team-name-r" style="color:#1e3a47;">Jordan / Chris Lee</div>
+            <div class="pct-r" style="color:#0a1e28;">27%</div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track" style="background:#0a1a22; height:8px; border-radius:99px; overflow:hidden;">
+            <div class="bar-fill" style="width:73%; background:linear-gradient(90deg,#0e7490,#22d3ee); box-shadow:0 0 10px rgba(34,211,238,0.4), 0 0 24px rgba(34,211,238,0.15);"></div>
+          </div>
+          <span class="bar-caption" style="color:#22d3ee; opacity:0.35;">Win probability</span>
+        </div>
+        <div class="ml-row">
+          <span class="ml-pill" style="background:#081420; color:#22d3ee; border:1px solid #0e4f63;">−270</span>
+          <span class="ml-label" style="color:#0e2533;">Model Line</span>
+        </div>
+        <hr style="border:none; border-top:1px solid #0e2a38;">
+        <div class="chips">
+          <div class="chip-row">
+            <div class="chip" style="background:#080f17; border:1px solid #0e2a38;"><div class="chip-lbl" style="color:#104e66;">Δ Rating</div><div class="chip-val" style="color:#22d3ee;">+42.3</div></div>
+            <div class="chip" style="background:#080f17; border:1px solid #0e2a38;"><div class="chip-lbl" style="color:#104e66;">Confidence</div><div class="chip-val" style="color:#cffafe;">87%</div></div>
+            <div class="chip" style="background:#080f17; border:1px solid #0e2a38;"><div class="chip-lbl" style="color:#104e66;">Volatility</div><div class="chip-val" style="color:#cffafe;">±12%</div></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" style="background:#080f17; border:1px solid #0e2a38;"><div class="chip-lbl" style="color:#104e66;">Momentum</div><div class="chip-val" style="color:#cffafe;">↑↑ Hot</div></div>
+            <div class="chip" style="background:#080f17; border:1px solid #0e2a38;"><div class="chip-lbl" style="color:#104e66;">Exp. Gap</div><div class="chip-val" style="color:#22d3ee;">+8.5</div></div>
+            <div style="flex:1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="annotation"><strong>Vibe:</strong> Premium, cinematic. Stands out from every sports app. Slightly unconventional — memorable.</p>
+  </div>
+
+  <!-- ═══════════════════ B6 — ROSE ═══════════════════ -->
+  <div class="approach">
+    <div class="approach-label">
+      <span class="approach-tag" style="background:#4c0519; color:#fb7185;">B6</span>
+      <span class="approach-name">Rose / Bold</span>
+    </div>
+    <p class="approach-desc">Deep black with hot pink/rose accent. Premium sports broadcast — intense and dramatic.</p>
+    <div class="card b6">
+      <div class="inner">
+        <div class="duel">
+          <div class="team-left">
+            <div class="team-name-l" style="color:#fda4af;">You / Sam Carter</div>
+            <div class="pct-l" style="color:#fb7185; filter:drop-shadow(0 0 14px rgba(251,113,133,0.45));">73%</div>
+          </div>
+          <div class="vs-badge">vs</div>
+          <div class="team-right">
+            <div class="team-name-r" style="color:#3a1f27;">Jordan / Chris Lee</div>
+            <div class="pct-r" style="color:#1e0e14;">27%</div>
+          </div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-track" style="background:#22101a; height:8px; border-radius:99px; overflow:hidden;">
+            <div class="bar-fill" style="width:73%; background:linear-gradient(90deg,#be123c,#fb7185); box-shadow:0 0 8px rgba(251,113,133,0.3);"></div>
+          </div>
+          <span class="bar-caption" style="color:#fb7185; opacity:0.35;">Win probability</span>
+        </div>
+        <div class="ml-row">
+          <span class="ml-pill" style="background:#190a10; color:#fb7185; border:1px solid #6b1031;">−270</span>
+          <span class="ml-label" style="color:#3a1f27;">Model Line</span>
+        </div>
+        <hr style="border:none; border-top:1px solid #2a1320;">
+        <div class="chips">
+          <div class="chip-row">
+            <div class="chip" style="background:#140a10; border:1px solid #2a1320;"><div class="chip-lbl" style="color:#6b1f35;">Δ Rating</div><div class="chip-val" style="color:#fb7185;">+42.3</div></div>
+            <div class="chip" style="background:#140a10; border:1px solid #2a1320;"><div class="chip-lbl" style="color:#6b1f35;">Confidence</div><div class="chip-val" style="color:#ffe4e6;">87%</div></div>
+            <div class="chip" style="background:#140a10; border:1px solid #2a1320;"><div class="chip-lbl" style="color:#6b1f35;">Volatility</div><div class="chip-val" style="color:#ffe4e6;">±12%</div></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" style="background:#140a10; border:1px solid #2a1320;"><div class="chip-lbl" style="color:#6b1f35;">Momentum</div><div class="chip-val" style="color:#ffe4e6;">↑↑ Hot</div></div>
+            <div class="chip" style="background:#140a10; border:1px solid #2a1320;"><div class="chip-lbl" style="color:#6b1f35;">Exp. Gap</div><div class="chip-val" style="color:#fb7185;">+8.5</div></div>
+            <div style="flex:1;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="annotation"><strong>Vibe:</strong> Dramatic, intense. Would stand out in a screenshot. May feel too aggressive for casual pickleball players.</p>
+  </div>
+
+</div>
+</body>
+</html>

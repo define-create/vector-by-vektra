@@ -45,7 +45,8 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "Bash(npm run:*)",
-      "Bash(grep '\"\"next\"\"' package.json)"
+      "Bash(grep '\"\"next\"\"' package.json)",
+      "Bash(find \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\))"
     ]
   }
 }

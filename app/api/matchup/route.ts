@@ -71,6 +71,17 @@ export async function GET(req: NextRequest) {
   const p4 = byId[player4Id]!;
 
   // -------------------------------------------------------------------------
+  // 3.2b — Opt-out check: reject if any player has opted out of predictions
+  // -------------------------------------------------------------------------
+  const optedOut = [p1, p2, p3, p4].find((p) => p.optOutPredictions);
+  if (optedOut) {
+    return NextResponse.json(
+      { error: `${optedOut.displayName} has opted out of matchup predictions` },
+      { status: 403 },
+    );
+  }
+
+  // -------------------------------------------------------------------------
   // 3.3 — Win probability, moneyline, ratingDiff
   // -------------------------------------------------------------------------
   const probability = computeWinProbability(p1.rating, p2.rating, p3.rating, p4.rating);

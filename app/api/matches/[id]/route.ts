@@ -86,7 +86,7 @@ export async function PATCH(
     }
 
     // Sanitize tag
-    const tagValue = hasTag ? (body.tag!.trim() || null) : undefined;
+    const tagValue = hasTag ? (body.tag!.trim().replace(/\s+/g, " ").toLowerCase() || null) : undefined;
 
     // Update games and/or tag in a transaction
     const updated = await prisma.$transaction(async (tx) => {

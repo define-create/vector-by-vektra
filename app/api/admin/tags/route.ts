@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({})) as { from?: unknown; to?: unknown };
   const fromTag = typeof body.from === "string" ? body.from.trim() : "";
-  const toTag = typeof body.to === "string" ? body.to.trim() : "";
+  const toTag = typeof body.to === "string" ? body.to.trim().replace(/\s+/g, " ").toLowerCase() : "";
 
   if (!fromTag || !toTag) {
     return NextResponse.json({ error: "Both 'from' and 'to' tags are required" }, { status: 400 });

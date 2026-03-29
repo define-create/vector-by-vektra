@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Sanitize tag
-    const tag = typeof body.tag === "string" ? body.tag.trim() || null : null;
+    const tag = typeof body.tag === "string" ? (body.tag.trim().replace(/\s+/g, " ").toLowerCase() || null) : null;
 
     // Create match + participants + games in a transaction
     const match = await prisma.$transaction(async (tx) => {

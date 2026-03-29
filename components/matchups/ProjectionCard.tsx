@@ -1,13 +1,11 @@
 // ---------------------------------------------------------------------------
 // ProjectionCard — PRD §4.6
 //
-// Layout (side-by-side, matches reference design):
-//   [Teams Block — full width]
-//   [Forecast Block (left-dominant)] | [Structural Metrics Grid (right)]
-//
-// Forecast: probability with %, moneyline, "Model Line" label.
-// Metrics: 2×2 grid + Expectation Gap spanning full width on last row.
-// Each metric label has an ⓘ icon that opens a bottom-sheet explanation.
+// Layout (Duel Bar):
+//   [Primary team + % (left)] | [vs] | [Opponent team + % (right)]
+//   [Split probability bar]
+//   [Moneyline pill]
+//   [Metric chips — 2 rows of 3]
 // ---------------------------------------------------------------------------
 
 import type { ReactNode } from "react";
@@ -95,25 +93,27 @@ function formatMomentum(n: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// MetricCell
+// MetricChip
 // ---------------------------------------------------------------------------
 
-interface MetricCellProps {
+interface MetricChipProps {
   label: string;
   value: string;
   info: MetricInfo;
   dimmed?: boolean;
 }
 
-function MetricCell({ label, value, info, dimmed }: MetricCellProps) {
+function MetricChip({ label, value, info, dimmed }: MetricChipProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 flex flex-col gap-1.5 min-w-0">
       <div className="flex items-center gap-1">
-        <span className="text-sm text-zinc-500 leading-none">{label}</span>
+        <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-600 leading-none truncate">
+          {label}
+        </span>
         <MetricInfoSheet metric={info} />
       </div>
       <span
-        className={`text-base font-medium tabular-nums leading-none ${dimmed ? "text-zinc-500" : "text-zinc-50"}`}
+        className={`text-sm font-semibold tabular-nums leading-snug ${dimmed ? "text-zinc-600" : "text-zinc-200"}`}
       >
         {value}
       </span>
@@ -140,6 +140,7 @@ export default function ProjectionCard({
   footer,
 }: ProjectionCardProps) {
   const pct = Math.round(probability * 100);
+  const oppPct = 100 - pct;
   const lowConfidence = minConfidence < 0.40;
 
   const p1Label = myPlayerId && players.player1.id === myPlayerId
@@ -151,32 +152,71 @@ export default function ProjectionCard({
   return (
     <div className="rounded-xl border border-[#374155] overflow-hidden">
       <div className="p-5 flex flex-col gap-4">
-        {/* Teams Block */}
-        <div>
-          <p className="text-base font-medium text-zinc-50 leading-snug">{primaryPair}</p>
-          <p className="text-base text-zinc-500 leading-snug">vs {oppPair}</p>
-        </div>
 
-        {/* Forecast Block (left) + Metrics column (right) — side by side */}
-        <div className="flex items-start gap-5">
-          {/* Forecast Block */}
-          <div className="flex flex-col flex-none">
-            <span className={`text-[64px] font-bold tracking-tight leading-none tabular-nums ${lowConfidence ? "text-zinc-400" : "text-zinc-50"}`}>
+        {/* Duel Row — teams + probabilities side by side */}
+        <div className="flex items-start">
+          {/* Primary team (left) */}
+          <div className="flex-1 flex flex-col gap-1">
+            <p className="text-sm font-semibold text-zinc-200 leading-snug">{primaryPair}</p>
+            <span
+              className={`text-4xl font-bold tracking-tight leading-none tabular-nums ${
+                lowConfidence ? "text-zinc-400" : "text-zinc-50"
+              }`}
+            >
               {lowConfidence ? `~${pct}%` : `${pct}%`}
             </span>
-            <span className="text-[40px] font-bold leading-none tabular-nums text-zinc-200 mt-1">
-              {formatMoneyline(moneyline)}
-            </span>
-            <span className="text-sm text-zinc-500 mt-2">Model Line</span>
           </div>
 
-          {/* Structural Metrics — single column */}
-          <div className="flex-1 flex flex-col gap-3 pl-3">
-            <MetricCell label="Δ Rating"        value={signedNum(ratingDiff, 1)}            info={METRIC_INFO.ratingDiff} />
-            <MetricCell label="Confidence"      value={`${Math.round(confidence * 100)}%`}  info={METRIC_INFO.confidence} />
-            <MetricCell label="Volatility"      value={volatility}                           info={METRIC_INFO.volatility} />
-            <MetricCell label="Momentum"        value={formatMomentum(momentum)}             info={METRIC_INFO.momentum} />
-            <MetricCell label="Expectation Gap" value={signedNum(expectationGap, 1)}         info={METRIC_INFO.expectationGap} dimmed={expectationGapLowSample} />
+          {/* VS label */}
+          <div className="px-3 pt-2 flex-shrink-0">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-700">vs</span>
+          </div>
+
+          {/* Opponent team (right) */}
+          <div className="flex-1 flex flex-col gap-1 items-end">
+            <p className="text-sm font-medium text-zinc-500 leading-snug text-right">{oppPair}</p>
+            <span className="text-4xl font-bold tracking-tight leading-none tabular-nums text-zinc-700">
+              {oppPct}%
+            </span>
+          </div>
+        </div>
+
+        {/* Split probability bar */}
+        <div className="flex flex-col gap-1.5">
+          <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                lowConfidence ? "bg-zinc-600" : "bg-zinc-300"
+              }`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <span className="text-[10px] uppercase tracking-wide text-zinc-600">Win probability</span>
+        </div>
+
+        {/* Moneyline pill */}
+        <div className="flex items-center gap-2">
+          <span className="bg-zinc-800 rounded-full px-3 py-1 text-sm font-bold text-zinc-400 tabular-nums">
+            {formatMoneyline(moneyline)}
+          </span>
+          <span className="text-[10px] uppercase tracking-wide text-zinc-600">Model Line</span>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-[#374155]" />
+
+        {/* Metric chips — 2 rows of 3 */}
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <MetricChip label="Δ Rating"    value={signedNum(ratingDiff, 1)}           info={METRIC_INFO.ratingDiff} />
+            <MetricChip label="Confidence"  value={`${Math.round(confidence * 100)}%`} info={METRIC_INFO.confidence} />
+            <MetricChip label="Volatility"  value={volatility}                          info={METRIC_INFO.volatility} />
+          </div>
+          <div className="flex gap-2">
+            <MetricChip label="Momentum"  value={formatMomentum(momentum)}          info={METRIC_INFO.momentum} />
+            <MetricChip label="Exp. Gap"  value={signedNum(expectationGap, 1)}      info={METRIC_INFO.expectationGap} dimmed={expectationGapLowSample} />
+            {/* Empty spacer keeps row aligned with row above */}
+            <div className="flex-1" />
           </div>
         </div>
 

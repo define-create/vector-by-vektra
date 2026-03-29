@@ -8,6 +8,7 @@ interface Player {
   rating: number;
   claimed: boolean;
   matchCount: number;
+  optOutPredictions?: boolean;
 }
 
 interface PlayerSelectorProps {
@@ -265,23 +266,35 @@ export default function PlayerSelector({
               </li>
             )}
             {!loading &&
-              results.map((p) => (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() => selectPlayer(p)}
-                    className="flex w-full items-center justify-between px-4 py-2 text-left text-base text-zinc-200 hover:bg-zinc-700"
-                  >
-                    <span className="flex flex-col">
-                      <span>{p.displayName}</span>
-                      <span className="text-xs text-zinc-500">
-                        {p.matchCount > 0 ? `${p.matchCount} matches` : "No matches yet"}
+              results.map((p) =>
+                p.optOutPredictions ? (
+                  <li key={p.id}>
+                    <div className="flex w-full items-center justify-between px-4 py-2 opacity-40 cursor-not-allowed">
+                      <span className="flex flex-col">
+                        <span className="text-base text-zinc-400">{p.displayName}</span>
+                        <span className="text-xs text-zinc-500">Opted out of predictions</span>
                       </span>
-                    </span>
-                    <span className="text-sm text-zinc-500">{Math.round(p.rating)}</span>
-                  </button>
-                </li>
-              ))}
+                      <span className="text-sm text-zinc-500">{Math.round(p.rating)}</span>
+                    </div>
+                  </li>
+                ) : (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectPlayer(p)}
+                      className="flex w-full items-center justify-between px-4 py-2 text-left text-base text-zinc-200 hover:bg-zinc-700"
+                    >
+                      <span className="flex flex-col">
+                        <span>{p.displayName}</span>
+                        <span className="text-xs text-zinc-500">
+                          {p.matchCount > 0 ? `${p.matchCount} matches` : "No matches yet"}
+                        </span>
+                      </span>
+                      <span className="text-sm text-zinc-500">{Math.round(p.rating)}</span>
+                    </button>
+                  </li>
+                )
+              )}
           </ul>
         )}
       </div>
