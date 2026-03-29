@@ -86,7 +86,7 @@ export function FilterSheet({ open, onClose, currentFilter }: Props) {
 
       {/* Sheet — above backdrop and nav */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-2xl bg-zinc-900 border-t border-zinc-700 px-5 pt-5 flex flex-col gap-5"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg z-[70] rounded-t-2xl bg-zinc-900 border-t border-zinc-700 px-5 pt-5 flex flex-col gap-5"
         style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {/* Handle */}

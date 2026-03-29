@@ -23,6 +23,8 @@ interface AdminMatch {
   matchDate: string;
   createdAt: string;
   voidedAt: string | null;
+  flaggedAt: string | null;
+  flagReason: string | null;
   team1: MatchPlayer[];
   team2: MatchPlayer[];
   games: GameScore[];
@@ -37,8 +39,10 @@ export default function AdminMatchesPage() {
   const [query, setQuery] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [page, setPage] = useState(1);
+  const [showFlagged, setShowFlagged] = useState(false);
   const [matches, setMatches] = useState<AdminMatch[]>([]);
   const [total, setTotal] = useState(0);
+  const [flaggedCount, setFlaggedCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   // Confirm dialog state
@@ -55,20 +59,27 @@ export default function AdminMatchesPage() {
     return () => clearTimeout(t);
   }, [query]);
 
+  // Reset page when flagged filter toggles
+  useEffect(() => {
+    setPage(1);
+  }, [showFlagged]);
+
   const fetchMatches = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page) });
     if (debouncedQ) params.set("q", debouncedQ);
+    if (showFlagged) params.set("flagged", "true");
 
     fetch(`/api/admin/matches?${params}`)
       .then((r) => r.json())
-      .then((data: { matches: AdminMatch[]; pagination: { total: number } }) => {
+      .then((data: { matches: AdminMatch[]; pagination: { total: number; flaggedCount: number } }) => {
         setMatches(data.matches ?? []);
         setTotal(data.pagination?.total ?? 0);
+        setFlaggedCount(data.pagination?.flaggedCount ?? 0);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [debouncedQ, page]);
+  }, [debouncedQ, page, showFlagged]);
 
   useEffect(() => {
     fetchMatches();
@@ -113,16 +124,37 @@ export default function AdminMatchesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-zinc-50">Void Matches</h1>
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-zinc-50">Void Matches</h1>
+        {flaggedCount > 0 && (
+          <span className="rounded-full bg-rose-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+            {flaggedCount} flagged
+          </span>
+        )}
+      </div>
 
-      {/* Search */}
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by player name…"
-        className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none"
-      />
+      {/* Search + flagged filter */}
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by player name…"
+          className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setShowFlagged((v) => !v)}
+          className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+            showFlagged
+              ? "border-rose-600 bg-rose-900/30 text-rose-400"
+              : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+          }`}
+        >
+          {showFlagged ? "Showing flagged only" : "Show flagged only"}
+        </button>
+      </div>
 
       {errorMsg && (
         <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">{errorMsg}</p>
@@ -155,7 +187,7 @@ export default function AdminMatchesPage() {
               </tr>
             ) : (
               matches.map((m) => (
-                <tr key={m.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
+                <tr key={m.id} className={`border-b border-zinc-800/50 hover:bg-zinc-900/50 ${m.flaggedAt && !m.voidedAt ? "bg-rose-950/20" : ""}`}>
                   <td className="px-4 py-3 text-zinc-300">{formatDate(m.matchDate)}</td>
                   <td className="px-4 py-3 text-zinc-300">
                     {m.team1.map((p) => p.displayName).join(" & ")}
@@ -166,15 +198,25 @@ export default function AdminMatchesPage() {
                   <td className="px-4 py-3 font-mono text-zinc-400">{gameScore(m.games)}</td>
                   <td className="px-4 py-3 text-zinc-400">{m.enteredBy.handle}</td>
                   <td className="px-4 py-3">
-                    {m.voidedAt ? (
-                      <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-500">
-                        Voided
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-emerald-900/30 px-2 py-0.5 text-xs text-emerald-400">
-                        Active
-                      </span>
-                    )}
+                    <div className="flex flex-wrap gap-1">
+                      {m.voidedAt ? (
+                        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-500">
+                          Voided
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-emerald-900/30 px-2 py-0.5 text-xs text-emerald-400">
+                          Active
+                        </span>
+                      )}
+                      {m.flaggedAt && !m.voidedAt && (
+                        <span
+                          className="rounded-full bg-rose-900/40 px-2 py-0.5 text-xs text-rose-400"
+                          title={m.flagReason ?? "flagged"}
+                        >
+                          Flagged
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     {!m.voidedAt && (

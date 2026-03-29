@@ -3,7 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import {
   authMutationLimiter,
   signInLimiter,
-  matchEntryLimiter,
+  matchEntryLimiterUser,
+  matchEntryLimiterAdmin,
 } from "@/lib/rate-limit";
 
 // Paths that don't require authentication
@@ -52,11 +53,12 @@ export async function proxy(req: NextRequest) {
     } catch { /* Upstash unavailable — fail open */ }
   }
 
-  // Match entry — keyed by userId; fall back to IP for unauthenticated attempts
+  // Match entry — tiered by role; keyed by userId; fall back to IP for unauthenticated attempts
   if (pathname === "/api/matches" && method === "POST") {
     const key = (token?.sub as string | undefined) ?? ip;
+    const limiter = token?.role === "admin" ? matchEntryLimiterAdmin : matchEntryLimiterUser;
     try {
-      const { success, reset } = await matchEntryLimiter.limit(key);
+      const { success, reset } = await limiter.limit(key);
       if (!success) return rateLimitedResponse(reset);
     } catch { /* Upstash unavailable — fail open */ }
   }

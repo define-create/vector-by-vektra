@@ -1,3 +1,58 @@
+export async function sendFlagNotification(params: {
+  flaggedUserHandle: string;
+  flaggedUserDisplayName: string;
+  matchId: string;
+  matchDate: Date;
+  matchCountInWindow: number;
+  adminEmails: string[];
+}): Promise<void> {
+  const {
+    flaggedUserHandle,
+    flaggedUserDisplayName,
+    matchId,
+    matchDate,
+    matchCountInWindow,
+    adminEmails,
+  } = params;
+
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const flaggedUrl = `${baseUrl}/admin/matches?flagged=true`;
+  const formattedDate = matchDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("RESEND_API_KEY is not configured.");
+    }
+    console.log(
+      `[email] Flag notification for @${flaggedUserHandle}: ${matchCountInWindow} matches in the past hour. Match ID: ${matchId}. Admins: ${adminEmails.join(", ")}`,
+    );
+    return;
+  }
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  for (const adminEmail of adminEmails) {
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM ?? "Vector by Vektra <noreply@yourdomain.com>",
+      to: adminEmail,
+      subject: `[Vector] Suspicious match entry — @${flaggedUserHandle}`,
+      html: `
+        <p><strong>Suspicious match submission detected.</strong></p>
+        <p><strong>User:</strong> ${flaggedUserDisplayName} (@${flaggedUserHandle})</p>
+        <p><strong>Matches submitted in the past hour:</strong> ${matchCountInWindow}</p>
+        <p><strong>Triggering match:</strong> ID <code>${matchId}</code> — played ${formattedDate}</p>
+        <p><a href="${flaggedUrl}">Review flagged matches →</a></p>
+        <p style="font-size:12px;color:#71717a;">This alert was generated automatically by Vector. If this activity is legitimate, no action is needed.</p>
+      `,
+    });
+  }
+}
+
 export async function sendInviteEmail(
   recipientEmail: string,
   inviterName: string,

@@ -6,6 +6,9 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
+// Export redis instance for raw counter operations (anomaly detection, notif dedup)
+export { redis };
+
 // ephemeralCache short-circuits the Redis call when the same Edge instance
 // already knows a key is under the limit — reduces latency and Redis usage.
 
@@ -23,9 +26,18 @@ export const signInLimiter = new Ratelimit({
   prefix: "rl:sign-in",
 });
 
-export const matchEntryLimiter = new Ratelimit({
+// Non-admin users: 20 matches per hour hard cap
+export const matchEntryLimiterUser = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(30, "60 s"),
+  limiter: Ratelimit.slidingWindow(20, "60 m"),
   ephemeralCache: new Map(),
-  prefix: "rl:match-entry",
+  prefix: "rl:match-entry-user",
+});
+
+// Admin users: effectively unrestricted (500/hr)
+export const matchEntryLimiterAdmin = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(500, "60 m"),
+  ephemeralCache: new Map(),
+  prefix: "rl:match-entry-admin",
 });

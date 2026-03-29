@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { findOrCreateShadowPlayer } from "@/lib/services/players";
 import { runRecompute } from "@/lib/services/recompute";
+import { redis } from "@/lib/rate-limit";
+import { sendFlagNotification } from "@/lib/email";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,6 +49,14 @@ export async function POST(req: NextRequest) {
     body = (await req.json()) as CreateMatchBody;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  // Admin mode requires admin role
+  if (body.adminMode === true && session.user.role !== "admin") {
+    return NextResponse.json(
+      { error: "Admin mode requires admin role" },
+      { status: 403 },
+    );
   }
 
   // Validate matchDate
@@ -211,7 +221,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Sanitize tag
-    const tag = typeof body.tag === "string" ? (body.tag.trim().replace(/\s+/g, " ").toLowerCase() || null) : null;
+    const tag = typeof body.tag === "string" ? (body.tag.trim().replace(/\s+/g, " ") || null) : null;
 
     // Create match + participants + games in a transaction
     const match = await prisma.$transaction(async (tx) => {
@@ -254,6 +264,50 @@ export async function POST(req: NextRequest) {
     });
 
     const recomputeResult = await runRecompute("admin", "auto: new match", matchDate);
+
+    // Anomaly detection — skip for admin users
+    if (session.user.role !== "admin") {
+      try {
+        const anomalyKey = `match-anomaly:${session.user.id}`;
+        const count = await redis.incr(anomalyKey);
+        if (count === 1) {
+          await redis.expire(anomalyKey, 3600);
+        }
+
+        if (count > 10) {
+          await prisma.match.update({
+            where: { id: match.id },
+            data: { flaggedAt: new Date(), flagReason: "anomaly:high_volume" },
+          });
+
+          const notifKey = `flag-notif:${session.user.id}`;
+          const alreadyNotified = await redis.exists(notifKey);
+          if (!alreadyNotified) {
+            const admins = await prisma.user.findMany({
+              where: { role: "admin" },
+              select: { email: true },
+            });
+            const user = await prisma.user.findUnique({
+              where: { id: session.user.id },
+              select: { handle: true, displayName: true },
+            });
+            if (admins.length > 0 && user) {
+              await sendFlagNotification({
+                flaggedUserHandle: user.handle,
+                flaggedUserDisplayName: user.displayName,
+                matchId: match.id,
+                matchDate: match.matchDate,
+                matchCountInWindow: count,
+                adminEmails: admins.map((a) => a.email),
+              });
+            }
+            await redis.set(notifKey, "1", { ex: 3600 });
+          }
+        }
+      } catch (err) {
+        console.error("[POST /api/matches] Anomaly detection error (non-fatal):", err);
+      }
+    }
 
     const editExpiresAt = new Date(match.createdAt.getTime() + 20 * 60 * 1000);
 
