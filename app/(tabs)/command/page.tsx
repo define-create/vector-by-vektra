@@ -21,15 +21,15 @@ const METRIC_INFO = {
     body: "Your rating is a number that represents your current skill level, calculated from every match you've played. Players start at 1000. Winning against stronger opponents raises it more; losing to weaker opponents drops it more. The higher your rating, the stronger the system considers you.",
   },
   winPct: {
-    label: "Win %",
-    body: "The percentage of matches you won. A 50% win rate means you're winning and losing about equally. Above 50% means you're outperforming expectations. Use the filter chip to scope this to a specific period or event.",
+    label: "Win Rate or %",
+    body: "The percentage of matches you won. A 50% win rate means you're winning and losing about equally. Above 50% means you're outperforming expectations. Use the filter chip on Home screen to scope this to a specific period or event.",
   },
   ci: {
     label: "Form",
-    body: "Measures whether your recent improvements are building on each other or just oscillating. A positive CI means your wins are producing increasingly larger rating gains — your momentum is reinforcing. A negative CI means losses are outpacing gains. Near zero means your results are flat or random.",
+    body: "Measures whether your recent improvements are building on each other or just oscillating. A positive number means your wins are producing increasingly larger rating gains — your momentum is reinforcing. A negative number means losses are outpacing gains. Near zero means your results are flat or random.",
   },
   drift: {
-    label: "Drift Score",
+    label: "Stability or Drift Score",
     body: "Measures how much your actual results diverge from what the rating model predicts. A positive Drift means you're consistently winning more than expected — your rating is likely to rise soon. A negative Drift means you're losing more than expected — a rating drop may follow.",
   },
   winProb: {

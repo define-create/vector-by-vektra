@@ -7,10 +7,10 @@ export default function TabsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <TopHeader />
-      {/* Main content — pad top to clear fixed header, bottom to clear fixed nav */}
-      <main className="flex-1 pt-14 pb-20 mx-auto w-full max-w-xl">{children}</main>
+      {/* Main content scrolls within this container — header and footer are part of flex flow */}
+      <main className="flex-1 overflow-y-auto mx-auto w-full max-w-xl">{children}</main>
       <BottomNav />
     </div>
   );

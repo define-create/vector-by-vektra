@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — User Data Deletion</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+      }
+    }
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { background: #09090b; }
+  .screen { display: none; }
+  .screen.active { display: flex; }
+  .nav-btn { transition: all 0.15s; }
+  .nav-btn.active { background: #3f3f46; color: #f4f4f5; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4 gap-8">
+
+  <!-- Title -->
+  <div class="w-full max-w-3xl">
+    <h1 class="text-zinc-200 text-xl font-bold mb-1">Mockup — User Data Deletion</h1>
+    <p class="text-zinc-500 text-sm">PRD: prd-user-data-deletion.md</p>
+  </div>
+
+  <!-- Screen switcher -->
+  <div class="w-full max-w-3xl flex flex-wrap gap-2">
+    <button onclick="show('profile-default')"    class="nav-btn active  rounded-lg px-3 py-1.5 text-sm text-zinc-400 border border-zinc-700" id="btn-profile-default">Profile — default</button>
+    <button onclick="show('profile-confirm')"    class="nav-btn rounded-lg px-3 py-1.5 text-sm text-zinc-400 border border-zinc-700" id="btn-profile-confirm">Profile — confirmation</button>
+    <button onclick="show('profile-success')"    class="nav-btn rounded-lg px-3 py-1.5 text-sm text-zinc-400 border border-zinc-700" id="btn-profile-success">Profile — success</button>
+    <button onclick="show('admin-players')"      class="nav-btn rounded-lg px-3 py-1.5 text-sm text-zinc-400 border border-zinc-700" id="btn-admin-players">Admin — players page</button>
+    <button onclick="show('admin-modal')"        class="nav-btn rounded-lg px-3 py-1.5 text-sm text-zinc-400 border border-zinc-700" id="btn-admin-modal">Admin — delete modal</button>
+    <button onclick="show('email-user')"         class="nav-btn rounded-lg px-3 py-1.5 text-sm text-zinc-400 border border-zinc-700" id="btn-email-user">Email — user confirmation</button>
+    <button onclick="show('email-admin')"        class="nav-btn rounded-lg px-3 py-1.5 text-sm text-zinc-400 border border-zinc-700" id="btn-email-admin">Email — admin notification</button>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SCREEN 1: Profile — default state                       -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div id="screen-profile-default" class="screen active w-full max-w-sm flex flex-col">
+    <!-- Phone frame -->
+    <div class="rounded-3xl border border-zinc-700 bg-zinc-950 overflow-hidden shadow-2xl">
+      <!-- Status bar -->
+      <div class="px-6 pt-3 pb-1 flex justify-between items-center">
+        <span class="text-zinc-500 text-xs">9:41</span>
+        <span class="text-zinc-500 text-xs">●●●</span>
+      </div>
+
+      <div class="flex flex-col overflow-y-auto" style="min-height:640px">
+        <!-- Header -->
+        <div class="px-5 pt-4 pb-3">
+          <h1 class="text-2xl font-bold text-zinc-50">Profile</h1>
+        </div>
+
+        <!-- Email -->
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <span class="text-sm text-zinc-400">Email</span>
+          <span class="text-sm text-zinc-200">alex@example.com</span>
+        </div>
+
+        <!-- Display Name -->
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <span class="text-sm text-zinc-400">Display name</span>
+          <span class="text-sm text-zinc-200 font-medium">Alex Torres</span>
+        </div>
+
+        <!-- Opt-out predictions -->
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-zinc-200">Include me in predictions</p>
+            <p class="text-xs text-zinc-500 mt-0.5">Show win probability on the Matchup screen</p>
+          </div>
+          <div class="w-11 h-6 rounded-full bg-emerald-600 flex items-center justify-end px-0.5">
+            <div class="w-5 h-5 rounded-full bg-white shadow"></div>
+          </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-4">
+          <p class="text-sm font-semibold text-zinc-200 mb-3">Change Password</p>
+          <div class="flex flex-col gap-2">
+            <input type="password" placeholder="Current password" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-50 placeholder-zinc-600 outline-none" />
+            <input type="password" placeholder="New password" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-50 placeholder-zinc-600 outline-none" />
+            <button class="self-start rounded-lg bg-zinc-700 px-4 py-1.5 text-sm font-medium text-zinc-100">Save</button>
+          </div>
+        </div>
+
+        <!-- 🆕 Delete my account link -->
+        <div class="mx-5 mb-3 px-1 py-1">
+          <button onclick="show('profile-confirm')" class="text-sm text-red-400 hover:text-red-300 transition-colors">
+            Delete my account
+          </button>
+        </div>
+
+        <!-- Spacer -->
+        <div class="flex-1"></div>
+
+        <!-- Sign Out + Close -->
+        <div class="mx-5 mb-6 mt-4 flex gap-3">
+          <button class="flex-1 rounded-xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-300">Sign Out</button>
+          <button class="flex-1 rounded-xl border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-300">Close</button>
+        </div>
+      </div>
+    </div>
+    <p class="mt-3 text-center text-xs text-zinc-600">Tap "Delete my account" to see next state</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SCREEN 2: Profile — inline confirmation panel           -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div id="screen-profile-confirm" class="screen w-full max-w-sm flex flex-col">
+    <div class="rounded-3xl border border-zinc-700 bg-zinc-950 overflow-hidden shadow-2xl">
+      <div class="px-6 pt-3 pb-1 flex justify-between items-center">
+        <span class="text-zinc-500 text-xs">9:41</span>
+        <span class="text-zinc-500 text-xs">●●●</span>
+      </div>
+
+      <div class="flex flex-col overflow-y-auto" style="min-height:640px">
+        <div class="px-5 pt-4 pb-3">
+          <h1 class="text-2xl font-bold text-zinc-50">Profile</h1>
+        </div>
+
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <span class="text-sm text-zinc-400">Email</span>
+          <span class="text-sm text-zinc-200">alex@example.com</span>
+        </div>
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <span class="text-sm text-zinc-400">Display name</span>
+          <span class="text-sm text-zinc-200 font-medium">Alex Torres</span>
+        </div>
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-zinc-200">Include me in predictions</p>
+            <p class="text-xs text-zinc-500 mt-0.5">Show win probability on the Matchup screen</p>
+          </div>
+          <div class="w-11 h-6 rounded-full bg-emerald-600 flex items-center justify-end px-0.5">
+            <div class="w-5 h-5 rounded-full bg-white shadow"></div>
+          </div>
+        </div>
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-4">
+          <p class="text-sm font-semibold text-zinc-200 mb-3">Change Password</p>
+          <div class="flex flex-col gap-2">
+            <input type="password" placeholder="Current password" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-50 placeholder-zinc-600 outline-none" />
+            <input type="password" placeholder="New password" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-50 placeholder-zinc-600 outline-none" />
+            <button class="self-start rounded-lg bg-zinc-700 px-4 py-1.5 text-sm font-medium text-zinc-100">Save</button>
+          </div>
+        </div>
+
+        <!-- 🆕 Inline confirmation panel — replaces the link in-place -->
+        <div class="mx-5 mb-3 rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-4 flex flex-col gap-3">
+          <div class="flex items-start gap-2">
+            <span class="text-red-400 text-base mt-0.5">⚠</span>
+            <div>
+              <p class="text-sm font-semibold text-red-300 mb-2">Delete your account?</p>
+              <ul class="flex flex-col gap-1.5 text-sm text-zinc-400">
+                <li class="flex gap-2"><span class="text-zinc-600 shrink-0">•</span>Your account, email address, and password will be <strong class="text-zinc-300">permanently deleted</strong></li>
+                <li class="flex gap-2"><span class="text-zinc-600 shrink-0">•</span>Your match history will be <strong class="text-zinc-300">anonymized</strong> — not removed. Other players' ratings are unaffected</li>
+                <li class="flex gap-2"><span class="text-zinc-600 shrink-0">•</span>Request will be processed within <strong class="text-zinc-300">30 days</strong></li>
+                <li class="flex gap-2"><span class="text-zinc-600 shrink-0">•</span>This <strong class="text-zinc-300">cannot be undone</strong></li>
+              </ul>
+            </div>
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button onclick="show('profile-success')" class="flex-1 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors">
+              Send deletion request
+            </button>
+            <button onclick="show('profile-default')" class="flex-1 rounded-xl border border-zinc-600 px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1"></div>
+        <div class="mx-5 mb-6 mt-4 flex gap-3">
+          <button class="flex-1 rounded-xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-300">Sign Out</button>
+          <button class="flex-1 rounded-xl border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-300">Close</button>
+        </div>
+      </div>
+    </div>
+    <p class="mt-3 text-center text-xs text-zinc-600">Tap "Send deletion request" to see success state</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SCREEN 3: Profile — success state                       -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div id="screen-profile-success" class="screen w-full max-w-sm flex flex-col">
+    <div class="rounded-3xl border border-zinc-700 bg-zinc-950 overflow-hidden shadow-2xl">
+      <div class="px-6 pt-3 pb-1 flex justify-between items-center">
+        <span class="text-zinc-500 text-xs">9:41</span>
+        <span class="text-zinc-500 text-xs">●●●</span>
+      </div>
+
+      <div class="flex flex-col overflow-y-auto" style="min-height:640px">
+        <div class="px-5 pt-4 pb-3">
+          <h1 class="text-2xl font-bold text-zinc-50">Profile</h1>
+        </div>
+
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <span class="text-sm text-zinc-400">Email</span>
+          <span class="text-sm text-zinc-200">alex@example.com</span>
+        </div>
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <span class="text-sm text-zinc-400">Display name</span>
+          <span class="text-sm text-zinc-200 font-medium">Alex Torres</span>
+        </div>
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-3 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-zinc-200">Include me in predictions</p>
+            <p class="text-xs text-zinc-500 mt-0.5">Show win probability on the Matchup screen</p>
+          </div>
+          <div class="w-11 h-6 rounded-full bg-emerald-600 flex items-center justify-end px-0.5">
+            <div class="w-5 h-5 rounded-full bg-white shadow"></div>
+          </div>
+        </div>
+        <div class="mx-5 mb-3 rounded-xl bg-zinc-800/60 px-4 py-4">
+          <p class="text-sm font-semibold text-zinc-200 mb-3">Change Password</p>
+          <div class="flex flex-col gap-2">
+            <input type="password" placeholder="Current password" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-50 placeholder-zinc-600 outline-none" />
+            <input type="password" placeholder="New password" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-50 placeholder-zinc-600 outline-none" />
+            <button class="self-start rounded-lg bg-zinc-700 px-4 py-1.5 text-sm font-medium text-zinc-100">Save</button>
+          </div>
+        </div>
+
+        <!-- 🆕 Success message — replaces the confirmation panel -->
+        <div class="mx-5 mb-3 rounded-xl border border-zinc-700 bg-zinc-800/40 px-4 py-3 flex items-start gap-3">
+          <span class="text-emerald-400 text-base shrink-0 mt-0.5">✓</span>
+          <p class="text-sm text-zinc-300">
+            Request sent. You'll receive a confirmation email when your data is deleted (within 30 days).
+          </p>
+        </div>
+
+        <div class="flex-1"></div>
+        <div class="mx-5 mb-6 mt-4 flex gap-3">
+          <button class="flex-1 rounded-xl bg-zinc-800 px-4 py-3 text-sm font-semibold text-zinc-300">Sign Out</button>
+          <button class="flex-1 rounded-xl border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-300">Close</button>
+        </div>
+      </div>
+    </div>
+    <p class="mt-3 text-center text-xs text-zinc-600">User remains signed in and can continue using the app</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SCREEN 4: Admin — players page with Delete Account btn  -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div id="screen-admin-players" class="screen w-full max-w-3xl flex flex-col">
+    <div class="rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden shadow-2xl">
+      <!-- Admin chrome -->
+      <div class="border-b border-zinc-800 bg-zinc-900 px-6 py-3 flex items-center gap-3">
+        <span class="text-zinc-500 text-sm">Admin</span>
+        <span class="text-zinc-700">/</span>
+        <span class="text-zinc-300 text-sm font-medium">Merge / Edit / Delete Players</span>
+      </div>
+
+      <div class="p-6 flex flex-col gap-8">
+        <h1 class="text-2xl font-bold text-zinc-50">Merge / Edit / Delete Players</h1>
+
+        <!-- Merge panel (collapsed/summary) -->
+        <section class="rounded-xl border border-zinc-800 bg-zinc-900 p-5 flex flex-col gap-3">
+          <h2 class="text-lg font-semibold text-zinc-100">Merge Players</h2>
+          <p class="text-sm text-zinc-400">All match history from the merged profile is reassigned to the kept profile. The merged profile is soft-deleted.</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <input type="text" placeholder="Search player to keep…" class="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-50 placeholder-zinc-500 outline-none"/>
+            <input type="text" placeholder="Search player to merge…" class="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-zinc-50 placeholder-zinc-500 outline-none"/>
+          </div>
+        </section>
+
+        <!-- Identity Edit panel — with Delete Account button -->
+        <section class="rounded-xl border border-zinc-800 bg-zinc-900 p-5 flex flex-col gap-4">
+          <h2 class="text-lg font-semibold text-zinc-100">Edit Player Identity</h2>
+
+          <!-- Player selected state -->
+          <div class="flex flex-col gap-3">
+            <label class="text-sm font-medium text-zinc-400">Select player</label>
+            <div class="flex items-center justify-between rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-2 max-w-sm">
+              <div>
+                <p class="text-sm text-zinc-200 font-medium">Alex Torres</p>
+                <p class="text-xs text-zinc-500">Claimed · verified_email · 1 204 pts</p>
+              </div>
+              <button class="text-zinc-500 hover:text-zinc-300 ml-2 text-sm">✕</button>
+            </div>
+
+            <!-- Name edit -->
+            <label class="text-sm text-zinc-400">New display name</label>
+            <div class="flex items-center gap-2 max-w-sm">
+              <input type="text" value="Alex Torres" class="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-zinc-50 text-sm outline-none"/>
+              <button class="rounded-xl bg-zinc-200 px-5 py-2 text-sm font-semibold text-zinc-900">Save</button>
+            </div>
+
+            <!-- Action buttons row — Unclaim + 🆕 Delete Account -->
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button class="rounded-xl bg-amber-800 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-700">
+                Unclaim
+              </button>
+
+              <!-- 🆕 Delete Account button — only shown for claimed players (userId not null) -->
+              <button onclick="show('admin-modal')" class="rounded-xl border border-red-800 bg-red-900/40 px-5 py-2 text-sm font-semibold text-red-400 hover:bg-red-900/60 hover:text-red-300 transition-colors">
+                Delete Account
+              </button>
+            </div>
+
+            <p class="text-xs text-zinc-600 -mt-1">
+              "Delete Account" permanently removes the user's login and anonymizes their player profile. Match history is retained.
+            </p>
+          </div>
+        </section>
+
+        <!-- Note about unclaimed players -->
+        <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+          <p class="text-xs text-zinc-500">
+            <strong class="text-zinc-400">Note:</strong> "Delete Account" only appears for <strong class="text-zinc-400">claimed</strong> players (those linked to a user account). Unclaimed shadow profiles use the existing Delete button.
+          </p>
+        </div>
+      </div>
+    </div>
+    <p class="mt-3 text-center text-xs text-zinc-600">Tap "Delete Account" to see the confirmation modal</p>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SCREEN 5: Admin — deletion confirmation modal           -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div id="screen-admin-modal" class="screen w-full max-w-3xl flex flex-col">
+    <div class="rounded-2xl border border-zinc-800 bg-zinc-950 overflow-hidden shadow-2xl relative">
+      <!-- Blurred background (admin page) -->
+      <div class="border-b border-zinc-800 bg-zinc-900 px-6 py-3 flex items-center gap-3">
+        <span class="text-zinc-500 text-sm">Admin</span>
+        <span class="text-zinc-700">/</span>
+        <span class="text-zinc-300 text-sm font-medium">Merge / Edit / Delete Players</span>
+      </div>
+      <div class="p-6 opacity-30 blur-sm select-none pointer-events-none">
+        <h1 class="text-2xl font-bold text-zinc-50 mb-6">Merge / Edit / Delete Players</h1>
+        <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-5 h-32"></div>
+      </div>
+
+      <!-- Modal overlay -->
+      <div class="absolute inset-0 bg-black/60 flex items-center justify-center p-6">
+        <div class="w-full max-w-sm rounded-2xl bg-zinc-900 border border-zinc-700 p-6 shadow-2xl flex flex-col gap-4">
+          <div>
+            <h2 class="text-lg font-semibold text-zinc-50">Delete user account?</h2>
+            <p class="text-sm text-zinc-400 mt-1">This action is permanent and cannot be undone.</p>
+          </div>
+
+          <!-- User details -->
+          <div class="rounded-xl border border-zinc-800 bg-zinc-800/40 px-4 py-3 flex flex-col gap-1.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-zinc-500">Name</span>
+              <span class="text-zinc-200 font-medium">Alex Torres</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-zinc-500">Email</span>
+              <span class="text-zinc-200">alex@example.com</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-zinc-500">User ID</span>
+              <span class="text-zinc-400 font-mono text-xs">clxm4k2ab0001…</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-zinc-500">Player ID</span>
+              <span class="text-zinc-400 font-mono text-xs">clxm4k2ab0003…</span>
+            </div>
+          </div>
+
+          <!-- What will happen -->
+          <div class="rounded-xl border border-red-900/40 bg-red-950/20 px-4 py-3 flex flex-col gap-1.5">
+            <p class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-1">What happens</p>
+            <ul class="flex flex-col gap-1 text-sm text-zinc-400">
+              <li class="flex gap-2"><span class="text-red-600 shrink-0">✕</span>User account (email + password) permanently deleted</li>
+              <li class="flex gap-2"><span class="text-zinc-500 shrink-0">~</span>Player profile anonymized → "Deleted User #clxm4k"</li>
+              <li class="flex gap-2"><span class="text-zinc-500 shrink-0">○</span>Match history retained (anonymized). No ratings change.</li>
+              <li class="flex gap-2"><span class="text-zinc-500 shrink-0">○</span>Final confirmation email sent to user</li>
+            </ul>
+          </div>
+
+          <!-- Cooling-off note -->
+          <p class="text-xs text-amber-400/80 bg-amber-900/10 border border-amber-800/30 rounded-lg px-3 py-2">
+            ⏱ Do not process before <strong>7 days</strong> have elapsed since the user's request (cooling-off period).
+          </p>
+
+          <!-- Actions -->
+          <div class="flex gap-3 pt-1">
+            <button onclick="show('admin-players')" class="flex-1 rounded-xl border border-zinc-600 py-2.5 text-sm text-zinc-300 hover:text-zinc-100">
+              Cancel
+            </button>
+            <button class="flex-1 rounded-xl bg-red-700 py-2.5 text-sm font-semibold text-white hover:bg-red-600">
+              Delete Account
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SCREEN 6: Email — user confirmation                     -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div id="screen-email-user" class="screen w-full max-w-xl flex flex-col">
+    <div class="rounded-2xl border border-zinc-800 bg-white overflow-hidden shadow-2xl">
+      <!-- Email chrome -->
+      <div class="bg-zinc-100 border-b border-zinc-200 px-6 py-3">
+        <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">Email preview — sent to user</p>
+      </div>
+      <div class="p-8 flex flex-col gap-4 bg-white">
+        <div class="flex flex-col gap-1 pb-4 border-b border-zinc-100">
+          <div class="flex gap-3 text-sm">
+            <span class="text-zinc-400 w-12 shrink-0">From</span>
+            <span class="text-zinc-700">Vector by Vektra &lt;noreply@yourdomain.com&gt;</span>
+          </div>
+          <div class="flex gap-3 text-sm">
+            <span class="text-zinc-400 w-12 shrink-0">To</span>
+            <span class="text-zinc-700">alex@example.com</span>
+          </div>
+          <div class="flex gap-3 text-sm">
+            <span class="text-zinc-400 w-12 shrink-0">Subject</span>
+            <span class="text-zinc-900 font-medium">Your deletion request has been received</span>
+          </div>
+        </div>
+
+        <!-- Email body -->
+        <div class="flex flex-col gap-4 text-sm text-zinc-700 leading-relaxed">
+          <p>Hi <strong>Alex Torres</strong>,</p>
+          <p>
+            We've received your request to delete your Vector by Vektra account. We'll process it within
+            <strong>30 days</strong>.
+          </p>
+          <p>What will happen:</p>
+          <ul class="list-disc pl-5 flex flex-col gap-1 text-zinc-600">
+            <li>Your account (email address and password) will be permanently deleted</li>
+            <li>Your match history will be anonymized — not removed. Other players' ratings will not be affected</li>
+          </ul>
+          <p>
+            You can continue using the app normally until your request is processed.
+          </p>
+          <p>
+            You'll receive another email once your data has been deleted.
+          </p>
+          <p class="text-zinc-400 text-xs border-t border-zinc-100 pt-3 mt-2">
+            You're receiving this because you submitted a deletion request via Vector by Vektra.
+            If you didn't make this request, please contact us immediately.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- SCREEN 7: Email — admin notification                    -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div id="screen-email-admin" class="screen w-full max-w-xl flex flex-col">
+    <div class="rounded-2xl border border-zinc-800 bg-white overflow-hidden shadow-2xl">
+      <div class="bg-zinc-100 border-b border-zinc-200 px-6 py-3">
+        <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">Email preview — sent to admin</p>
+      </div>
+      <div class="p-8 flex flex-col gap-4 bg-white">
+        <div class="flex flex-col gap-1 pb-4 border-b border-zinc-100">
+          <div class="flex gap-3 text-sm">
+            <span class="text-zinc-400 w-12 shrink-0">From</span>
+            <span class="text-zinc-700">Vector by Vektra &lt;noreply@yourdomain.com&gt;</span>
+          </div>
+          <div class="flex gap-3 text-sm">
+            <span class="text-zinc-400 w-12 shrink-0">To</span>
+            <span class="text-zinc-700">vectorbyvektra@gmail.com</span>
+          </div>
+          <div class="flex gap-3 text-sm">
+            <span class="text-zinc-400 w-12 shrink-0">Subject</span>
+            <span class="text-zinc-900 font-medium">[Vector] Data deletion request — Alex Torres</span>
+          </div>
+        </div>
+
+        <!-- Email body -->
+        <div class="flex flex-col gap-4 text-sm text-zinc-700 leading-relaxed">
+          <p>A user has submitted a data deletion request.</p>
+
+          <!-- User detail block -->
+          <table class="w-full text-sm border border-zinc-200 rounded-lg overflow-hidden">
+            <tbody>
+              <tr class="border-b border-zinc-100">
+                <td class="px-4 py-2 text-zinc-500 bg-zinc-50 w-32">Display name</td>
+                <td class="px-4 py-2 text-zinc-800 font-medium">Alex Torres</td>
+              </tr>
+              <tr class="border-b border-zinc-100">
+                <td class="px-4 py-2 text-zinc-500 bg-zinc-50">Email</td>
+                <td class="px-4 py-2 text-zinc-800">alex@example.com</td>
+              </tr>
+              <tr class="border-b border-zinc-100">
+                <td class="px-4 py-2 text-zinc-500 bg-zinc-50">User ID</td>
+                <td class="px-4 py-2 text-zinc-600 font-mono text-xs">clxm4k2ab0001abc123</td>
+              </tr>
+              <tr class="border-b border-zinc-100">
+                <td class="px-4 py-2 text-zinc-500 bg-zinc-50">Player ID</td>
+                <td class="px-4 py-2 text-zinc-600 font-mono text-xs">clxm4k2ab0003def456</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2 text-zinc-500 bg-zinc-50">Requested at</td>
+                <td class="px-4 py-2 text-zinc-800">March 29, 2026 at 9:41 AM UTC</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- CTA -->
+          <div>
+            <a href="#" class="inline-block rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white no-underline">
+              Go to Admin Players →
+            </a>
+          </div>
+
+          <!-- Cooling-off notice -->
+          <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm">
+            ⏱ <strong>Do not process this request before March 29 + 7 days (Apr 5, 2026).</strong>
+            The user has a 7-day cooling-off window in case the request was accidental.
+          </div>
+
+          <p class="text-xs text-zinc-400 border-t border-zinc-100 pt-3 mt-2">
+            To process: find the user by name in /admin/players, click "Delete Account", and confirm in the modal.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const screens = ['profile-default','profile-confirm','profile-success','admin-players','admin-modal','email-user','email-admin'];
+    function show(id) {
+      screens.forEach(s => {
+        document.getElementById('screen-' + s).classList.remove('active');
+        const btn = document.getElementById('btn-' + s);
+        if (btn) btn.classList.remove('active');
+      });
+      document.getElementById('screen-' + id).classList.add('active');
+      const btn = document.getElementById('btn-' + id);
+      if (btn) btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

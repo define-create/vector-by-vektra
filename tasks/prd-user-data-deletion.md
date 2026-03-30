@@ -47,9 +47,8 @@ matches) so that other players' ratings are not disrupted.
 
 ### User-facing (Profile screen)
 
-1. The Profile screen must display a "Delete my account" link/button in the footer area,
-   below Sign Out.
-2. Tapping "Delete my account" must show an inline confirmation message explaining:
+1. The Profile screen must display a "Delete my account" link/button, below "Include me in predictions" pill.
+2. Tapping "Delete my account" must show confirmation message panel (similar to "i" panel) explaining:
    - The account and personal data (name, email, password) will be permanently deleted
    - Match history will be anonymized (not removed) — other players are unaffected
    - The request will be processed within 30 days
