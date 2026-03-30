@@ -87,7 +87,7 @@ export default async function CommandPage({
   const formState = ciToFormState(data.compoundingIndex);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex flex-col">
       <div className="flex flex-col items-center pt-3 pb-1 px-5">
         <div className="flex items-center gap-1">
           <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Rating</p>
@@ -145,8 +145,8 @@ export default async function CommandPage({
       {/* Separator */}
       <div className="border-t border-zinc-800/40" />
 
-      {/* Scrollable section */}
-      <div className="flex-1 overflow-y-auto px-5 pb-5 flex flex-col gap-4 pt-4">
+      {/* Match history section */}
+      <div className="px-5 pb-5 flex flex-col gap-4 pt-4">
         <FilterChip filter={filter} />
 
         {data.recentMatchHistory.length > 0 && (
