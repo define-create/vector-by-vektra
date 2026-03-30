@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RatingChart Fix — Before & After</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #09090b;
+    color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 40px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f4f4f5;
+    text-align: center;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #71717a;
+    text-align: center;
+    margin-top: 6px;
+    max-width: 520px;
+  }
+
+  .comparison {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    max-width: 900px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .panel {
+    flex: 1;
+    min-width: 300px;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .panel-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 6px;
+    display: inline-block;
+    align-self: flex-start;
+  }
+  .panel-label.before {
+    background: #3f1515;
+    color: #f87171;
+  }
+  .panel-label.after {
+    background: #14352a;
+    color: #34d399;
+  }
+
+  .panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e4e4e7;
+  }
+  .panel-desc {
+    font-size: 12px;
+    color: #71717a;
+    line-height: 1.5;
+  }
+
+  .phone-frame {
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    user-select: none;
+  }
+
+  /* Info row (after only) */
+  .info-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 4px;
+  }
+  .info-date {
+    font-size: 13px;
+    color: #71717a;
+    transition: color 0.1s;
+  }
+  .info-rating {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #f4f4f5;
+    transition: color 0.1s;
+  }
+  .info-row.active .info-date { color: #a1a1aa; }
+  .info-row.active .info-rating { color: #ffffff; }
+
+  /* SVG chart container */
+  .chart-wrap {
+    position: relative;
+    height: 200px;
+    cursor: crosshair;
+    border-radius: 8px;
+    overflow: visible;
+  }
+  .chart-wrap svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* Tooltip bubble (before) */
+  .tooltip-bubble {
+    position: absolute;
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #f4f4f5;
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.1s;
+    opacity: 0;
+    top: 20px;
+    transform: translateX(-50%);
+  }
+  .tooltip-bubble .tt-label { color: #a1a1aa; font-size: 11px; margin-bottom: 2px; }
+  .tooltip-bubble.visible { opacity: 1; }
+
+  /* Bug callout */
+  .bug-callout {
+    position: absolute;
+    bottom: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #7f1d1d;
+    border: 1px solid #ef4444;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #fca5a5;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .bug-callout.visible { opacity: 1; }
+
+  /* Annotation arrows */
+  .annotations {
+    font-size: 11px;
+    color: #71717a;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 4px;
+  }
+  .annotation {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .annotation .dot-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .annotation.red .dot-icon { background: #ef4444; }
+  .annotation.green .dot-icon { background: #34d399; }
+  .annotation.blue .dot-icon { background: #60a5fa; }
+
+  /* Drag hint */
+  .drag-hint {
+    font-size: 11px;
+    color: #52525b;
+    text-align: center;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stat-card {
+    background: rgba(39,39,42,0.6);
+    border-radius: 12px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .stat-label { font-size: 12px; color: #71717a; }
+  .stat-value { font-size: 18px; font-weight: 700; color: #f4f4f5; }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    max-width: 900px;
+    height: 1px;
+    background: #27272a;
+  }
+
+  /* Root cause box */
+  .root-cause {
+    width: 100%;
+    max-width: 900px;
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .root-cause h2 { font-size: 14px; font-weight: 600; color: #e4e4e7; }
+  .root-cause p { font-size: 13px; color: #71717a; line-height: 1.6; }
+  .root-cause code {
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 11px;
+    color: #a1a1aa;
+  }
+  .change-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .change-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #a1a1aa;
+    line-height: 1.5;
+  }
+  .change-item .badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .badge.remove { background: #3f1515; color: #f87171; }
+  .badge.add    { background: #14352a; color: #34d399; }
+  .badge.keep   { background: #1c1c2e; color: #818cf8; }
+</style>
+</head>
+<body>
+
+<div>
+  <h1>RatingChart — Interaction Fix</h1>
+  <p class="subtitle">Drag your mouse (or touch) across either chart to see the difference</p>
+</div>
+
+<div class="comparison">
+
+  <!-- ═══════════════════════════════ BEFORE ═══════════════════════════════ -->
+  <div class="panel">
+    <span class="panel-label before">Before (current)</span>
+    <p class="panel-desc">
+      Recharts renders the cursor line at the raw touch/mouse X position.<br>
+      The activeDot snaps to the nearest data point's X.<br>
+      On sparse data these diverge — <strong style="color:#f87171">the line and dot indicate different points</strong>.
+    </p>
+    <div class="phone-frame">
+      <div class="chart-wrap" id="chart-before">
+        <svg id="svg-before"></svg>
+        <div class="tooltip-bubble" id="tooltip-before">
+          <div class="tt-label" id="tt-label"></div>
+          <div id="tt-value"></div>
+        </div>
+        <div class="bug-callout" id="bug-callout">⚠ Cursor ≠ Dot position!</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><span class="stat-label">Win %</span><span class="stat-value">62%</span></div>
+        <div class="stat-card"><span class="stat-label">Record</span><span class="stat-value">8–5</span></div>
+        <div class="stat-card"><span class="stat-label">Pt Diff</span><span class="stat-value">+14</span></div>
+      </div>
+    </div>
+    <div class="annotations">
+      <div class="annotation red"><span class="dot-icon"></span><span>Vertical cursor line — anchored at raw touch X (can be anywhere)</span></div>
+      <div class="annotation blue"><span class="dot-icon" style="background:#60a5fa"></span><span>activeDot — snaps to nearest data point X (correct)</span></div>
+      <div class="annotation red"><span class="dot-icon"></span><span>Tooltip value may show a different point than the dot</span></div>
+    </div>
+    <p class="drag-hint">← drag to see cursor drift from dot</p>
+  </div>
+
+  <!-- ═══════════════════════════════ AFTER ════════════════════════════════ -->
+  <div class="panel">
+    <span class="panel-label after">After (fixed)</span>
+    <p class="panel-desc">
+      <code>&lt;Tooltip&gt;</code> removed — cursor line disappears with it.<br>
+      Active index tracked via <code>onMouseMove / onTouchMove</code>.<br>
+      Date + rating shown in a <strong style="color:#34d399">static info row above the chart</strong> — always correct.
+    </p>
+    <div class="phone-frame">
+      <div class="info-row" id="info-row-after">
+        <span class="info-date" id="info-date">3/29</span>
+        <span class="info-rating" id="info-rating">1247</span>
+      </div>
+      <div class="chart-wrap" id="chart-after">
+        <svg id="svg-after"></svg>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><span class="stat-label">Win %</span><span class="stat-value">62%</span></div>
+        <div class="stat-card"><span class="stat-label">Record</span><span class="stat-value">8–5</span></div>
+        <div class="stat-card"><span class="stat-label">Pt Diff</span><span class="stat-value">+14</span></div>
+      </div>
+    </div>
+    <div class="annotations">
+      <div class="annotation green"><span class="dot-icon"></span><span>Info row above chart — always matches the activeDot exactly</span></div>
+      <div class="annotation blue"><span class="dot-icon" style="background:#60a5fa"></span><span>activeDot — unchanged, still snaps correctly</span></div>
+      <div class="annotation green"><span class="dot-icon"></span><span>No cursor line — no inconsistency possible</span></div>
+    </div>
+    <p class="drag-hint">← drag to see smooth, consistent tracking</p>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- Root cause + changes summary -->
+<div class="root-cause">
+  <h2>Root Cause &amp; Changes</h2>
+  <p>
+    Recharts' <code>&lt;Cursor&gt;</code> (the vertical line) is rendered as part of the <code>&lt;Tooltip&gt;</code> pipeline.
+    It positions itself at the <strong>raw pointer X coordinate</strong>. The <code>activeDot</code> on <code>&lt;Line&gt;</code>
+    positions itself at the <strong>snapped data-point X coordinate</strong>. With 10 points across a 400 px chart (~40 px per segment),
+    a touch 20 px past a point leaves the cursor 20 px from the dot. On mobile this is consistently unreliable.
+  </p>
+  <p>
+    The fix removes the floating tooltip entirely and replaces it with a deterministic display driven by
+    <code>state.activeTooltipIndex</code> — an integer index that Recharts internally uses to snap the activeDot.
+    Both the info row and the dot now reference the <em>same index</em>, so they can never disagree.
+  </p>
+  <div class="change-list">
+    <div class="change-item"><span class="badge remove">REMOVE</span><span><code>&lt;Tooltip&gt;</code> from JSX and import — this also removes the cursor line</span></div>
+    <div class="change-item"><span class="badge add">ADD</span><span><code>useState&lt;number | null&gt;(null)</code> for <code>activeIndex</code></span></div>
+    <div class="change-item"><span class="badge add">ADD</span><span><code>onMouseMove / onTouchMove</code> → reads <code>state.activeTooltipIndex</code>, sets <code>activeIndex</code></span></div>
+    <div class="change-item"><span class="badge add">ADD</span><span><code>onMouseLeave / onTouchEnd</code> → resets <code>activeIndex</code> to <code>null</code> (shows latest point)</span></div>
+    <div class="change-item"><span class="badge add">ADD</span><span>Info row above chart: date (left, muted) + rating (right, bold large) — updates via state</span></div>
+    <div class="change-item"><span class="badge keep">KEEP</span><span><code>activeDot</code>, <code>CartesianGrid</code>, <code>XAxis</code>, <code>YAxis</code>, <code>dot</code> logic, <code>yMin/yMax</code> — all unchanged</span></div>
+  </div>
+  <p style="color:#52525b; font-size:12px;">Only file modified: <code>components/trajectory/RatingChart.tsx</code></p>
+</div>
+
+<script>
+// ─── Sample data (same for both charts) ───────────────────────────────────────
+const RAW = [
+  { date: "3/15", rating: 1142 },
+  { date: "3/17", rating: 1158 },
+  { date: "3/18", rating: 1145 },
+  { date: "3/20", rating: 1171 },
+  { date: "3/21", rating: 1189 },
+  { date: "3/22", rating: 1176 },
+  { date: "3/24", rating: 1203 },
+  { date: "3/26", rating: 1218 },
+  { date: "3/28", rating: 1231 },
+  { date: "3/29", rating: 1247 },
+];
+
+const GRID_COLOR   = "#3f3f46";
+const LINE_COLOR   = "#e4e4e7";
+const TICK_COLOR   = "#71717a";
+const DOT_FILL     = "#f4f4f5";
+const CURSOR_COLOR = "#71717a";
+
+// Margins must match for coordinate mapping
+const MARGIN = { top: 8, right: 8, bottom: 28, left: 44 };
+
+function buildChart(svgEl, opts = {}) {
+  const W = svgEl.parentElement.clientWidth;
+  const H = 200;
+  svgEl.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svgEl.setAttribute("width", W);
+  svgEl.setAttribute("height", H);
+
+  const plotW = W - MARGIN.left - MARGIN.right;
+  const plotH = H - MARGIN.top - MARGIN.bottom;
+
+  const ratings = RAW.map(d => d.rating);
+  const minR = Math.min(...ratings);
+  const maxR = Math.max(...ratings);
+  const pad = Math.max(20, (maxR - minR) * 0.2);
+  const yMin = Math.floor((minR - pad) / 10) * 10;
+  const yMax = Math.ceil((maxR + pad) / 10) * 10;
+
+  function xOf(i) {
+    return MARGIN.left + (i / (RAW.length - 1)) * plotW;
+  }
+  function yOf(r) {
+    return MARGIN.top + plotH - ((r - yMin) / (yMax - yMin)) * plotH;
+  }
+
+  const ns = "http://www.w3.org/2000/svg";
+
+  // Grid lines
+  const yTicks = 4;
+  for (let t = 0; t <= yTicks; t++) {
+    const r = yMin + ((yMax - yMin) / yTicks) * t;
+    const y = yOf(r);
+    const line = document.createElementNS(ns, "line");
+    line.setAttribute("x1", MARGIN.left);
+    line.setAttribute("x2", MARGIN.left + plotW);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", GRID_COLOR);
+    line.setAttribute("stroke-dasharray", "3 3");
+    svgEl.appendChild(line);
+
+    const txt = document.createElementNS(ns, "text");
+    txt.setAttribute("x", MARGIN.left - 6);
+    txt.setAttribute("y", y + 4);
+    txt.setAttribute("text-anchor", "end");
+    txt.setAttribute("fill", TICK_COLOR);
+    txt.setAttribute("font-size", "11");
+    txt.textContent = Math.round(r);
+    svgEl.appendChild(txt);
+  }
+
+  // X axis labels (first and last only)
+  [0, RAW.length - 1].forEach(i => {
+    const txt = document.createElementNS(ns, "text");
+    txt.setAttribute("x", xOf(i));
+    txt.setAttribute("y", H - 8);
+    txt.setAttribute("text-anchor", i === 0 ? "start" : "end");
+    txt.setAttribute("fill", TICK_COLOR);
+    txt.setAttribute("font-size", "11");
+    txt.textContent = RAW[i].date;
+    svgEl.appendChild(txt);
+  });
+
+  // Polyline
+  const points = RAW.map((d, i) => `${xOf(i)},${yOf(d.rating)}`).join(" ");
+  const poly = document.createElementNS(ns, "polyline");
+  poly.setAttribute("points", points);
+  poly.setAttribute("fill", "none");
+  poly.setAttribute("stroke", LINE_COLOR);
+  poly.setAttribute("stroke-width", "2");
+  poly.setAttribute("stroke-linejoin", "round");
+  poly.setAttribute("stroke-linecap", "round");
+  svgEl.appendChild(poly);
+
+  // Static dots
+  RAW.forEach((d, i) => {
+    const c = document.createElementNS(ns, "circle");
+    c.setAttribute("cx", xOf(i));
+    c.setAttribute("cy", yOf(d.rating));
+    c.setAttribute("r", 3);
+    c.setAttribute("fill", DOT_FILL);
+    c.setAttribute("stroke", "#18181b");
+    c.setAttribute("stroke-width", "1.5");
+    svgEl.appendChild(c);
+  });
+
+  // Cursor line (before only) — hidden by default
+  let cursorLine = null;
+  if (opts.showCursor) {
+    cursorLine = document.createElementNS(ns, "line");
+    cursorLine.setAttribute("y1", MARGIN.top);
+    cursorLine.setAttribute("y2", MARGIN.top + plotH);
+    cursorLine.setAttribute("stroke", CURSOR_COLOR);
+    cursorLine.setAttribute("stroke-width", "1");
+    cursorLine.setAttribute("stroke-dasharray", "4 3");
+    cursorLine.setAttribute("opacity", "0");
+    svgEl.appendChild(cursorLine);
+  }
+
+  // Active dot (always)
+  const activeDot = document.createElementNS(ns, "circle");
+  activeDot.setAttribute("r", "5");
+  activeDot.setAttribute("fill", "#ffffff");
+  activeDot.setAttribute("stroke", "#18181b");
+  activeDot.setAttribute("stroke-width", "2");
+  activeDot.setAttribute("opacity", "0");
+  svgEl.appendChild(activeDot);
+
+  function nearestIndex(mouseX) {
+    let best = 0, bestDist = Infinity;
+    for (let i = 0; i < RAW.length; i++) {
+      const d = Math.abs(xOf(i) - mouseX);
+      if (d < bestDist) { bestDist = d; best = i; }
+    }
+    return best;
+  }
+
+  return { xOf, yOf, cursorLine, activeDot, nearestIndex };
+}
+
+// ─── Before chart ─────────────────────────────────────────────────────────────
+(function() {
+  const svgEl = document.getElementById("svg-before");
+  const tooltipEl = document.getElementById("tooltip-before");
+  const ttLabel = document.getElementById("tt-label");
+  const ttValue = document.getElementById("tt-value");
+  const bugCallout = document.getElementById("bug-callout");
+  const wrap = document.getElementById("chart-before");
+
+  const { xOf, yOf, cursorLine, activeDot, nearestIndex } = buildChart(svgEl, { showCursor: true });
+
+  function onMove(rawX) {
+    const rect = svgEl.getBoundingClientRect();
+    const svgW = rect.width;
+    const scale = svgEl.getAttribute("width") / svgW;
+    const mx = rawX * scale; // convert to SVG coords
+
+    // Cursor line follows raw X
+    cursorLine.setAttribute("x1", mx);
+    cursorLine.setAttribute("x2", mx);
+    cursorLine.setAttribute("opacity", "0.7");
+
+    // Active dot snaps to nearest point
+    const idx = nearestIndex(mx);
+    const snapX = xOf(idx);
+    const snapY = yOf(RAW[idx].rating);
+    activeDot.setAttribute("cx", snapX);
+    activeDot.setAttribute("cy", snapY);
+    activeDot.setAttribute("opacity", "1");
+
+    // Tooltip follows SNAPPED position but appears near raw cursor — simulating Recharts behavior
+    // In reality Recharts tooltip anchors near the cursor, not the dot
+    const displayX = (mx / scale); // screen px
+    tooltipEl.style.left = displayX + "px";
+    ttLabel.textContent = RAW[idx].date;
+    ttValue.textContent = RAW[idx].rating + " Rating";
+    tooltipEl.classList.add("visible");
+
+    // Show bug callout if cursor is far from dot
+    const diff = Math.abs(mx - snapX) / scale;
+    if (diff > 12) {
+      bugCallout.classList.add("visible");
+    } else {
+      bugCallout.classList.remove("visible");
+    }
+  }
+
+  function onLeave() {
+    cursorLine.setAttribute("opacity", "0");
+    activeDot.setAttribute("opacity", "0");
+    tooltipEl.classList.remove("visible");
+    bugCallout.classList.remove("visible");
+  }
+
+  wrap.addEventListener("mousemove", e => {
+    const rect = wrap.getBoundingClientRect();
+    onMove(e.clientX - rect.left);
+  });
+  wrap.addEventListener("mouseleave", onLeave);
+  wrap.addEventListener("touchmove", e => {
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    onMove(e.touches[0].clientX - rect.left);
+  }, { passive: false });
+  wrap.addEventListener("touchend", onLeave);
+})();
+
+// ─── After chart ──────────────────────────────────────────────────────────────
+(function() {
+  const svgEl = document.getElementById("svg-after");
+  const infoRow = document.getElementById("info-row-after");
+  const infoDate = document.getElementById("info-date");
+  const infoRating = document.getElementById("info-rating");
+  const wrap = document.getElementById("chart-after");
+
+  const { xOf, yOf, activeDot, nearestIndex } = buildChart(svgEl, { showCursor: false });
+
+  // Default: latest point
+  function setDisplay(idx) {
+    infoDate.textContent = RAW[idx].date;
+    infoRating.textContent = RAW[idx].rating;
+  }
+  setDisplay(RAW.length - 1);
+
+  function onMove(rawX) {
+    const rect = svgEl.getBoundingClientRect();
+    const svgW = rect.width;
+    const scale = svgEl.getAttribute("width") / svgW;
+    const mx = rawX * scale;
+
+    const idx = nearestIndex(mx);
+    activeDot.setAttribute("cx", xOf(idx));
+    activeDot.setAttribute("cy", yOf(RAW[idx].rating));
+    activeDot.setAttribute("opacity", "1");
+
+    setDisplay(idx);
+    infoRow.classList.add("active");
+  }
+
+  function onLeave() {
+    activeDot.setAttribute("opacity", "0");
+    setDisplay(RAW.length - 1);
+    infoRow.classList.remove("active");
+  }
+
+  wrap.addEventListener("mousemove", e => {
+    const rect = wrap.getBoundingClientRect();
+    onMove(e.clientX - rect.left);
+  });
+  wrap.addEventListener("mouseleave", onLeave);
+  wrap.addEventListener("touchmove", e => {
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    onMove(e.touches[0].clientX - rect.left);
+  }, { passive: false });
+  wrap.addEventListener("touchend", onLeave);
+})();
+</script>
+</body>
+</html>
