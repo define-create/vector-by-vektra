@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vector — Screen Transition Preview</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #09090b;
+  color: #f4f4f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 40px;
+  gap: 32px;
+  min-height: 100vh;
+}
+
+h1 { font-size: 20px; font-weight: 700; color: #f4f4f5; }
+.subtitle { font-size: 13px; color: #71717a; margin-top: 4px; text-align: center; }
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ctrl-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #3f3f46;
+  background: #27272a;
+  color: #a1a1aa;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.ctrl-btn.active {
+  background: #e4e4e7;
+  color: #18181b;
+  border-color: #e4e4e7;
+}
+
+/* Phones side by side */
+.phones {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.phone-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.phone-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #52525b;
+}
+.phone-label.highlight { color: #34d399; }
+
+/* Phone shell */
+.phone {
+  width: 320px;
+  height: 580px;
+  background: #09090b;
+  border: 1px solid #3f3f46;
+  border-radius: 36px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 0 6px #18181b, 0 20px 60px rgba(0,0,0,0.6);
+}
+
+/* Top header */
+.top-header {
+  flex-shrink: 0;
+  height: 56px;
+  background: #09090b;
+  border-bottom: 1px solid #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
+.logo-text { font-size: 15px; font-weight: 700; color: #f4f4f5; }
+.header-icons { display: flex; gap: 14px; }
+.header-icon { color: #71717a; }
+
+/* Page content area */
+.page-area {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.page.hidden { display: none; }
+
+/* Transition variants */
+.page.fade-enter { animation: fadeIn var(--dur, 180ms) ease-out both; }
+.page.slide-enter { animation: slideIn var(--dur, 220ms) cubic-bezier(0.25,0.46,0.45,0.94) both; }
+.page.pop-enter { animation: popIn var(--dur, 200ms) cubic-bezier(0.34,1.56,0.64,1) both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Bottom nav */
+.bottom-nav {
+  flex-shrink: 0;
+  height: 64px;
+  background: #09090b;
+  border-top: 1px solid #27272a;
+  display: flex;
+  align-items: center;
+}
+.nav-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  transition: color 0.15s;
+  color: #52525b;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-tab.active { color: #f4f4f5; }
+.nav-icon { font-size: 16px; line-height: 1; }
+.nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Page content mock */
+.screen-title { font-size: 26px; font-weight: 700; color: #f4f4f5; }
+.screen-subtitle { font-size: 13px; color: #71717a; }
+.card {
+  background: rgba(39,39,42,0.6);
+  border: 1px solid #3f3f46;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.card-title { font-size: 13px; font-weight: 600; color: #e4e4e7; }
+.card-sub { font-size: 12px; color: #71717a; }
+.card-meta { font-size: 12px; color: #a1a1aa; }
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #14532d;
+  color: #4ade80;
+}
+.badge.loss { background: #450a0a; color: #f87171; }
+.pill-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #3f3f46;
+  background: #27272a;
+  color: #a1a1aa;
+  cursor: pointer;
+}
+.pill.active { background: #e4e4e7; color: #18181b; border-color: #e4e4e7; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.stat-cell {
+  background: rgba(39,39,42,0.6);
+  border-radius: 10px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.stat-val { font-size: 20px; font-weight: 700; color: #f4f4f5; }
+.stat-lbl { font-size: 10px; color: #71717a; }
+.chart-placeholder {
+  background: rgba(39,39,42,0.6);
+  border-radius: 12px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.chart-placeholder svg { position: absolute; inset: 0; }
+.input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.input-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #52525b; }
+.input-mock {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #71717a;
+}
+.enter-btn {
+  background: #10b981;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-top: 4px;
+}
+
+/* Speed note */
+.speed-note {
+  font-size: 12px;
+  color: #52525b;
+  text-align: center;
+  max-width: 340px;
+}
+</style>
+</head>
+<body>
+
+<div style="text-align:center">
+  <h1>Screen Transition Preview</h1>
+  <p class="subtitle">Tap the nav tabs on each phone. Left = no transition. Right = with transition.</p>
+</div>
+
+<!-- Transition picker -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+  <p style="font-size:12px;color:#52525b;letter-spacing:0.06em;text-transform:uppercase">Choose transition style</p>
+  <div class="controls">
+    <button class="ctrl-btn active" data-anim="fade">Fade + slide up</button>
+    <button class="ctrl-btn" data-anim="slide">Slide from right</button>
+    <button class="ctrl-btn" data-anim="pop">Scale pop</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;margin-top:4px">
+    <p style="font-size:12px;color:#52525b">Duration</p>
+    <div class="controls" id="dur-controls">
+      <button class="ctrl-btn" data-dur="100">Fast (100ms)</button>
+      <button class="ctrl-btn active" data-dur="180">Default (180ms)</button>
+      <button class="ctrl-btn" data-dur="300">Slow (300ms)</button>
+    </div>
+  </div>
+</div>
+
+<div class="phones">
+
+  <!-- Phone A: No transition -->
+  <div class="phone-col">
+    <span class="phone-label">No transition (current)</span>
+    <div class="phone" id="phone-a">
+      <!-- Header -->
+      <div class="top-header">
+        <div class="logo"><div class="logo-dot"></div><span class="logo-text">Vector</span></div>
+        <div class="header-icons">
+          <svg class="header-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+      </div>
+      <!-- Content -->
+      <div class="page-area">
+        <div class="page" id="a-home">
+          <div><div class="screen-title">Home</div><div class="screen-subtitle">Recent matches</div></div>
+          <div class="card"><div class="card-title">Mar 29 · Team A vs Team B</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">21–18, 21–15</span><span class="badge">Win</span></div></div>
+          <div class="card"><div class="card-title">Mar 28 · Team A vs Team C</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">18–21, 15–21</span><span class="badge loss">Loss</span></div></div>
+          <div class="card"><div class="card-title">Mar 27 · Team A vs Team D</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">21–19, 21–17</span><span class="badge">Win</span></div></div>
+          <div class="card"><div class="card-title">Mar 25 · Team A vs Team E</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">21–12, 21–14</span><span class="badge">Win</span></div></div>
+        </div>
+        <div class="page hidden" id="a-enter">
+          <div><div class="screen-title">Enter Match</div><div class="screen-subtitle">Record a new result</div></div>
+          <div class="input-row"><div class="input-label">Team 1</div><div class="input-mock">Alex, Jordan</div></div>
+          <div class="input-row"><div class="input-label">Team 2</div><div class="input-mock">Sam, Taylor</div></div>
+          <div class="input-row"><div class="input-label">Score — Game 1</div><div class="input-mock">21 – 18</div></div>
+          <div class="input-row"><div class="input-label">Score — Game 2</div><div class="input-mock">21 – 15</div></div>
+          <div class="enter-btn">Save Match</div>
+        </div>
+        <div class="page hidden" id="a-stats">
+          <div><div class="screen-title">Stats</div><div class="screen-subtitle">Your recent performance</div></div>
+          <div class="pill-row"><span class="pill active">10 Games</span><span class="pill">7 Days</span><span class="pill">1 Month</span></div>
+          <div class="chart-placeholder">
+            <svg viewBox="0 0 288 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <line x1="0" y1="20" x2="288" y2="20" stroke="#3f3f46" stroke-dasharray="3 3"/>
+              <line x1="0" y1="60" x2="288" y2="60" stroke="#3f3f46" stroke-dasharray="3 3"/>
+              <line x1="0" y1="100" x2="288" y2="100" stroke="#3f3f46" stroke-dasharray="3 3"/>
+              <polyline points="20,100 60,85 100,70 140,78 180,55 220,42 268,30" fill="none" stroke="#e4e4e7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="268" cy="30" r="4" fill="#f4f4f5"/>
+            </svg>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-cell"><div class="stat-val">62%</div><div class="stat-lbl">Win %</div></div>
+            <div class="stat-cell"><div class="stat-val">8–5</div><div class="stat-lbl">Record</div></div>
+            <div class="stat-cell"><div class="stat-val">+14</div><div class="stat-lbl">Pt Diff</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom nav -->
+      <nav class="bottom-nav">
+        <button class="nav-tab active" data-phone="a" data-tab="home"><span class="nav-icon">⌘</span><span class="nav-label">Home</span></button>
+        <button class="nav-tab" data-phone="a" data-tab="enter"><span class="nav-icon">⊕</span><span class="nav-label">Enter</span></button>
+        <button class="nav-tab" data-phone="a" data-tab="stats">
+          <span class="nav-icon">
+            <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          </span>
+          <span class="nav-label">Stats</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Phone B: With transition -->
+  <div class="phone-col">
+    <span class="phone-label highlight">With transition</span>
+    <div class="phone" id="phone-b">
+      <div class="top-header">
+        <div class="logo"><div class="logo-dot"></div><span class="logo-text">Vector</span></div>
+        <div class="header-icons">
+          <svg class="header-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+      </div>
+      <div class="page-area">
+        <div class="page" id="b-home">
+          <div><div class="screen-title">Home</div><div class="screen-subtitle">Recent matches</div></div>
+          <div class="card"><div class="card-title">Mar 29 · Team A vs Team B</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">21–18, 21–15</span><span class="badge">Win</span></div></div>
+          <div class="card"><div class="card-title">Mar 28 · Team A vs Team C</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">18–21, 15–21</span><span class="badge loss">Loss</span></div></div>
+          <div class="card"><div class="card-title">Mar 27 · Team A vs Team D</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">21–19, 21–17</span><span class="badge">Win</span></div></div>
+          <div class="card"><div class="card-title">Mar 25 · Team A vs Team E</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="card-meta">21–12, 21–14</span><span class="badge">Win</span></div></div>
+        </div>
+        <div class="page hidden" id="b-enter">
+          <div><div class="screen-title">Enter Match</div><div class="screen-subtitle">Record a new result</div></div>
+          <div class="input-row"><div class="input-label">Team 1</div><div class="input-mock">Alex, Jordan</div></div>
+          <div class="input-row"><div class="input-label">Team 2</div><div class="input-mock">Sam, Taylor</div></div>
+          <div class="input-row"><div class="input-label">Score — Game 1</div><div class="input-mock">21 – 18</div></div>
+          <div class="input-row"><div class="input-label">Score — Game 2</div><div class="input-mock">21 – 15</div></div>
+          <div class="enter-btn">Save Match</div>
+        </div>
+        <div class="page hidden" id="b-stats">
+          <div><div class="screen-title">Stats</div><div class="screen-subtitle">Your recent performance</div></div>
+          <div class="pill-row"><span class="pill active">10 Games</span><span class="pill">7 Days</span><span class="pill">1 Month</span></div>
+          <div class="chart-placeholder">
+            <svg viewBox="0 0 288 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <line x1="0" y1="20" x2="288" y2="20" stroke="#3f3f46" stroke-dasharray="3 3"/>
+              <line x1="0" y1="60" x2="288" y2="60" stroke="#3f3f46" stroke-dasharray="3 3"/>
+              <line x1="0" y1="100" x2="288" y2="100" stroke="#3f3f46" stroke-dasharray="3 3"/>
+              <polyline points="20,100 60,85 100,70 140,78 180,55 220,42 268,30" fill="none" stroke="#e4e4e7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="268" cy="30" r="4" fill="#f4f4f5"/>
+            </svg>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-cell"><div class="stat-val">62%</div><div class="stat-lbl">Win %</div></div>
+            <div class="stat-cell"><div class="stat-val">8–5</div><div class="stat-lbl">Record</div></div>
+            <div class="stat-cell"><div class="stat-val">+14</div><div class="stat-lbl">Pt Diff</div></div>
+          </div>
+        </div>
+      </div>
+      <nav class="bottom-nav">
+        <button class="nav-tab active" data-phone="b" data-tab="home"><span class="nav-icon">⌘</span><span class="nav-label">Home</span></button>
+        <button class="nav-tab" data-phone="b" data-tab="enter"><span class="nav-icon">⊕</span><span class="nav-label">Enter</span></button>
+        <button class="nav-tab" data-phone="b" data-tab="stats">
+          <span class="nav-icon">
+            <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          </span>
+          <span class="nav-label">Stats</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+</div>
+
+<p class="speed-note">Tip: try "Fade + slide up" at 180ms — that's the recommended default for the app.</p>
+
+<script>
+  let currentAnim = "fade";
+  let currentDur = 180;
+  const activeTab = { a: "home", b: "home" };
+
+  // Anim picker
+  document.querySelectorAll("[data-anim]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-anim]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentAnim = btn.dataset.anim;
+    });
+  });
+
+  // Duration picker
+  document.querySelectorAll("[data-dur]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-dur]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentDur = parseInt(btn.dataset.dur);
+      document.documentElement.style.setProperty("--dur", currentDur + "ms");
+    });
+  });
+
+  // Nav tabs
+  document.querySelectorAll(".nav-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const phone = btn.dataset.phone;
+      const tab = btn.dataset.tab;
+      if (activeTab[phone] === tab) return;
+
+      // Update active tab button
+      document.querySelectorAll(`.nav-tab[data-phone="${phone}"]`).forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // Hide current page
+      const oldPage = document.getElementById(`${phone}-${activeTab[phone]}`);
+      if (oldPage) oldPage.classList.add("hidden");
+
+      // Show new page
+      const newPage = document.getElementById(`${phone}-${tab}`);
+      if (newPage) {
+        newPage.classList.remove("hidden");
+
+        // Apply transition only on phone B
+        if (phone === "b") {
+          newPage.classList.remove("fade-enter", "slide-enter", "pop-enter");
+          void newPage.offsetWidth; // force reflow
+          newPage.classList.add(`${currentAnim}-enter`);
+        }
+      }
+
+      activeTab[phone] = tab;
+    });
+  });
+</script>
+</body>
+</html>

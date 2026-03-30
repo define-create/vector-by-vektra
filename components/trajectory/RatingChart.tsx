@@ -88,7 +88,6 @@ export default function RatingChart({ ratingSeries }: RatingChartProps) {
       <div
         ref={wrapRef}
         onTouchStart={(e) => setActiveIndex(indexFromClientX(e.touches[0].clientX))}
-        onTouchMove={(e) => setActiveIndex(indexFromClientX(e.touches[0].clientX))}
       >
         <ResponsiveContainer width="100%" height={200}>
           <LineChart
