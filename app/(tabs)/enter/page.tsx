@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import PlayerSelector from "@/components/enter/PlayerSelector";
 import GameScoreInput, { type GameScore, type GameScoreHandle } from "@/components/enter/GameScoreInput";
@@ -66,6 +67,7 @@ export default function EnterPage() {
   // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [duplicateMatchId, setDuplicateMatchId] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [submittedMatchId, setSubmittedMatchId] = useState<string | null>(null);
   const [ratingsDeferred, setRatingsDeferred] = useState(false);
@@ -184,7 +186,7 @@ export default function EnterPage() {
   }
 
   function canSubmit(): boolean {
-    return playersComplete() && opponentsComplete() && resultComplete();
+    return !duplicateMatchId && playersComplete() && opponentsComplete() && resultComplete();
   }
 
   // ---------------------------------------------------------------------------
@@ -261,10 +263,11 @@ export default function EnterPage() {
   // Submit
   // ---------------------------------------------------------------------------
 
-  async function submit() {
+  async function submit(force = false) {
     if (submitting) return;
     setSubmitting(true);
     setSubmitError(null);
+    setDuplicateMatchId(null);
 
     const body = adminMode
       ? {
@@ -283,6 +286,7 @@ export default function EnterPage() {
             team2Score: Number(g.team2Score),
           })),
           ...(tag.trim() ? { tag: tag.trim() } : {}),
+          ...(force && { force: true }),
         }
       : {
           matchDate,
@@ -296,6 +300,7 @@ export default function EnterPage() {
             team2Score: Number(g.team2Score),
           })),
           ...(tag.trim() ? { tag: tag.trim() } : {}),
+          ...(force && { force: true }),
         };
 
     try {
@@ -308,9 +313,15 @@ export default function EnterPage() {
       const data = (await res.json()) as {
         ok?: boolean;
         error?: string;
+        existingMatchId?: string;
         match?: { id: string };
         ratingsDeferred?: boolean;
       };
+
+      if (res.status === 409) {
+        setDuplicateMatchId(data.existingMatchId ?? null);
+        return;
+      }
 
       if (!res.ok) {
         setSubmitError(data.error ?? "Something went wrong");
@@ -585,18 +596,44 @@ export default function EnterPage() {
               </>
             ) : null}
           </div>
-          {submitError && (
+          {duplicateMatchId ? (
+            <div className="rounded-lg bg-amber-900/30 px-4 py-3 text-amber-300 space-y-3">
+              <p className="text-sm">A match with these players and this score was already recorded today.</p>
+              <Link
+                href={`/match/${duplicateMatchId}`}
+                className="block text-sm underline text-amber-400"
+              >
+                View existing match
+              </Link>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDuplicateMatchId(null)}
+                  className="flex-1 rounded-xl border border-zinc-600 py-2 text-sm text-zinc-300 hover:bg-zinc-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => submit(true)}
+                  className="flex-1 rounded-xl bg-amber-600 py-2 text-sm font-semibold text-white hover:bg-amber-500"
+                >
+                  Save anyway
+                </button>
+              </div>
+            </div>
+          ) : submitError ? (
             <p className="rounded-lg bg-rose-900/30 px-4 py-3 text-rose-400">
               {submitError}
             </p>
-          )}
+          ) : null}
         </div>
       </div>
 
       <div className="border-t border-zinc-800 px-4 py-4">
         <button
           type="button"
-          onClick={submit}
+          onClick={() => submit()}
           disabled={submitting || !canSubmit()}
           className={[
             "w-full rounded-xl py-3 font-semibold transition-colors",

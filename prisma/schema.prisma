@@ -134,6 +134,7 @@ model Match {
   voidedAt        DateTime?
   flaggedAt       DateTime?   // set when anomaly threshold is exceeded
   flagReason      String?     // e.g. "anomaly:high_volume"
+  fingerprint     String?
   dataSource      DataSource  @default(manual)
   createdAt       DateTime    @default(now())
 

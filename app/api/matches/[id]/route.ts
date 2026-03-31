@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { computeMatchFingerprint } from "@/lib/services/matchFingerprint";
 import { runRecompute } from "@/lib/services/recompute";
 
 // ---------------------------------------------------------------------------
@@ -18,6 +19,7 @@ interface GameUpdateInput {
 interface PatchMatchBody {
   games?: GameUpdateInput[];
   tag?: string; // optional event/league label update
+  force?: boolean; // bypass duplicate check
 }
 
 export async function PATCH(
@@ -88,6 +90,42 @@ export async function PATCH(
     // Sanitize tag
     const tagValue = hasTag ? (body.tag!.trim().replace(/\s+/g, " ") || null) : undefined;
 
+    // ---------------------------------------------------------------------------
+    // Fingerprint recompute on score edit
+    // ---------------------------------------------------------------------------
+    // undefined = don't touch; null = clear; string = new value
+    let updatedFingerprint: string | null | undefined = undefined;
+
+    if (hasGames && !body.force) {
+      const participants = await prisma.matchParticipant.findMany({
+        where: { matchId: id },
+        orderBy: { team: "asc" },
+      });
+      const team1 = participants.filter((p) => p.team === 1).map((p) => p.playerId);
+      const team2 = participants.filter((p) => p.team === 2).map((p) => p.playerId);
+
+      const newFingerprint = computeMatchFingerprint(
+        [team1[0]!, team1[1]!],
+        [team2[0]!, team2[1]!],
+        new Date(match.matchDate),
+        body.games!
+      );
+
+      const collision = await prisma.match.findFirst({
+        where: { fingerprint: newFingerprint, voidedAt: null, id: { not: id } },
+      });
+
+      if (collision) {
+        return NextResponse.json(
+          { error: "duplicate_match", existingMatchId: collision.id },
+          { status: 409 }
+        );
+      }
+      updatedFingerprint = newFingerprint;
+    } else if (hasGames && body.force) {
+      updatedFingerprint = null;
+    }
+
     // Update games and/or tag in a transaction
     const updated = await prisma.$transaction(async (tx) => {
       if (hasGames) {
@@ -102,9 +140,15 @@ export async function PATCH(
         });
       }
 
-      // Update tag only if explicitly provided (tagValue === null clears it)
-      if (hasTag) {
-        await tx.match.update({ where: { id }, data: { tag: tagValue } });
+      // Update tag and/or fingerprint if changed
+      if (hasTag || updatedFingerprint !== undefined) {
+        await tx.match.update({
+          where: { id },
+          data: {
+            ...(hasTag && { tag: tagValue }),
+            ...(updatedFingerprint !== undefined && { fingerprint: updatedFingerprint }),
+          },
+        });
       }
 
       return tx.match.findUnique({

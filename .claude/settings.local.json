@@ -53,7 +53,10 @@
       "Bash(rmdir components/tournament app/api/tournament)",
       "Bash(find d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -name *layout* -type f)",
       "Bash(grep -rn \"onMouseMove\\\\|onMouseLeave\\\\|onTouchMove\\\\|onTouchEnd\\\\|activeTooltipIndex\\\\|activeDot\\\\|CategoricalChartState\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/ --include=*.tsx --include=*.ts)",
-      "Bash(grep -rn \"CategoricalChartState\\\\|activeTooltipIndex\\\\|onMouseMove.*activeTooltip\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/node_modules/recharts/types/ --include=*.d.ts)"
+      "Bash(grep -rn \"CategoricalChartState\\\\|activeTooltipIndex\\\\|onMouseMove.*activeTooltip\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/node_modules/recharts/types/ --include=*.d.ts)",
+      "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/\")",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(grep -r \"validation\\\\|validate\\\\|error\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components/enter/*.tsx)"
     ]
   }
 }

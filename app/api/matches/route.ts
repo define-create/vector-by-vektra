@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { findOrCreateShadowPlayer } from "@/lib/services/players";
+import { computeMatchFingerprint } from "@/lib/services/matchFingerprint";
 import { runRecompute } from "@/lib/services/recompute";
 import { redis } from "@/lib/rate-limit";
 import { sendFlagNotification } from "@/lib/email";
@@ -32,6 +33,7 @@ interface CreateMatchBody {
   outcome: "win" | "loss"; // team 1's perspective
   games: GameInput[];
   tag?: string; // optional event/league label
+  force?: boolean; // bypass duplicate check
 }
 
 // ---------------------------------------------------------------------------
@@ -223,14 +225,51 @@ export async function POST(req: NextRequest) {
     // Sanitize tag
     const tag = typeof body.tag === "string" ? (body.tag.trim().replace(/\s+/g, " ") || null) : null;
 
+    // ---------------------------------------------------------------------------
+    // Duplicate fingerprint check
+    // ---------------------------------------------------------------------------
+    let matchFingerprint: string | null = null;
+
+    if (!body.force) {
+      const fingerprint = computeMatchFingerprint(
+        [team1P1.id, partnerPlayer.id],
+        [opp1Player.id, opp2Player.id],
+        matchDate,
+        body.games
+      );
+
+      const existing = await prisma.match.findFirst({
+        where: { fingerprint, voidedAt: null },
+      });
+
+      if (existing) {
+        if (existing.enteredByUserId === session.user.id) {
+          // Same user re-entering their own match — allow silently, no fingerprint
+          matchFingerprint = null;
+        } else {
+          // Different user — soft 409 warning
+          return NextResponse.json(
+            { error: "duplicate_match", existingMatchId: existing.id },
+            { status: 409 }
+          );
+        }
+      } else {
+        matchFingerprint = fingerprint;
+      }
+    }
+
     // Create match + participants + games in a transaction
-    const match = await prisma.$transaction(async (tx) => {
+    // eslint-disable-next-line prefer-const
+    let match!: Awaited<ReturnType<typeof prisma.match.create>>;
+    try {
+    match = await prisma.$transaction(async (tx) => {
       const created = await tx.match.create({
         data: {
           enteredByUserId: session.user.id,
           matchDate,
           tag,
           dataSource: "manual",
+          fingerprint: matchFingerprint,
         },
       });
 
@@ -262,6 +301,20 @@ export async function POST(req: NextRequest) {
 
       return created;
     });
+    } catch (err: unknown) {
+      const prismaErr = err as { code?: string; meta?: { target?: string[] } };
+      if (prismaErr?.code === "P2002" && prismaErr?.meta?.target?.includes("fingerprint")) {
+        const conflicting = await prisma.match.findFirst({
+          where: { fingerprint: matchFingerprint, voidedAt: null },
+          select: { id: true },
+        });
+        return NextResponse.json(
+          { error: "duplicate_match", existingMatchId: conflicting?.id ?? null },
+          { status: 409 }
+        );
+      }
+      throw err;
+    }
 
     const recomputeResult = await runRecompute("admin", "auto: new match", matchDate);
 
