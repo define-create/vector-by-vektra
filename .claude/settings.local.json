@@ -56,7 +56,10 @@
       "Bash(grep -rn \"CategoricalChartState\\\\|activeTooltipIndex\\\\|onMouseMove.*activeTooltip\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/node_modules/recharts/types/ --include=*.d.ts)",
       "Bash(ls -la \"/d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\(tabs\\)/\")",
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
-      "Bash(grep -r \"validation\\\\|validate\\\\|error\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components/enter/*.tsx)"
+      "Bash(grep -r \"validation\\\\|validate\\\\|error\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components/enter/*.tsx)",
+      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -type f -name *[Ee]nter*)",
+      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\))",
+      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/enter)"
     ]
   }
 }

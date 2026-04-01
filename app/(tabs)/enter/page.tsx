@@ -79,6 +79,9 @@ export default function EnterPage() {
 
   // Ref to GameScoreInput for imperative focus on win selection
   const gameScoreRef = useRef<GameScoreHandle>(null);
+  // Ref to submit footer — scrolled into view when form becomes submittable
+  const submitRef = useRef<HTMLDivElement>(null);
+  const prevSubmitReady = useRef(false);
 
   // ---------------------------------------------------------------------------
   // Load recent players + tags on mount
@@ -188,6 +191,19 @@ export default function EnterPage() {
   function canSubmit(): boolean {
     return !duplicateMatchId && playersComplete() && opponentsComplete() && resultComplete();
   }
+
+  const submitReady = canSubmit();
+
+  // Scroll submit button into view when the form first becomes submittable
+  // (e.g. after filling in scores while the mobile keyboard is still open)
+  useEffect(() => {
+    if (submitReady && !prevSubmitReady.current) {
+      setTimeout(() => {
+        submitRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 150);
+    }
+    prevSubmitReady.current = submitReady;
+  }, [submitReady]);
 
   // ---------------------------------------------------------------------------
   // Chip-tap assignment — fills the next empty slot in order
@@ -630,14 +646,14 @@ export default function EnterPage() {
         </div>
       </div>
 
-      <div className="border-t border-zinc-800 px-4 py-4">
+      <div ref={submitRef} className="border-t border-zinc-800 px-4 py-4">
         <button
           type="button"
           onClick={() => submit()}
-          disabled={submitting || !canSubmit()}
+          disabled={submitting || !submitReady}
           className={[
             "w-full rounded-xl py-3 font-semibold transition-colors",
-            submitting || !canSubmit()
+            submitting || !submitReady
               ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
               : "bg-emerald-500 text-white hover:bg-emerald-400",
           ].join(" ")}
