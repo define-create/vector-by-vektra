@@ -1,15 +1,26 @@
 
+New Ideas:
+0.1. Club level membership. Players in club-ecosystem. (option to be visible outside the club)
+0.2. Individual player stats screen. 
+  - ".vs" mode - select player and get the game stats you played vs. that specific player
+  - "with" mode - select player and get the game stats you played vs. that specific player
+  - allow date range or event tag filtering
+0.3. Membership plans: 
+  - basic (all features, 30-days free )
+  - Pro (all features which are visible during 30-day trail) 
+  - Club (all features, isolated player eco-system)
+  - Admin (void matches, run recalc, enter for others, ... )
+  - SuperAdmin (me) (flagged for potential abuse,...)
+
+
 
 Potential Issues
 High Priority
 1. ~~Email verification is broken in production~~ ✓ RESOLVED — Resend configured with michianapickleball.com, RESEND_API_KEY and EMAIL_FROM set in Vercel, smoke-tested end-to-end.
 
-2. ClaimProfilePrompt: user stuck on screen after creating/claiming a profile
-After a successful POST /api/players (or POST /api/players/:id/claim), the component calls router.refresh(). In the (tabs) App Router layout this doesn't reliably re-render the parent server component, so the user stays on the "Set up your player profile" screen and nav taps do nothing.
-Fix: replace router.refresh() with router.push('/command') in both handleCreate and handleClaim (components/command/ClaimProfilePrompt.tsx lines 183 and 204).
+2. ~~ClaimProfilePrompt: user stuck on screen after creating/claiming a profile~~ ✓ RESOLVED — Both handleClaim and handleCreate already call router.push('/command') on success (ClaimProfilePrompt.tsx lines 185 and 206). The fix described in this note was already applied. Confirmed via code inspection 2026-04-01.
 
-3. ClaimProfilePrompt: "Find Your Stats" search returns no results
-Search hits /api/players/search?unclaimed=true — only returns players where userId IS NULL. Needs investigation: confirm whether the shadow profile for the test user existed and was truly unclaimed, or whether the search filter itself is too strict (e.g. claimed=false vs userId=null mismatch).
+3. ~~ClaimProfilePrompt: "Find Your Stats" search returns no results~~ ✓ RESOLVED — The search filter in /api/players/search uses { userId: null } (line 35), which is the correct condition for unclaimed shadow profiles. No claimed=false vs userId=null mismatch exists in current code. Confirmed via code inspection 2026-04-01.
 
 4. ~~No rate limiting on API routes~~ ✓ RESOLVED — Upstash Redis rate limiting added via proxy.ts (sliding window: 5 req/60s on auth mutations, 10 req/60s on sign-in, 30 req/60s on match entry). middleware.ts migrated to proxy.ts per Next.js 16 convention.
 
@@ -43,25 +54,25 @@ Lower Priority / Design Considerations
 10. No draft/recovery on match entry
 The multi-step Enter form uses local React state. Navigating away mid-entry loses everything. No draft saved to localStorage or DB.
 
+22. ~~Submit button hidden behind nav when form is ready~~ ✓ RESOLVED — When canSubmit() transitions false→true (all players and scores filled), the submit footer auto-scrolls into view via scrollIntoView({ behavior: "smooth", block: "nearest" }) with a 150ms delay to allow the mobile keyboard to start dismissing first. Implemented in app/(tabs)/enter/page.tsx using submitRef on the footer div and a useEffect that tracks the previous submitReady value.
+
+23. ~~"Enter" nav tab confused with "submit match" action~~ ✓ RESOLVED — Renamed BottomNav tab label from "Enter" to "Match" (components/nav/BottomNav.tsx). Removes the ambiguity between the navigation tab and the match-entry submit action on the same screen.
+
 11. publish/vercel branch is stale
 From the git graph, publish/vercel diverged from an older commit (before tasks 9–12). If Vercel is deploying from that branch, the live app is missing the last 4 features. Worth verifying which branch Vercel is tracking.
 
 12. ~~Tag matching is case-sensitive and exact~~ ✓ RESOLVED — Tags are now normalized at write time (trim + collapse whitespace + toLowerCase) in POST /api/matches, PATCH /api/matches/[id], and POST /api/admin/tags (rename destination). New tags will never produce case or whitespace duplicates. Existing mixed-case tags in DB can be cleaned up via the admin rename tool.
 
-13. No soft-delete for players
-Matches have voidedAt. Players don't — a "deleted" player would need to be manually handled. The merge tool is the closest thing.
+13. ~~No soft-delete for players~~ ✓ RESOLVED — Player.deletedAt DateTime? exists in schema and is fully wired up. POST /api/admin/players/bulk-delete soft-deletes orphaned shadow profiles (no match history) by setting deletedAt. All queries filter deletedAt: null so deleted players are invisible app-wide. Players with match history intentionally cannot be deleted — use the merge tool for those.
 
 14. No end-to-end tests
 All 104 tests are unit tests. No integration tests cover the API routes or the full auth flow.
 
-18. Think About: match entry abuse prevention
-A motivated bad actor could spam POST /api/matches to inflate or tank player ratings. The existing rate limiter allows 30 match submissions per 60s per user — high enough to be ineffective against deliberate abuse.
-Options to consider:
-  a) Tighten the rate limit (e.g. 5–10 matches per hour per user) — simple but may frustrate admins entering a full tournament day.
-  b) Admin-only match entry (non-admin users can only enter matches for themselves and only as a participant) — architectural, requires role-aware entry flow.
-  c) Require both teams to confirm a match before it counts toward ratings — adds friction but makes stuffing impossible.
-  d) Anomaly detection: flag users who enter >N matches in a session for admin review without blocking them.
-No immediate action needed — worth revisiting when the user base grows or if rating manipulation is observed.
+18. ~~Think About: match entry abuse prevention~~ ✓ RESOLVED (a, b, d implemented; c deferred) —
+  a) ✓ Rate limit tightened: non-admin users capped at 20 matches/hr (matchEntryLimiterUser), admins at 500/hr (matchEntryLimiterAdmin) — separate limiters avoid frustrating tournament admins.
+  b) ✓ Admin-only for entering on behalf of others: adminMode=true requires role=admin; normal users are always locked in as team1P1.
+  c) ✗ Deferred — mutual match confirmation not implemented; adds significant friction, low priority at current scale.
+  d) ✓ Anomaly detection: >10 matches/hr by a non-admin flags those matches (flaggedAt, flagReason: "anomaly:high_volume") and sends a one-per-hour email alert to all admins.
 
 17. Feedback / Contact button for app users
 Add a way for logged-in users to send feedback or contact support. A button (e.g. in the nav, settings, or a dedicated Help screen) opens a simple form (subject + message). On submit, sends an email to vectorbyvektra@gmail.com via the existing Resend integration. No new email provider needed — just a new API route (e.g. POST /api/feedback) that calls Resend with the user's email as reply-to so responses go directly to them.

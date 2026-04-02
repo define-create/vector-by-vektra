@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { FeedbackSheet } from "@/components/nav/FeedbackSheet";
 
 const SCREEN_NAMES: Record<string, string> = {
   "/command": " ",
@@ -14,6 +16,7 @@ export default function TopHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Match on the first path segment (e.g. "/stats/..." → "/stats")
   const segment = "/" + (pathname.split("/")[1] ?? "");
@@ -41,6 +44,16 @@ export default function TopHeader() {
               </svg>
             </Link>
           )}
+          <button
+            type="button"
+            onClick={() => setFeedbackOpen(true)}
+            aria-label="Send feedback"
+            className="text-zinc-400 hover:text-zinc-200 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
           <Link href="/profile" aria-label="Profile">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
               <circle cx="12" cy="8" r="4" />
@@ -49,6 +62,13 @@ export default function TopHeader() {
           </Link>
         </div>
       </div>
+      {session?.user?.email && (
+        <FeedbackSheet
+          open={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          userEmail={session.user.email}
+        />
+      )}
     </header>
   );
 }

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vector — Feedback Sheet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --zinc-950: #09090b;
+      --zinc-900: #18181b;
+      --zinc-800: #27272a;
+      --zinc-700: #3f3f46;
+      --zinc-600: #52525b;
+      --zinc-500: #71717a;
+      --zinc-400: #a1a1aa;
+      --zinc-300: #d4d4d8;
+      --zinc-200: #e4e4e7;
+      --zinc-50:  #fafafa;
+      --emerald-500: #10b981;
+      --emerald-400: #34d399;
+      --red-400: #f87171;
+    }
+
+    body {
+      background: #111;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--zinc-50);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      gap: 48px;
+    }
+
+    h1 {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--zinc-500);
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 390px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+      align-self: flex-start;
+    }
+
+    /* ── Phone shell ── */
+    .phone {
+      width: 390px;
+      height: 720px;
+      background: var(--zinc-950);
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--zinc-800);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+    }
+
+    /* ── Top Header ── */
+    .top-header {
+      height: 56px;
+      background: var(--zinc-950);
+      border-bottom: 1px solid var(--zinc-800);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--emerald-500);
+    }
+
+    .wordmark {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--zinc-50);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--zinc-400);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      transition: color 0.15s;
+    }
+
+    .icon-btn:hover { color: var(--zinc-200); }
+
+    .icon-btn.active {
+      color: var(--zinc-50);
+    }
+
+    /* ── Screen body ── */
+    .screen-body {
+      height: calc(100% - 56px - 64px);
+      background: var(--zinc-950);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen-hint {
+      font-size: 13px;
+      color: var(--zinc-700);
+    }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      height: 64px;
+      background: var(--zinc-950);
+      border-top: 1px solid var(--zinc-800);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--zinc-500);
+    }
+
+    .nav-item.active { color: var(--zinc-50); }
+
+    /* ── Backdrop ── */
+    .backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 20;
+    }
+
+    /* ── Bottom Sheet ── */
+    .sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      background: var(--zinc-900);
+      border-top: 1px solid var(--zinc-700);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .drag-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--zinc-700);
+      margin: 0 auto 4px;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sheet-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--zinc-50);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--zinc-500);
+      font-size: 16px;
+      line-height: 1;
+      padding: 2px;
+    }
+
+    .reply-hint {
+      font-size: 12px;
+      color: var(--zinc-500);
+    }
+
+    .reply-hint span {
+      color: var(--zinc-400);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--zinc-500);
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      background: var(--zinc-800);
+      border: 1px solid var(--zinc-600);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--zinc-50);
+      outline: none;
+      resize: none;
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder {
+      color: var(--zinc-500);
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--zinc-400);
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--zinc-200);
+      color: #18181b;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .submit-btn:hover { background: #fff; }
+
+    .submit-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── Success state ── */
+    .success-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 0 8px;
+      text-align: center;
+    }
+
+    .success-check {
+      font-size: 32px;
+      color: var(--emerald-400);
+    }
+
+    .success-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--zinc-100);
+    }
+
+    .success-sub {
+      font-size: 12px;
+      color: var(--zinc-500);
+    }
+
+    /* ── Labels ── */
+    .state-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--zinc-600);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Feedback Sheet — States</h1>
+
+  <!-- STATE 1: Header with feedback icon (closed) -->
+  <div class="section">
+    <div class="section-label">1 · Header — feedback icon visible</div>
+    <div class="phone">
+      <div class="top-header">
+        <div class="header-left">
+          <div class="dot"></div>
+          <span class="wordmark">Vector</span>
+        </div>
+        <div class="header-right">
+          <!-- Feedback bubble icon -->
+          <button class="icon-btn" title="Send feedback">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+          <!-- Profile icon -->
+          <button class="icon-btn" title="Profile">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <span class="screen-hint">app content</span>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item">
+          <span style="font-size:16px;line-height:1">⊕</span>
+          <span>Match</span>
+        </div>
+        <div class="nav-item">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Stats</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-label">Non-admin: bubble + profile only</div>
+  </div>
+
+  <!-- STATE 1b: Admin header (gear + bubble + profile) -->
+  <div class="section">
+    <div class="section-label">1b · Header — admin user (3 icons)</div>
+    <div class="phone">
+      <div class="top-header">
+        <div class="header-left">
+          <div class="dot"></div>
+          <span class="wordmark">Vector</span>
+        </div>
+        <div class="header-right">
+          <!-- Admin gear -->
+          <button class="icon-btn" title="Admin">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </button>
+          <!-- Feedback bubble -->
+          <button class="icon-btn active" title="Send feedback">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+          <!-- Profile icon -->
+          <button class="icon-btn" title="Profile">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <span class="screen-hint">app content</span>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item">
+          <span style="font-size:16px;line-height:1">⊕</span>
+          <span>Match</span>
+        </div>
+        <div class="nav-item">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Stats</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-label">Admin: gear + bubble + profile</div>
+  </div>
+
+  <!-- STATE 2: Sheet open, empty form -->
+  <div class="section">
+    <div class="section-label">2 · Sheet open — empty (submit disabled)</div>
+    <div class="phone">
+      <div class="top-header">
+        <div class="header-left">
+          <div class="dot"></div>
+          <span class="wordmark">Vector</span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn active">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+          <button class="icon-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <span class="screen-hint">app content</span>
+      </div>
+      <div class="backdrop"></div>
+      <div class="sheet">
+        <div class="drag-handle"></div>
+        <div class="sheet-header">
+          <span class="sheet-title">Feedback</span>
+          <button class="close-btn">✕</button>
+        </div>
+        <p class="reply-hint">We'll reply to: <span>alex@example.com</span></p>
+        <div class="field">
+          <label class="field-label">Subject <span style="text-transform:none;font-weight:400">(optional)</span></label>
+          <input type="text" placeholder="e.g. Bug report, feature idea…" />
+        </div>
+        <div class="field">
+          <label class="field-label">Message</label>
+          <textarea rows="4" placeholder="Tell us what's on your mind…"></textarea>
+        </div>
+        <button class="submit-btn" disabled>Send Feedback</button>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item"><span style="font-size:16px;line-height:1">⊕</span><span>Match</span></div>
+        <div class="nav-item">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Stats</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-label">Submit disabled until message has content</div>
+  </div>
+
+  <!-- STATE 3: Sheet open, filled form -->
+  <div class="section">
+    <div class="section-label">3 · Sheet open — ready to submit</div>
+    <div class="phone">
+      <div class="top-header">
+        <div class="header-left">
+          <div class="dot"></div>
+          <span class="wordmark">Vector</span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn active">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+          <button class="icon-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <span class="screen-hint">app content</span>
+      </div>
+      <div class="backdrop"></div>
+      <div class="sheet">
+        <div class="drag-handle"></div>
+        <div class="sheet-header">
+          <span class="sheet-title">Feedback</span>
+          <button class="close-btn">✕</button>
+        </div>
+        <p class="reply-hint">We'll reply to: <span>alex@example.com</span></p>
+        <div class="field">
+          <label class="field-label">Subject <span style="text-transform:none;font-weight:400">(optional)</span></label>
+          <input type="text" value="Score edit bug" style="border-color: var(--zinc-400);" />
+        </div>
+        <div class="field">
+          <label class="field-label">Message</label>
+          <textarea rows="4" style="border-color: var(--zinc-400);">After editing a match score the rating doesn't seem to update. Refreshing fixes it but it's confusing.</textarea>
+        </div>
+        <button class="submit-btn">Send Feedback</button>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item"><span style="font-size:16px;line-height:1">⊕</span><span>Match</span></div>
+        <div class="nav-item">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Stats</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-label">Submit active — white button</div>
+  </div>
+
+  <!-- STATE 4: Success -->
+  <div class="section">
+    <div class="section-label">4 · Success — auto-closes after 2s</div>
+    <div class="phone">
+      <div class="top-header">
+        <div class="header-left">
+          <div class="dot"></div>
+          <span class="wordmark">Vector</span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn active">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+          <button class="icon-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <span class="screen-hint">app content</span>
+      </div>
+      <div class="backdrop"></div>
+      <div class="sheet">
+        <div class="drag-handle"></div>
+        <div class="sheet-header">
+          <span class="sheet-title">Feedback</span>
+          <button class="close-btn">✕</button>
+        </div>
+        <div class="success-state">
+          <div class="success-check">✓</div>
+          <p class="success-title">Thanks for the feedback!</p>
+          <p class="success-sub">We'll reply to alex@example.com</p>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item"><span style="font-size:16px;line-height:1">⊕</span><span>Match</span></div>
+        <div class="nav-item">
+          <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="8" width="4" height="6" fill="currentColor" rx="0.5"/><rect x="6" y="4" width="4" height="10" fill="currentColor" rx="0.5"/><rect x="12" y="0" width="4" height="14" fill="currentColor" rx="0.5"/></svg>
+          <span>Stats</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-label">Sheet closes automatically after 2 seconds</div>
+  </div>
+
+</body>
+</html>

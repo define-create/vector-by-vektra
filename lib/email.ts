@@ -141,6 +141,43 @@ export async function sendPasswordResetEmail(email: string, rawToken: string): P
   });
 }
 
+export async function sendFeedbackEmail(params: {
+  fromEmail: string;
+  subject: string;
+  message: string;
+}): Promise<void> {
+  const { fromEmail, subject, message } = params;
+
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("RESEND_API_KEY is not configured.");
+    }
+    console.log(`[email] Feedback from ${fromEmail}: ${message}`);
+    return;
+  }
+
+  // HTML-escape user content before interpolating into HTML
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "Vector by Vektra <noreply@yourdomain.com>",
+    to: "vectorbyvektra@gmail.com",
+    replyTo: fromEmail,
+    subject: `[Vector Feedback] ${esc(subject) || "(no subject)"}`,
+    html: `
+      <p><strong>From:</strong> ${esc(fromEmail)}</p>
+      ${subject ? `<p><strong>Subject:</strong> ${esc(subject)}</p>` : ""}
+      <p><strong>Message:</strong></p>
+      <pre style="white-space:pre-wrap;font-family:inherit">${esc(message)}</pre>
+      <p style="font-size:12px;color:#71717a;">Sent via Vector by Vektra feedback form.</p>
+    `,
+  });
+}
+
 export async function sendVerificationEmail(email: string, rawToken: string): Promise<void> {
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
   const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${rawToken}`;

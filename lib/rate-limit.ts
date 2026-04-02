@@ -41,3 +41,11 @@ export const matchEntryLimiterAdmin = new Ratelimit({
   ephemeralCache: new Map(),
   prefix: "rl:match-entry-admin",
 });
+
+// Feedback: 3 per 10 minutes per user (anti-spam)
+export const feedbackLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "10 m"),
+  ephemeralCache: new Map(),
+  prefix: "rl:feedback",
+});
