@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TagSelector } from "@/components/events/TagSelector";
 import { Podium } from "@/components/events/Podium";
 import { LeaderboardTable } from "@/components/events/LeaderboardTable";
@@ -8,10 +8,20 @@ import { EventMatchList } from "@/components/events/EventMatchList";
 import { type EventData } from "@/lib/services/events";
 
 export default function TournamentPage() {
+  const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [data, setData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/tags")
+      .then((r) => r.json())
+      .then((d: { tags: { tag: string }[] }) =>
+        setAllTags(d.tags?.map((t) => t.tag) ?? []),
+      )
+      .catch(() => {});
+  }, []);
 
   async function loadTag(tag: string) {
     if (!tag) {
@@ -52,7 +62,7 @@ export default function TournamentPage() {
       </div>
 
       {/* Tag selector */}
-      <TagSelector value={selectedTag} onChange={loadTag} />
+      <TagSelector value={selectedTag} onChange={loadTag} tags={allTags} />
 
       {/* Empty state */}
       {!selectedTag && (

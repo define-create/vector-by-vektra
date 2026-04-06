@@ -59,7 +59,8 @@
       "Bash(grep -r \"validation\\\\|validate\\\\|error\" /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/components/enter/*.tsx)",
       "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -type f -name *[Ee]nter*)",
       "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\))",
-      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/enter)"
+      "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/enter)",
+      "Bash(xargs cat:*)"
     ]
   }
 }
