@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
       voidedAt: m.voidedAt,
       flaggedAt: m.flaggedAt,
       flagReason: m.flagReason,
+      tag: m.tag ?? null,
       dataSource: m.dataSource,
       enteredBy: m.enteredBy,
       team1: m.participants

@@ -8,8 +8,8 @@ const LINKS = [
   },
   {
     href: "/admin/matches",
-    title: "Void Matches",
-    description: "Search and void incorrect match records.",
+    title: "Void / Edit Matches",
+    description: "Search, edit, or void match records.",
   },
   {
     href: "/admin/players",

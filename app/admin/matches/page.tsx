@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import EditMatchModal from "@/components/admin/EditMatchModal";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,6 +26,7 @@ interface AdminMatch {
   voidedAt: string | null;
   flaggedAt: string | null;
   flagReason: string | null;
+  tag: string | null;
   team1: MatchPlayer[];
   team2: MatchPlayer[];
   games: GameScore[];
@@ -49,6 +51,9 @@ export default function AdminMatchesPage() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [voidingId, setVoidingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Edit modal state
+  const [editingMatch, setEditingMatch] = useState<AdminMatch | null>(null);
 
   // Debounce query
   useEffect(() => {
@@ -126,7 +131,7 @@ export default function AdminMatchesPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold text-zinc-50">Void Matches</h1>
+        <h1 className="text-2xl font-bold text-zinc-50">Void / Edit Matches</h1>
         {flaggedCount > 0 && (
           <span className="rounded-full bg-rose-600 px-2.5 py-0.5 text-xs font-semibold text-white">
             {flaggedCount} flagged
@@ -165,7 +170,7 @@ export default function AdminMatchesPage() {
         <table className="w-full text-sm">
           <thead className="border-b border-zinc-800 bg-zinc-900">
             <tr>
-              {["Date", "Team 1", "Team 2", "Score", "Entered by", "Status", ""].map((h) => (
+              {["Date", "Team 1", "Team 2", "Score", "Event", "Entered by", "Status", ""].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-medium text-zinc-500">
                   {h}
                 </th>
@@ -175,13 +180,13 @@ export default function AdminMatchesPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-zinc-500">
                   Loading…
                 </td>
               </tr>
             ) : matches.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-zinc-500">
                   No matches found
                 </td>
               </tr>
@@ -196,6 +201,13 @@ export default function AdminMatchesPage() {
                     {m.team2.map((p) => p.displayName).join(" & ")}
                   </td>
                   <td className="px-4 py-3 font-mono text-zinc-400">{gameScore(m.games)}</td>
+                  <td className="px-4 py-3 text-zinc-400">
+                    {m.tag ? (
+                      <span className="block max-w-[120px] truncate text-xs" title={m.tag}>
+                        {m.tag}
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3 text-zinc-400">{m.enteredBy.handle}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
@@ -220,13 +232,22 @@ export default function AdminMatchesPage() {
                   </td>
                   <td className="px-4 py-3">
                     {!m.voidedAt && (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmId(m.id)}
-                        className="rounded-lg border border-rose-800 px-3 py-1 text-xs text-rose-400 hover:bg-rose-900/30"
-                      >
-                        Void
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingMatch(m)}
+                          className="rounded-lg border border-blue-800 px-3 py-1 text-xs text-blue-400 hover:bg-blue-900/30"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmId(m.id)}
+                          className="rounded-lg border border-rose-800 px-3 py-1 text-xs text-rose-400 hover:bg-rose-900/30"
+                        >
+                          Void
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -259,6 +280,18 @@ export default function AdminMatchesPage() {
             Next
           </button>
         </div>
+      )}
+
+      {/* Edit match modal */}
+      {editingMatch && (
+        <EditMatchModal
+          match={editingMatch}
+          onClose={() => setEditingMatch(null)}
+          onSaved={() => {
+            fetchMatches();
+            setEditingMatch(null);
+          }}
+        />
       )}
 
       {/* Confirmation dialog */}

@@ -48,6 +48,7 @@ enum RatingRunStatus {
 
 enum AuditActionType {
   void_match
+  edit_match
   merge_player
   edit_player_identity
   claim_profile
@@ -135,6 +136,7 @@ model Match {
   flaggedAt       DateTime?   // set when anomaly threshold is exceeded
   flagReason      String?     // e.g. "anomaly:high_volume"
   fingerprint     String?
+  replacesMatchId String?     // set when this match was created by an admin edit (points to the voided original)
   dataSource      DataSource  @default(manual)
   createdAt       DateTime    @default(now())
 
