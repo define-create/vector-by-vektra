@@ -60,7 +60,10 @@
       "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra -type f -name *[Ee]nter*)",
       "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\))",
       "Bash(ls -la /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/\\\\\\(tabs\\\\\\)/enter)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/\"next.config*)",
+      "Bash(npx jest:*)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('next:', p.dependencies.next\\)\")"
     ]
   }
 }

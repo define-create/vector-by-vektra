@@ -82,6 +82,8 @@ export default function EnterPage() {
   // Ref to submit footer — scrolled into view when form becomes submittable
   const submitRef = useRef<HTMLDivElement>(null);
   const prevSubmitReady = useRef(false);
+  // Ref to duplicate warning — scrolled into view when a 409 is received
+  const duplicateRef = useRef<HTMLDivElement>(null);
 
   // ---------------------------------------------------------------------------
   // Load recent players + tags on mount
@@ -204,6 +206,14 @@ export default function EnterPage() {
     }
     prevSubmitReady.current = submitReady;
   }, [submitReady]);
+
+  useEffect(() => {
+    if (duplicateMatchId) {
+      setTimeout(() => {
+        duplicateRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 150);
+    }
+  }, [duplicateMatchId]);
 
   // ---------------------------------------------------------------------------
   // Chip-tap assignment — fills the next empty slot in order
@@ -613,7 +623,7 @@ export default function EnterPage() {
             ) : null}
           </div>
           {duplicateMatchId ? (
-            <div className="rounded-lg bg-amber-900/30 px-4 py-3 text-amber-300 space-y-3">
+            <div ref={duplicateRef} className="rounded-lg bg-amber-900/30 px-4 py-3 text-amber-300 space-y-3">
               <p className="text-sm">A match with these players and this score was already recorded today.</p>
               <Link
                 href={`/match/${duplicateMatchId}`}
