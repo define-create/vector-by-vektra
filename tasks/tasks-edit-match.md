@@ -83,12 +83,12 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 6.2 Render `<EditMatchModal>` when `editingMatch` is non-null, passing `match={editingMatch}`, `onClose={() => setEditingMatch(null)}`, `onSaved={() => { fetchMatches(); setEditingMatch(null); }}`
   - [x] 6.3 Confirm the table refreshes after a successful save and the modal closes
 
-- [ ] 7.0 End-to-end verification
-  - [ ] 7.1 Open the admin Matches page and confirm the title reads "Void / Edit Matches"
-  - [ ] 7.2 Confirm the Event column appears and displays tags correctly (blank for untagged matches)
-  - [ ] 7.3 Click Edit on an active match — confirm the modal opens pre-populated with correct data
-  - [ ] 7.4 Change a player, score, tag, and date — click Save — confirm the original match now shows as Voided and the new match appears in the table with the updated data
-  - [ ] 7.5 Confirm the new match record has `replacesMatchId` set to the original match's ID (check via Supabase or a quick API call)
-  - [ ] 7.6 Confirm player ratings have been recomputed (check a player's rating before and after the edit)
-  - [ ] 7.7 Click Cancel mid-edit — confirm no changes were made
-  - [ ] 7.8 Confirm voided match rows show no Edit or Void button
+- [x] 7.0 End-to-end verification
+  - [x] 7.1 Open the admin Matches page and confirm the title reads "Void / Edit Matches"
+  - [x] 7.2 Confirm the Event column appears and displays tags correctly (blank for untagged matches)
+  - [x] 7.3 Click Edit on an active match — confirm the modal opens pre-populated with correct data
+  - [x] 7.4 Change a player, score, tag, and date — click Save — confirm the original match now shows as Voided and the new match appears in the table with the updated data
+  - [x] 7.5 Confirm the new match record has `replacesMatchId` set to the original match's ID (check via Supabase or a quick API call)
+  - [x] 7.6 Confirm player ratings have been recomputed (check a player's rating before and after the edit)
+  - [x] 7.7 Click Cancel mid-edit — confirm no changes were made
+  - [x] 7.8 Confirm voided match rows show no Edit or Void button

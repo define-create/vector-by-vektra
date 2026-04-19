@@ -56,7 +56,7 @@ export default function EnterPage() {
   // Tag state
   const [tag, setTag] = useState("");
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
-  const [tagExpanded, setTagExpanded] = useState(false);
+  const [tagExpanded, setTagExpanded] = useState(true);
 
   // Disambiguation ok-flags
   const [partnerOk, setPartnerOk] = useState(true);
@@ -591,7 +591,7 @@ export default function EnterPage() {
                     value={tag}
                     onChange={(e) => setTag(e.target.value)}
                     placeholder="e.g. Winter League, Club Night…"
-                    autoFocus={tagExpanded}
+                    autoFocus={false}
                     className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
                   />
                   {tag && (
