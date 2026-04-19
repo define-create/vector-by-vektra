@@ -15,10 +15,11 @@ export interface GameScoreHandle {
 interface GameScoreInputProps {
   games: GameScore[];
   onChange: (games: GameScore[]) => void;
+  outcome?: "win" | "loss" | null;
 }
 
 const GameScoreInput = forwardRef<GameScoreHandle, GameScoreInputProps>(
-function GameScoreInput({ games, onChange }, ref) {
+function GameScoreInput({ games, onChange, outcome }, ref) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [activeField, setActiveField] = useState<{ gi: number; field: "team1Score" | "team2Score" }>({ gi: 0, field: "team1Score" });
 
@@ -117,8 +118,12 @@ function GameScoreInput({ games, onChange }, ref) {
               placeholder="0"
               className={[
                 "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-                isActive(gi, "team1Score")
+                game.team1Score !== "" && outcome === "win"
                   ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.2)]"
+                  : game.team1Score !== "" && outcome === "loss"
+                  ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.15)]"
+                  : isActive(gi, "team1Score")
+                  ? "border-zinc-400"
                   : "border-zinc-600",
               ].join(" ")}
             />
@@ -137,8 +142,12 @@ function GameScoreInput({ games, onChange }, ref) {
               placeholder="0"
               className={[
                 "w-16 rounded-lg border bg-zinc-800 py-2 text-center text-lg font-semibold text-zinc-50 placeholder-zinc-600 focus:outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-                isActive(gi, "team2Score")
+                game.team2Score !== "" && outcome === "loss"
                   ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.2)]"
+                  : game.team2Score !== "" && outcome === "win"
+                  ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.15)]"
+                  : isActive(gi, "team2Score")
+                  ? "border-zinc-400"
                   : "border-zinc-600",
               ].join(" ")}
             />

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vector — Type Match Entry Mockup</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #18181b;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f4f4f5;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 32px 16px;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Phone shell ── */
+  .phone {
+    width: 390px;
+    background: #09090b;
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px #3f3f46, 0 32px 80px rgba(0,0,0,.7);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #71717a;
+    margin-bottom: 12px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #a1a1aa;
+    flex-shrink: 0;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    border-top: 1px solid #27272a;
+    display: flex;
+    padding: 8px 0 20px;
+    background: #09090b;
+    flex-shrink: 0;
+  }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .tab-icon { font-size: 20px; }
+  .tab-label { font-size: 10px; color: #71717a; }
+  .tab.active .tab-label { color: #10b981; }
+  .tab.active .tab-icon { filter: drop-shadow(0 0 6px #10b981aa); }
+
+  /* Scrollable content */
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ── Toggle rows (same style as admin toggle) ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 12px;
+    background: rgba(39,39,42,.6);
+    padding: 12px 16px;
+  }
+  .toggle-row + .toggle-row { margin-top: -8px; border-top-left-radius: 0; border-top-right-radius: 0; }
+  .toggle-row:first-child:not(:last-child) { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .toggle-label { flex: 1; font-size: 14px; color: #d4d4d8; }
+  .switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: background .2s;
+    flex-shrink: 0;
+  }
+  .switch.off { background: #52525b; }
+  .switch.on  { background: #10b981; }
+  .switch-thumb {
+    position: absolute;
+    top: 1px;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.4);
+    transition: transform .2s;
+  }
+  .switch.off .switch-thumb { transform: translateX(1px); }
+  .switch.on  .switch-thumb { transform: translateX(21px); }
+
+  /* Instruction text above textarea */
+  .hint-instruction {
+    font-size: 11px;
+    color: #52525b;
+    letter-spacing: .03em;
+  }
+
+  /* ── Cards ── */
+  .card {
+    border-radius: 16px;
+    border: 1px solid #3f3f46;
+    background: rgba(39,39,42,.4);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card.win-border { border-color: rgba(16,185,129,.7); }
+  .card.loss-border { border-color: rgba(63,63,70,.3); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #71717a;
+  }
+  .win-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #34d399;
+    background: rgba(16,185,129,.15);
+    border: 1px solid rgba(16,185,129,.25);
+    border-radius: 9999px;
+    padding: 2px 10px;
+  }
+  .lose-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #f87171;
+    background: rgba(239,68,68,.15);
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: 9999px;
+    padding: 2px 10px;
+  }
+
+  .player-row {
+    font-size: 14px;
+    color: #e4e4e7;
+    padding: 4px 0;
+    border-bottom: 1px solid #27272a;
+  }
+  .player-row:last-child { border-bottom: none; }
+
+  /* VS divider */
+  .vs-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .vs-divider .line { flex: 1; border-top: 1px solid rgba(63,63,70,.6); }
+  .vs-divider .vs-text {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: #52525b;
+  }
+
+  /* Score card */
+  .score-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #a1a1aa;
+  }
+  .score-inputs { display: flex; align-items: center; gap: 8px; }
+  .score-box {
+    width: 48px;
+    height: 40px;
+    background: #18181b;
+    border: 1px solid #52525b;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #f4f4f5;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .score-box.filled { border-color: #71717a; color: #f4f4f5; }
+  .score-sep { color: #52525b; font-size: 16px; }
+
+  /* Event tag */
+  .event-input {
+    width: 100%;
+    background: #09090b;
+    border: 1px solid #52525b;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #f4f4f5;
+    outline: none;
+  }
+
+  /* Submit bar */
+  .submit-bar {
+    border-top: 1px solid #27272a;
+    padding: 16px;
+    background: #09090b;
+    flex-shrink: 0;
+  }
+  .submit-btn {
+    width: 100%;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+  }
+  .submit-btn.ready { background: #10b981; color: #fff; }
+  .submit-btn.disabled { background: #27272a; color: #52525b; cursor: not-allowed; }
+
+  /* ── TYPE MATCH PANEL ── */
+  .type-match-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ghost-wrapper {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* Ghost hint layer (behind) */
+  .ghost-hint {
+    position: absolute;
+    inset: 0;
+    padding: 13px 14px;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: normal;
+    pointer-events: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .ghost-typed { color: transparent; }
+  .ghost-remaining { color: #52525b; }
+
+  /* Textarea on top */
+  .type-textarea {
+    position: relative;
+    width: 100%;
+    min-height: 80px;
+    background: transparent;
+    border: 1px solid #52525b;
+    border-radius: 12px;
+    padding: 13px 14px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #f4f4f5;
+    resize: none;
+    outline: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: normal;
+    caret-color: #10b981;
+    display: block;
+    z-index: 1;
+  }
+  .type-textarea:focus { border-color: #71717a; }
+  .type-textarea.has-content { background: transparent; }
+
+  /* Textarea container with bg for ghost */
+  .textarea-container {
+    position: relative;
+    border-radius: 12px;
+    background: #09090b;
+  }
+  .textarea-container .ghost-hint {
+    z-index: 0;
+  }
+  .textarea-container .type-textarea {
+    position: relative;
+    background: transparent;
+    z-index: 1;
+  }
+
+  /* Parse error */
+  .parse-error {
+    font-size: 12px;
+    color: #f87171;
+    padding: 8px 12px;
+    background: rgba(239,68,68,.1);
+    border-radius: 8px;
+    border: 1px solid rgba(239,68,68,.2);
+  }
+
+  /* OK / Cancel buttons */
+  .action-row {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-cancel {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #3f3f46;
+    background: transparent;
+    color: #a1a1aa;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-ok {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: #3f3f46;
+    color: #f4f4f5;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-ok.active { background: #10b981; color: #fff; }
+
+  /* Chip strip */
+  .chip-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .chip-strip::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: #27272a;
+    font-size: 14px;
+    color: #e4e4e7;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* Annotation labels */
+  .annotation {
+    font-size: 11px;
+    color: #f59e0b;
+    background: rgba(245,158,11,.1);
+    border: 1px solid rgba(245,158,11,.2);
+    border-radius: 6px;
+    padding: 2px 8px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  /* Scenario label */
+  .scenario-wrapper { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 0: Admin view — both toggles stacked
+═══════════════════════════════════════════════════════ -->
+<div class="scenario-wrapper">
+  <p class="phone-label">⓪ Admin — both toggles</p>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+
+    <div class="screen">
+
+      <!-- Admin toggle (off) + text mode toggle (off) — stacked -->
+      <div style="display:flex;flex-direction:column;gap:1px;">
+        <div class="toggle-row" style="border-radius:12px 12px 4px 4px;">
+          <span class="toggle-label">Enter on behalf of players</span>
+          <div class="switch off"><div class="switch-thumb"></div></div>
+        </div>
+        <div class="toggle-row" style="border-radius:4px 4px 12px 12px;">
+          <span class="toggle-label">Switch to text mode</span>
+          <div class="switch off"><div class="switch-thumb"></div></div>
+        </div>
+      </div>
+
+      <!-- Chip strip -->
+      <div class="chip-strip">
+        <button class="chip">Jordan</button>
+        <button class="chip">Sam</button>
+        <button class="chip">Taylor</button>
+      </div>
+
+      <!-- Team 1 card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-label">Your Partner</span>
+          <span style="font-size:11px;font-weight:700;color:#52525b;background:rgba(63,63,70,.4);border:1px solid #3f3f46;border-radius:9999px;padding:2px 10px;">WIN?</span>
+        </div>
+        <div style="height:36px;background:#18181b;border-radius:8px;border:1px dashed #3f3f46;"></div>
+      </div>
+
+      <div class="vs-divider"><div class="line"></div><span class="vs-text">VS</span><div class="line"></div></div>
+
+      <!-- Team 2 card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-label">Opponents</span>
+          <span style="font-size:11px;font-weight:700;color:#52525b;background:rgba(63,63,70,.4);border:1px solid #3f3f46;border-radius:9999px;padding:2px 10px;">WIN?</span>
+        </div>
+        <div style="height:36px;background:#18181b;border-radius:8px;border:1px dashed #3f3f46;margin-bottom:4px;"></div>
+        <div style="height:36px;background:#18181b;border-radius:8px;border:1px dashed #3f3f46;"></div>
+      </div>
+
+    </div>
+
+    <div class="submit-bar">
+      <button class="submit-btn disabled">Submit Match</button>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab active"><div class="tab-icon">➕</div><div class="tab-label">Enter</div></div>
+      <div class="tab"><div class="tab-icon">📊</div><div class="tab-label">Stats</div></div>
+      <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 1: Type Match mode — empty (ghost hint full)
+═══════════════════════════════════════════════════════ -->
+<div class="scenario-wrapper">
+  <p class="phone-label">① Switch on — empty state</p>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+
+    <div class="screen">
+
+      <!-- Switch row: ON -->
+      <div class="toggle-row">
+        <span class="toggle-label">Switch to text mode</span>
+        <div class="switch on"><div class="switch-thumb"></div></div>
+      </div>
+
+      <!-- Type match panel -->
+      <div class="type-match-panel">
+        <p class="hint-instruction">Type your match, follow the hints</p>
+
+        <div class="textarea-container">
+          <div class="ghost-hint" aria-hidden="true">
+            <span class="ghost-typed"></span><span class="ghost-remaining">Player1 &amp; Player2 defeated Player3 &amp; Player4 11-7 #tag</span>
+          </div>
+          <textarea class="type-textarea" rows="2" placeholder=""></textarea>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-cancel">Cancel</button>
+          <button class="btn-ok">OK</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab active"><div class="tab-icon">➕</div><div class="tab-label">Enter</div></div>
+      <div class="tab"><div class="tab-icon">📊</div><div class="tab-label">Stats</div></div>
+      <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 2: Typing in progress — hint advancing
+═══════════════════════════════════════════════════════ -->
+<div class="scenario-wrapper">
+  <p class="phone-label">② Typing — hint advancing</p>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+
+    <div class="screen">
+
+      <div class="toggle-row">
+        <span class="toggle-label">Switch to text mode</span>
+        <div class="switch on"><div class="switch-thumb"></div></div>
+      </div>
+
+      <div class="type-match-panel">
+        <p class="hint-instruction">Type your match, follow the hints</p>
+
+        <div class="textarea-container">
+          <div class="ghost-hint" aria-hidden="true">
+            <span class="ghost-typed">Jordan &amp; Mike </span><span class="ghost-remaining">defeated Player3 &amp; Player4 11-7 #tag</span>
+          </div>
+          <textarea class="type-textarea has-content" rows="2">Jordan &amp; Mike </textarea>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-cancel">Cancel</button>
+          <button class="btn-ok active">OK</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab active"><div class="tab-icon">➕</div><div class="tab-label">Enter</div></div>
+      <div class="tab"><div class="tab-icon">📊</div><div class="tab-label">Stats</div></div>
+      <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 3: Full valid entry — OK enabled
+═══════════════════════════════════════════════════════ -->
+<div class="scenario-wrapper">
+  <p class="phone-label">③ Complete entry — OK active</p>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+
+    <div class="screen">
+
+      <div class="toggle-row">
+        <span class="toggle-label">Switch to text mode</span>
+        <div class="switch on"><div class="switch-thumb"></div></div>
+      </div>
+
+      <div class="type-match-panel">
+        <p class="hint-instruction">Type your match, follow the hints</p>
+
+        <div class="textarea-container">
+          <div class="ghost-hint" aria-hidden="true">
+            <span class="ghost-typed">Jordan &amp; Mike defeated Sam &amp; Taylor 11-7 #League</span><span class="ghost-remaining"></span>
+          </div>
+          <textarea class="type-textarea has-content" rows="2">Jordan &amp; Mike defeated Sam &amp; Taylor 11-7 #League</textarea>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-cancel">Cancel</button>
+          <button class="btn-ok active">OK</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab active"><div class="tab-icon">➕</div><div class="tab-label">Enter</div></div>
+      <div class="tab"><div class="tab-icon">📊</div><div class="tab-label">Stats</div></div>
+      <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 4: Parse error state
+═══════════════════════════════════════════════════════ -->
+<div class="scenario-wrapper">
+  <p class="phone-label">④ Parse error</p>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+
+    <div class="screen">
+
+      <div class="toggle-row">
+        <span class="toggle-label">Switch to text mode</span>
+        <div class="switch on"><div class="switch-thumb"></div></div>
+      </div>
+
+      <div class="type-match-panel">
+        <p class="hint-instruction">Type your match, follow the hints</p>
+
+        <div class="textarea-container">
+          <div class="ghost-hint" aria-hidden="true">
+            <span class="ghost-typed">Jordan &amp; Mike defeated Sam &amp; Taylor</span><span class="ghost-remaining"> 11-7 #tag</span>
+          </div>
+          <textarea class="type-textarea has-content" rows="2" style="border-color:#f87171">Jordan &amp; Mike defeated Sam &amp; Taylor</textarea>
+        </div>
+
+        <div class="parse-error">
+          Couldn't find a score — expected a format like 11-7
+        </div>
+
+        <div class="action-row">
+          <button class="btn-cancel">Cancel</button>
+          <button class="btn-ok active">OK</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab active"><div class="tab-icon">➕</div><div class="tab-label">Enter</div></div>
+      <div class="tab"><div class="tab-icon">📊</div><div class="tab-label">Stats</div></div>
+      <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 5: After OK — manual form populated
+═══════════════════════════════════════════════════════ -->
+<div class="scenario-wrapper">
+  <p class="phone-label">⑤ After OK — manual form pre-filled</p>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+
+    <div class="screen">
+
+      <!-- Toggle OFF — back to manual mode -->
+      <div class="toggle-row">
+        <span class="toggle-label">Switch to text mode</span>
+        <div class="switch off"><div class="switch-thumb"></div></div>
+      </div>
+
+      <!-- Chip strip -->
+      <div class="chip-strip">
+        <button class="chip">Alex B.</button>
+        <button class="chip">Chris</button>
+        <button class="chip">Dana</button>
+        <button class="chip">Pat</button>
+      </div>
+
+      <!-- Team 1 card — WIN border (Jordan & Mike won) -->
+      <div class="card win-border">
+        <div class="card-header">
+          <span class="card-label">Your Partner</span>
+          <span class="win-badge">WIN</span>
+        </div>
+        <div class="player-row">Mike</div>
+      </div>
+
+      <div class="vs-divider">
+        <div class="line"></div>
+        <span class="vs-text">VS</span>
+        <div class="line"></div>
+      </div>
+
+      <!-- Team 2 card -->
+      <div class="card loss-border">
+        <div class="card-header">
+          <span class="card-label">Opponents</span>
+          <span class="lose-badge">LOSS</span>
+        </div>
+        <div class="player-row">Sam</div>
+        <div class="player-row">Taylor</div>
+      </div>
+
+      <!-- Score -->
+      <div class="card">
+        <div class="card-header"><span class="card-label">Score</span></div>
+        <div class="score-row">
+          <span>Game 1</span>
+          <div class="score-inputs">
+            <div class="score-box filled">11</div>
+            <span class="score-sep">–</span>
+            <div class="score-box filled">7</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event -->
+      <div class="card">
+        <div class="card-header"><span class="card-label">Event</span></div>
+        <input class="event-input" type="text" value="League" readonly>
+      </div>
+
+    </div>
+
+    <div class="submit-bar">
+      <button class="submit-btn ready">Submit Match</button>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Home</div></div>
+      <div class="tab active"><div class="tab-icon">➕</div><div class="tab-label">Enter</div></div>
+      <div class="tab"><div class="tab-icon">📊</div><div class="tab-label">Stats</div></div>
+      <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profile</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

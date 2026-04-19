@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import PlayerSelector from "@/components/enter/PlayerSelector";
 import GameScoreInput, { type GameScore, type GameScoreHandle } from "@/components/enter/GameScoreInput";
+import MatchTextInput from "@/components/MatchTextInput";
+import { parseMatchText } from "@/lib/import/parse-match";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,11 +34,16 @@ interface PlayerValue {
 
 export default function EnterPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const isAdmin = session?.user?.role === "admin";
 
   // Admin mode
   const [adminMode, setAdminMode] = useState(false);
+
+  // Text entry mode
+  const [entryMode, setEntryMode] = useState<"manual" | "text">("manual");
+  const [parseText, setParseText] = useState("");
+  const [parseError, setParseError] = useState<string | null>(null);
 
   // Form state
   const [matchDate] = useState(() => new Date().toISOString());
@@ -107,8 +114,8 @@ export default function EnterPage() {
   }
 
   useEffect(() => {
-    fetchTags();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (sessionStatus === "authenticated") fetchTags();
+  }, [sessionStatus]);
 
   // Clear flash slot after animation duration
   useEffect(() => {
@@ -121,9 +128,7 @@ export default function EnterPage() {
   // Admin mode toggle — resets all form state
   // ---------------------------------------------------------------------------
 
-  function toggleAdminMode() {
-    const next = !adminMode;
-    setAdminMode(next);
+  function resetFormState() {
     setTeam1Player1(null);
     setPartner(null);
     setOpponent1(null);
@@ -135,6 +140,45 @@ export default function EnterPage() {
     setOpponent1Ok(true);
     setOpponent2Ok(true);
     setFocusedSlot(null);
+  }
+
+  function resetTextMode() {
+    setParseText("");
+    setParseError(null);
+  }
+
+  function toggleAdminMode() {
+    setAdminMode((prev) => !prev);
+    resetFormState();
+  }
+
+  function toggleTextMode() {
+    setEntryMode((prev) => {
+      const next = prev === "manual" ? "text" : "manual";
+      resetFormState();
+      resetTextMode();
+      return next;
+    });
+  }
+
+  function handleOk() {
+    const result = parseMatchText(parseText);
+    if (!result.ok) {
+      setParseError(result.error);
+      return;
+    }
+    const { team1, team2, outcome: parsedOutcome, game, tag: parsedTag } = result.match;
+    setPartner({ name: team1[1] });
+    setOpponent1({ name: team2[0] });
+    setOpponent2({ name: team2[1] });
+    if (adminMode) {
+      setTeam1Player1({ name: team1[0] });
+    }
+    setOutcome(parsedOutcome);
+    setGames([{ gameOrder: 1, team1Score: game.team1Score, team2Score: game.team2Score }]);
+    if (parsedTag) setTag(parsedTag);
+    resetTextMode();
+    setEntryMode("manual");
   }
 
   // ---------------------------------------------------------------------------
@@ -419,7 +463,7 @@ export default function EnterPage() {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {/* Admin "on behalf of" toggle */}
         {isAdmin && (
-          <div className="mb-5 flex items-center gap-3 rounded-xl bg-zinc-800/60 px-4 py-3">
+          <div className="mb-2 flex items-center gap-3 rounded-xl bg-zinc-800/60 px-4 py-3">
             <span className="flex-1 text-sm text-zinc-300">Enter on behalf of players</span>
             <button
               type="button"
@@ -441,9 +485,68 @@ export default function EnterPage() {
           </div>
         )}
 
+        {/* Switch to text mode toggle */}
+        <div className={["flex items-center gap-3 rounded-xl bg-zinc-800/60 px-4 py-3", isAdmin ? "mb-5" : "mb-5"].join(" ")}>
+          <span className="flex-1 text-sm text-zinc-300">Switch to text mode</span>
+          <button
+            type="button"
+            onClick={toggleTextMode}
+            className={[
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+              entryMode === "text" ? "bg-emerald-500" : "bg-zinc-600",
+            ].join(" ")}
+            role="switch"
+            aria-checked={entryMode === "text"}
+          >
+            <span
+              className={[
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200",
+                entryMode === "text" ? "translate-x-5" : "translate-x-0",
+              ].join(" ")}
+            />
+          </button>
+        </div>
+
+        {/* Text mode panel */}
+        {entryMode === "text" && (
+          <div className="flex flex-col gap-3 mb-5">
+            <p className="text-xs text-zinc-500">
+              {adminMode
+                ? "Type your match — e.g. John & Mike defeated Sam & Taylor 11-7"
+                : "Type your match — e.g. me & Mike defeated Sam & Taylor 11-7"}
+            </p>
+            <MatchTextInput value={parseText} onChange={(v) => { setParseText(v); setParseError(null); }} adminMode={adminMode} />
+            {parseError && (
+              <p className="rounded-lg bg-rose-900/30 px-3 py-2 text-xs text-rose-400">{parseError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setEntryMode("manual"); resetTextMode(); }}
+                className="flex-1 rounded-xl border border-zinc-600 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleOk}
+                disabled={!parseText.trim()}
+                className={[
+                  "flex-1 rounded-xl py-2 text-sm font-semibold transition-colors",
+                  !parseText.trim()
+                    ? "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+                    : "bg-emerald-600 text-white hover:bg-emerald-500",
+                ].join(" ")}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-5">
           {/* Shared recent-player chip strip */}
-          {!allSlotsFilled && availableChips.length > 0 && (
+          {entryMode === "manual" && !allSlotsFilled && availableChips.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {availableChips.map((p) => (
                 <button
@@ -458,10 +561,13 @@ export default function EnterPage() {
             </div>
           )}
 
+          {/* Player cards + score — hidden in text mode */}
+          {entryMode === "manual" && (<>
+
           {/* Team 1 card */}
           <div className={["rounded-2xl border bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 transition-colors duration-300",
             outcome === "win"  ? "border-emerald-500/70" :
-            outcome === "loss" ? "border-zinc-700/30" :
+            outcome === "loss" ? "border-rose-500/50" :
             "border-zinc-700/60"].join(" ")}>
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
@@ -521,7 +627,7 @@ export default function EnterPage() {
           {/* Team 2 card */}
           <div className={["rounded-2xl border bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 transition-colors duration-300",
             outcome === "loss" ? "border-emerald-500/70" :
-            outcome === "win"  ? "border-zinc-700/30" :
+            outcome === "win"  ? "border-rose-500/50" :
             "border-zinc-700/60"].join(" ")}>
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">
@@ -569,11 +675,22 @@ export default function EnterPage() {
             />
           </div>
 
-          <GameScoreInput ref={gameScoreRef} games={games} onChange={handleGamesChange} />
+          <GameScoreInput ref={gameScoreRef} games={games} onChange={handleGamesChange} outcome={outcome} />
+
+          </>)} {/* end entryMode === "manual" */}
+
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Event</p>
-              {!tagExpanded && !tag && (
+              {tagExpanded || tag ? (
+                <button
+                  type="button"
+                  onClick={() => { setTagExpanded(false); setTag(""); }}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  - close
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={() => setTagExpanded(true)}
@@ -597,7 +714,7 @@ export default function EnterPage() {
                   {tag && (
                     <button
                       type="button"
-                      onClick={() => { setTag(""); setTagExpanded(false); }}
+                      onClick={() => setTag("")}
                       aria-label="Clear event"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
                     >

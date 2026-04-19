@@ -93,6 +93,33 @@ export default function PlayerSelector({
     return () => clearTimeout(t);
   }, [flashConfirm]);
 
+  const selectPlayer = useCallback(
+    (player: Player) => {
+      searchGenRef.current += 1;        // invalidate any in-flight fetch
+      skipNextSearchRef.current = true; // block next debounce-triggered search
+      isSelectedRef.current = true;     // block excludeIds-triggered re-searches
+      setResults([]);                   // clear stale results immediately
+      setMatchWarning([]);
+      setConfirmedNew(false);
+      setInputValue(player.displayName);
+      onChange({ id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount, claimed: player.claimed });
+      setOpen(false);
+      onDisambiguated?.(true);
+    },
+    [onChange, onDisambiguated],
+  );
+
+  const clearSelection = useCallback(() => {
+    isSelectedRef.current = false;
+    setInputValue("");
+    onChange(null);
+    setResults([]);
+    setMatchWarning([]);
+    setConfirmedNew(false);
+    setOpen(false);
+    onDisambiguated?.(true);
+  }, [onChange, onDisambiguated]);
+
   // Fetch search results when input changes
   useEffect(() => {
     if (!debouncedInput || debouncedInput.length < 1) {
@@ -121,6 +148,14 @@ export default function PlayerSelector({
       .then((data: { players: Player[] }) => {
         if (myGen !== searchGenRef.current) return;
         const filtered = (data.players ?? []).filter((p) => !excludeIds.includes(p.id));
+        const selectable = filtered.filter((p) => !p.optOutPredictions);
+
+        // Exactly one match — auto-select silently, no confirmation needed
+        if (!isSelectedRef.current && selectable.length === 1) {
+          selectPlayer(selectable[0]);
+          return;
+        }
+
         setResults(filtered);
         // Store warning candidates only for name-only entries
         if (!isSelectedRef.current) {
@@ -137,7 +172,7 @@ export default function PlayerSelector({
         if (myGen !== searchGenRef.current) return;
         setLoading(false);
       });
-  }, [debouncedInput, excludeIds]);
+  }, [debouncedInput, excludeIds, selectPlayer]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -149,33 +184,6 @@ export default function PlayerSelector({
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, []);
-
-  const selectPlayer = useCallback(
-    (player: Player) => {
-      searchGenRef.current += 1;        // invalidate any in-flight fetch
-      skipNextSearchRef.current = true; // block next debounce-triggered search
-      isSelectedRef.current = true;     // block excludeIds-triggered re-searches
-      setResults([]);                   // clear stale results immediately
-      setMatchWarning([]);
-      setConfirmedNew(false);
-      setInputValue(player.displayName);
-      onChange({ id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount, claimed: player.claimed });
-      setOpen(false);
-      onDisambiguated?.(true);
-    },
-    [onChange, onDisambiguated],
-  );
-
-  const clearSelection = useCallback(() => {
-    isSelectedRef.current = false;
-    setInputValue("");
-    onChange(null);
-    setResults([]);
-    setMatchWarning([]);
-    setConfirmedNew(false);
-    setOpen(false);
-    onDisambiguated?.(true);
-  }, [onChange, onDisambiguated]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     isSelectedRef.current = false;
