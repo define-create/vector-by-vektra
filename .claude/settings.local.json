@@ -64,7 +64,11 @@
       "Bash(ls \"d:/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/\"next.config*)",
       "Bash(npx jest:*)",
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('next:', p.dependencies.next\\)\")",
-      "Bash(find d:\\\\\\\\DEV\\\\\\\\ClaudeCode\\\\\\\\Vektra\\\\\\\\Vector\\\\\\\\vector-by-vektra -maxdepth 2 -name \"package.json\" -o -name \".env*\")"
+      "Bash(find d:\\\\\\\\DEV\\\\\\\\ClaudeCode\\\\\\\\Vektra\\\\\\\\Vector\\\\\\\\vector-by-vektra -maxdepth 2 -name \"package.json\" -o -name \".env*\")",
+      "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/api/matchup* -type f -name \"*.ts\")",
+      "Bash(node --loader ts-node/esm -e ' *)",
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)"
     ]
   }
 }

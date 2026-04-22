@@ -1,3 +1,8 @@
+export interface GameScore {
+  team1Score: number;
+  team2Score: number;
+}
+
 /**
  * A single match record as consumed by the rating engine.
  * All filtering (voided matches, etc.) is done by the caller before passing records in.
@@ -9,6 +14,7 @@ export interface MatchRecord {
   team1PlayerIds: string[]; // exactly 2 for doubles
   team2PlayerIds: string[]; // exactly 2 for doubles
   team1Won: boolean;
+  games: GameScore[]; // per-game scores sorted by gameOrder; empty array triggers fallbacks
 }
 
 /**

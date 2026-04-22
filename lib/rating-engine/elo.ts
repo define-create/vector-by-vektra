@@ -5,6 +5,13 @@
 
 export const BASE_K = 32;
 
+export const K_MAX = 48;
+export const K_MIN = 16;
+export const K_DECAY_RATE = 20;
+export const LOPSIDED_SCALE = 400;
+export const MOV_MIN = 0.75;
+export const MOV_MAX = 1.25;
+
 /**
  * Team rating: simple average of the two players' individual ratings.
  */
@@ -46,4 +53,41 @@ export function computeRatingDelta(
   expected: number,
 ): number {
   return effectiveK * (actual - expected);
+}
+
+/**
+ * Per-player dynamic base K that decays from K_MAX to K_MIN as match count grows.
+ * @param matchesPlayed - matches completed before the current match (0 = first match)
+ */
+export function dynamicK(matchesPlayed: number): number {
+  return K_MIN + (K_MAX - K_MIN) * Math.exp(-matchesPlayed / K_DECAY_RATE);
+}
+
+/**
+ * Lopsided-matchup gap factor in (0, 1].
+ * Returns 1.0 for equal teams; shrinks toward 0 as the rating gap grows.
+ * Multiply the favourite's baseK by this value and the underdog's by (2 - this value).
+ * @param ratingGap - t1Avg - t2Avg (sign ignored)
+ */
+export function lopsidedGapFactor(ratingGap: number): number {
+  return Math.exp(-Math.abs(ratingGap) / LOPSIDED_SCALE);
+}
+
+/**
+ * Margin-of-victory weight in [MOV_MIN, MOV_MAX] based on winner's point share.
+ * Returns 1.0 if arrays are empty (graceful fallback for missing score data).
+ * @param winnerScores - winning team's per-game scores
+ * @param loserScores  - losing team's per-game scores (same length)
+ */
+export function marginOfVictoryMultiplier(
+  winnerScores: number[],
+  loserScores: number[],
+): number {
+  if (winnerScores.length === 0) return 1.0;
+  const totalWinner = winnerScores.reduce((s, v) => s + v, 0);
+  const totalLoser = loserScores.reduce((s, v) => s + v, 0);
+  const total = totalWinner + totalLoser;
+  if (total === 0) return 1.0;
+  const normalized = 2 * (totalWinner / total - 0.5);
+  return MOV_MIN + (MOV_MAX - MOV_MIN) * normalized;
 }

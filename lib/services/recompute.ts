@@ -141,7 +141,7 @@ export async function runRecompute(
       },
       include: {
         participants: { select: { playerId: true, team: true } },
-        games: { select: { team1Score: true, team2Score: true } },
+        games: { select: { team1Score: true, team2Score: true, gameOrder: true } },
       },
       orderBy: [{ matchDate: "asc" }, { createdAt: "asc" }],
     });
@@ -153,6 +153,9 @@ export async function runRecompute(
       team1PlayerIds: m.participants.filter((p) => p.team === 1).map((p) => p.playerId),
       team2PlayerIds: m.participants.filter((p) => p.team === 2).map((p) => p.playerId),
       team1Won: computeTeam1Won(m.games),
+      games: m.games
+        .sort((a, b) => a.gameOrder - b.gameOrder)
+        .map((g) => ({ team1Score: g.team1Score, team2Score: g.team2Score })),
     }));
 
     // All player IDs affected by this run

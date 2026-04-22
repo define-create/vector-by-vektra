@@ -19,6 +19,7 @@ function makeMatch(
     team1PlayerIds: team1,
     team2PlayerIds: team2,
     team1Won: true,
+    games: [],
   };
 }
 

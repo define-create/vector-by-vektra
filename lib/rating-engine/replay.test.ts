@@ -1,5 +1,6 @@
 import { replayAllMatches } from "./replay";
-import { type MatchRecord } from "./types";
+import { type GameScore, type MatchRecord } from "./types";
+import { K_MAX, K_MIN } from "./elo";
 
 // Helper: build a simple match record
 function makeMatch(
@@ -9,6 +10,7 @@ function makeMatch(
   team1Won: boolean,
   matchDate: Date,
   createdAt?: Date,
+  games?: GameScore[],
 ): MatchRecord {
   return {
     matchId: id,
@@ -17,6 +19,7 @@ function makeMatch(
     team1PlayerIds: team1,
     team2PlayerIds: team2,
     team1Won,
+    games: games ?? [],
   };
 }
 
@@ -126,5 +129,92 @@ describe("replayAllMatches", () => {
     const { snapshots } = replayAllMatches(matches, "run1");
     // 4 players × 3 matches = 12 snapshots
     expect(snapshots).toHaveLength(12);
+  });
+
+  it("effectiveK is in [K_MIN, K_MAX] range for all snapshots", () => {
+    const matches = [
+      makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1),
+      makeMatch("m2", ["p1", "p3"], ["p2", "p4"], false, d2),
+    ];
+    const { snapshots } = replayAllMatches(matches, "run1");
+    for (const snap of snapshots) {
+      expect(snap.effectiveK).toBeGreaterThan(0);
+      expect(snap.effectiveK).toBeLessThanOrEqual(K_MAX * 2); // lopsided underdog can go up to 2×K_MAX
+    }
+  });
+
+  it("new player (first match) gets higher effectiveK than veteran (many matches)", () => {
+    // Build 50 matches for p1+p2 vs p3+p4 to make them veterans
+    const manyMatches = Array.from({ length: 50 }, (_, i) =>
+      makeMatch(`m${i}`, ["p1", "p2"], ["p3", "p4"], true, new Date(d1.getTime() + i * 86400000)),
+    );
+    // Then one more match where new players p5+p6 play veterans p1+p2
+    const finalDate = new Date(d1.getTime() + 50 * 86400000);
+    const newPlayerMatch = makeMatch("mNew", ["p5", "p6"], ["p1", "p2"], true, finalDate);
+
+    const { snapshots } = replayAllMatches([...manyMatches, newPlayerMatch], "run1");
+
+    const newSnap = snapshots.find((s) => s.matchId === "mNew" && s.playerId === "p5")!;
+    const vetSnap = snapshots.find((s) => s.matchId === "mNew" && s.playerId === "p1")!;
+
+    expect(newSnap.effectiveK).toBeGreaterThan(vetSnap.effectiveK);
+  });
+
+  it("a dominant win (11-0) produces a larger delta than a close win (11-9) for the same teams", () => {
+    const blowout = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1, d1, [
+      { team1Score: 11, team2Score: 0 },
+    ]);
+    const close = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1, d1, [
+      { team1Score: 11, team2Score: 9 },
+    ]);
+
+    const { finalRatings: blowoutRatings } = replayAllMatches([blowout], "run1");
+    const { finalRatings: closeRatings } = replayAllMatches([close], "run1");
+
+    const blowoutDelta = blowoutRatings.get("p1")! - 1000;
+    const closeDelta = closeRatings.get("p1")! - 1000;
+
+    expect(blowoutDelta).toBeGreaterThan(closeDelta);
+  });
+
+  it("lopsided favourite winning produces a smaller delta than evenly-matched teams", () => {
+    const even = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    // Seed p1+p2 as strong favourites by giving them 600-point advantage
+    const startingRatings = new Map([
+      ["p1", 1300],
+      ["p2", 1300],
+      ["p3", 700],
+      ["p4", 700],
+    ]);
+    const lopsided = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+
+    const { finalRatings: evenRatings } = replayAllMatches([even], "run1");
+    const { finalRatings: lopsidedRatings } = replayAllMatches([lopsided], "run1", startingRatings);
+
+    const evenDelta = evenRatings.get("p1")! - 1000;
+    const lopsidedDelta = lopsidedRatings.get("p1")! - 1300;
+
+    expect(Math.abs(lopsidedDelta)).toBeLessThan(Math.abs(evenDelta));
+  });
+
+  it("upset (underdog beats heavy favourite) produces a larger delta than expected win", () => {
+    const startingRatings = new Map([
+      ["p1", 1300],
+      ["p2", 1300],
+      ["p3", 700],
+      ["p4", 700],
+    ]);
+    // Underdog (p3+p4) wins the upset
+    const upset = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], false, d1);
+    const { finalRatings } = replayAllMatches([upset], "run1", startingRatings);
+
+    // Underdog gains more than the favourite would have in a normal expected win
+    const expectedWin = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const { finalRatings: normalRatings } = replayAllMatches([expectedWin], "run1", startingRatings);
+
+    const upsetGain = finalRatings.get("p3")! - 700;
+    const normalWinGain = normalRatings.get("p1")! - 1300;
+
+    expect(upsetGain).toBeGreaterThan(normalWinGain);
   });
 });
