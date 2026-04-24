@@ -107,6 +107,83 @@ None of these changes require a database schema migration. On deployment, a full
 
 ---
 
+## Amendment A — Partner K Isolation (veteran protected from new-player uncertainty)
+
+### Problem
+
+The current team base-K formula averages both players' individual `dynamicK` values:
+
+```
+teamBaseK = (dynamicK(n_a) + dynamicK(n_b)) / 2
+```
+
+When a veteran (e.g. 153 matches, `dynamicK ≈ 16`) is paired with a brand-new player (e.g. 2 matches, `dynamicK ≈ 45`), the team K inflates to ~30. The veteran then loses or gains ~14 pts from a match where they should move ~7 pts — purely because their partner's rating is uncertain, not because anything meaningful was learned about the veteran's own skill level.
+
+This was observed in a real match: Almir (153 matches) paired with matt NewGuy (2 matches) lost to Eldi/Edita. Almir dropped 14.24 pts instead of the ~7 pts a veteran pairing would have produced.
+
+DUPR addresses this with the same philosophy: "if a rated player loses to an NR, it has minimal impact on their rating" — the experienced player's update is decoupled from their partner's uncertainty.
+
+### Solution — Cap team K at the more experienced player's dynamicK
+
+Replace the simple average with a **weighted blend** that caps the team K at the more experienced partner's `dynamicK` when one partner is significantly newer than the other.
+
+**New formula:**
+
+```
+NEW_PLAYER_THRESHOLD = 10   // matches; below this, partner is considered "uncertain"
+
+teamBaseK(n_a, n_b):
+  if both n_a >= threshold AND n_b >= threshold:
+    return (dynamicK(n_a) + dynamicK(n_b)) / 2   // no change — both established
+  else:
+    return Math.min(dynamicK(n_a), dynamicK(n_b)) // cap at the veteran's K
+```
+
+The new player still gets their own high-K learning experience in matches where *their* team K is the minimum (i.e., when paired with another new player). They are not penalised — only the veteran partner is protected.
+
+**Worked example (Almir/matt NewGuy):**
+
+| | Old formula | New formula |
+|---|---|---|
+| teamBaseK1 | (16.00 + 45.05) / 2 = **30.53** | min(16.00, 45.05) = **16.00** |
+| adjBaseK1 (after lopsided) | 19.97 | **10.46** |
+| effectiveK1 (after MOV) | 19.59 | **10.28** |
+| delta for Almir/matt | **−14.24 each** | **~−7.47 each** |
+
+Eldi/Edita's K is unaffected (both are established players).
+
+### Functional requirements
+
+**FR1-amendment:**
+
+- Add exported constant `NEW_PLAYER_THRESHOLD = 10` to `lib/rating-engine/elo.ts`.
+- Add exported helper `teamBaseK(n_a: number, n_b: number): number` to `lib/rating-engine/elo.ts` implementing the capped formula above.
+- Replace the inline average in `replay.ts` (`(dynamicK(n1a) + dynamicK(n1b)) / 2`) with a call to `teamBaseK(n1a, n1b)` for both teams.
+- Export `NEW_PLAYER_THRESHOLD` and `teamBaseK` from `lib/rating-engine/index.ts`.
+
+### Files to modify
+
+| File | Change |
+|---|---|
+| `lib/rating-engine/elo.ts` | Add `NEW_PLAYER_THRESHOLD` constant and `teamBaseK()` function |
+| `lib/rating-engine/index.ts` | Export `NEW_PLAYER_THRESHOLD` and `teamBaseK` |
+| `lib/rating-engine/replay.ts` | Replace inline `(dynamicK(n1a) + dynamicK(n1b)) / 2` with `teamBaseK(n1a, n1b)` for both teams |
+
+No schema changes. No `npx prisma generate` needed. Requires a full recompute after deploy.
+
+### Success metrics
+
+- **SM-A1:** Almir paired with a 2-match partner in an evenly-matched game moves ≤ 10 pts, not ~14.
+- **SM-A2:** Two new players paired together (both < 10 matches) still see large swings — the cap does not apply when both partners are new.
+- **SM-A3:** Two veterans paired together produce identical results to the pre-amendment formula.
+
+### Non-goals
+
+- This amendment does not address the case where both players are new — high K for both is correct behaviour.
+- This does not implement per-player deltas (team still moves in lockstep); that remains out of scope.
+
+---
+
 ## 6. Technical Considerations
 
 ### Files to modify (in implementation order)

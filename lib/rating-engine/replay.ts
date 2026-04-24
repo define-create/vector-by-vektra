@@ -9,7 +9,7 @@ import {
   expectedScore,
   kFactor,
   computeRatingDelta,
-  dynamicK,
+  teamBaseK,
   lopsidedGapFactor,
   marginOfVictoryMultiplier,
 } from "./elo";
@@ -71,8 +71,8 @@ export function replayAllMatches(
     const n1b = matchCounts.get(team1PlayerIds[1]!) ?? 0;
     const n2a = matchCounts.get(team2PlayerIds[0]!) ?? 0;
     const n2b = matchCounts.get(team2PlayerIds[1]!) ?? 0;
-    const teamBaseK1 = (dynamicK(n1a) + dynamicK(n1b)) / 2;
-    const teamBaseK2 = (dynamicK(n2a) + dynamicK(n2b)) / 2;
+    const teamBaseK1 = teamBaseK(n1a, n1b);
+    const teamBaseK2 = teamBaseK(n2a, n2b);
 
     // Lopsided-matchup adjustment: favourite's K shrinks, underdog's K grows.
     const gapFactor = lopsidedGapFactor(t1Avg - t2Avg);

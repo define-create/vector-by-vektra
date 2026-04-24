@@ -68,7 +68,12 @@
       "Bash(find /d/DEV/ClaudeCode/Vektra/Vector/vector-by-vektra/app/api/matchup* -type f -name \"*.ts\")",
       "Bash(node --loader ts-node/esm -e ' *)",
       "Bash(npx tsx -e ' *)",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "Bash(node -e ' *)",
+      "Bash(npx ts-node --project tsconfig.json -e ' *)",
+      "Bash(psql 'postgresql://postgres.dzdgffgelbzxypngotjp@aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require' -c ' *)",
+      "WebFetch(domain:www.dupr.com)",
+      "WebFetch(domain:www.pickleheads.com)"
     ]
   }
 }
