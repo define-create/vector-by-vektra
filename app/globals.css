@@ -24,6 +24,15 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* Prevent iOS WebKit (Safari + iOS Chrome) auto-zoom on input focus.
+ * iOS zooms when an input's font-size is < 16px and never reliably zooms back.
+ * Setting 16px on inputs at small viewports keeps the rendered look while
+ * suppressing the zoom. Override per-input with `!text-sm` if a smaller size
+ * is genuinely needed. */
+@media (max-width: 640px) {
+  input, select, textarea { font-size: 16px; }
+}
+
 /* Page transition — applied via app/(tabs)/template.tsx */
 @keyframes page-enter {
   from { opacity: 0; transform: translateY(6px); }
