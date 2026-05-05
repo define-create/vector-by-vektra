@@ -12,8 +12,6 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans, Arial, sans-serif);
-  /* Prevent horizontal scroll on mobile */
-  overflow-x: hidden;
 }
 
 /* Bottom nav safe area padding on iOS */

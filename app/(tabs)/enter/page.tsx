@@ -62,6 +62,25 @@ export default function EnterPage() {
   const [tag, setTag] = useState("");
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [tagExpanded, setTagExpanded] = useState(true);
+  const [tagTouched, setTagTouched] = useState(false);
+  const tagFocusedOnce = useRef(false);
+
+  // Default tag: "MM/DD · <displayName>" — skipped in admin mode.
+  // Computed once per render; the prefill effect below sets it on mount and
+  // after submit reset, but only when the user hasn't touched the field.
+  const defaultTag = useMemo(() => {
+    if (adminMode) return "";
+    const name = session?.user?.name?.trim();
+    if (!name) return "";
+    const now = new Date();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    return `${mm}/${dd} · ${name}`;
+  }, [adminMode, session?.user?.name]);
+
+  useEffect(() => {
+    if (!tagTouched && !tag && defaultTag) setTag(defaultTag);
+  }, [defaultTag, tagTouched, tag]);
 
   // Disambiguation ok-flags
   const [partnerOk, setPartnerOk] = useState(true);
@@ -435,6 +454,8 @@ export default function EnterPage() {
             setGames([{ gameOrder: 1, team1Score: "", team2Score: "" }]);
             setTag("");
             setTagExpanded(false);
+            setTagTouched(false);
+            tagFocusedOnce.current = false;
             setTeam1Player1Ok(true);
             setPartnerOk(true);
             setOpponent1Ok(true);
@@ -682,7 +703,7 @@ export default function EnterPage() {
               {tagExpanded || tag ? (
                 <button
                   type="button"
-                  onClick={() => { setTagExpanded(false); setTag(""); }}
+                  onClick={() => { setTagExpanded(false); setTag(""); setTagTouched(true); }}
                   className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
                   - close
@@ -703,7 +724,13 @@ export default function EnterPage() {
                   <input
                     type="text"
                     value={tag}
-                    onChange={(e) => setTag(e.target.value)}
+                    onChange={(e) => { setTag(e.target.value); setTagTouched(true); }}
+                    onFocus={(e) => {
+                      if (!tagFocusedOnce.current && tag === defaultTag && defaultTag) {
+                        e.currentTarget.select();
+                      }
+                      tagFocusedOnce.current = true;
+                    }}
                     placeholder="e.g. Winter League, Club Night…"
                     autoFocus={false}
                     className="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none text-sm"
@@ -711,7 +738,7 @@ export default function EnterPage() {
                   {tag && (
                     <button
                       type="button"
-                      onClick={() => setTag("")}
+                      onClick={() => { setTag(""); setTagTouched(true); }}
                       aria-label="Clear event"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
                     >
@@ -725,7 +752,7 @@ export default function EnterPage() {
                       <button
                         key={t}
                         type="button"
-                        onClick={() => setTag(t)}
+                        onClick={() => { setTag(t); setTagTouched(true); }}
                         className="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-sm text-zinc-400 hover:border-zinc-400 hover:text-zinc-200 transition-colors"
                       >
                         {t}

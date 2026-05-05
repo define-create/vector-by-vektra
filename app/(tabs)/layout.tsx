@@ -10,7 +10,7 @@ export default function TabsLayout({
     <div className="flex h-dvh flex-col overflow-hidden">
       <TopHeader />
       {/* Main content scrolls within this container — header and footer are part of flex flow */}
-      <main className="flex-1 overflow-y-auto mx-auto w-full max-w-xl">{children}</main>
+      <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto mx-auto w-full max-w-xl">{children}</main>
       <BottomNav />
     </div>
   );
