@@ -364,7 +364,14 @@ export async function POST(req: NextRequest) {
 
     const editExpiresAt = new Date(match.createdAt.getTime() + 20 * 60 * 1000);
 
-    revalidateTag("command", "default");
+    // Invalidate command data cache for all four players (skip shadow profiles: userId === null)
+    const involvedPlayers = [team1P1, partnerPlayer, opp1Player, opp2Player];
+    for (const player of involvedPlayers) {
+      if (player.userId) {
+        revalidateTag(`command-data:${player.userId}`, "default");
+      }
+    }
+    revalidateTag("command-data", "default");
     if (tag) {
       revalidateTag("event", "default");
     }

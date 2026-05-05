@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import PlayerSelector from "@/components/enter/PlayerSelector";
@@ -33,7 +32,6 @@ interface PlayerValue {
 // ---------------------------------------------------------------------------
 
 export default function EnterPage() {
-  const router = useRouter();
   const { data: session, status: sessionStatus } = useSession();
   const isAdmin = session?.user?.role === "admin";
 
@@ -400,7 +398,6 @@ export default function EnterPage() {
         setRatingsDeferred(data.ratingsDeferred ?? false);
         setSuccess(true);
         fetchTags();
-        router.refresh();
       }
     } catch {
       setSubmitError("Network error — please try again");

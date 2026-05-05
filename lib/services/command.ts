@@ -62,8 +62,14 @@ export interface CommandData {
   dominantDriver: "winRate" | "ci" | "drift" | null;
 }
 
-export const getCommandData = unstable_cache(
-  async (userId: string, filter?: CommandFilter): Promise<CommandData> => {
+const _cacheMap = new Map<string, (filter?: CommandFilter) => Promise<CommandData>>();
+
+function _getCommandDataCached(userId: string): (filter?: CommandFilter) => Promise<CommandData> {
+  if (!_cacheMap.has(userId)) {
+    _cacheMap.set(
+      userId,
+      unstable_cache(
+        async (filter?: CommandFilter): Promise<CommandData> => {
   const empty: Omit<CommandData, "hasPlayer" | "emailVerified" | "userDisplayName"> = {
     myPlayerId: null,
     myPlayerDisplayName: null,
@@ -429,10 +435,18 @@ export const getCommandData = unstable_cache(
     driverDeltas,
     dominantDriver,
   };
-  },
-  ["command-data"],
-  {
-    tags: ["command"],
-    revalidate: 300, // 5-minute fallback in case cron-triggered invalidation misses
+        },
+        [`command-data:${userId}`],
+        {
+          tags: ["command-data", `command-data:${userId}`],
+          revalidate: 300, // 5-minute fallback in case tag-based invalidation misses
+        }
+      )
+    );
   }
-);
+  return _cacheMap.get(userId)!;
+}
+
+export function getCommandData(userId: string, filter?: CommandFilter): Promise<CommandData> {
+  return _getCommandDataCached(userId)(filter);
+}
