@@ -78,7 +78,10 @@
       "Bash(node -e \"const nc=require\\('next/cache'\\); console.log\\(Object.keys\\(nc\\)\\)\")",
       "Bash(node -e \"const {revalidateTag}=require\\('next/cache'\\); console.log\\(revalidateTag.length, revalidateTag.toString\\(\\).slice\\(0,200\\)\\)\")",
       "Bash(node -e \"const {unstable_cache}=require\\('next/cache'\\); console.log\\(unstable_cache.length\\)\")",
-      "Bash(node -e \"const {unstable_cache}=require\\('next/cache'\\); console.log\\(unstable_cache.toString\\(\\).slice\\(0,300\\)\\)\")"
+      "Bash(node -e \"const {unstable_cache}=require\\('next/cache'\\); console.log\\(unstable_cache.toString\\(\\).slice\\(0,300\\)\\)\")",
+      "Bash(xargs -I {} bash -c \"echo '=== {} ===' && head -20 '{}'\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

@@ -304,24 +304,27 @@ export default function EnterPage() {
       // Focused slot is already filled — fall through to next-empty-slot logic
     }
 
-    // Otherwise fill the next empty slot in order
-    if (adminMode) {
-      if (!team1Player1?.id && !team1Player1?.name) {
-        setTeam1Player1(val); setTeam1Player1Ok(true); setFlashSlot("team1Player1"); return;
+    // Fill the first empty slot in sequential order
+    const order = adminMode
+      ? [
+          { key: "team1Player1" as const, val: team1Player1, set: setTeam1Player1, setOk: setTeam1Player1Ok },
+          { key: "partner"      as const, val: partner,      set: setPartner,      setOk: setPartnerOk },
+          { key: "opponent1"    as const, val: opponent1,    set: setOpponent1,    setOk: setOpponent1Ok },
+          { key: "opponent2"    as const, val: opponent2,    set: setOpponent2,    setOk: setOpponent2Ok },
+        ]
+      : [
+          { key: "partner"   as const, val: partner,   set: setPartner,   setOk: setPartnerOk },
+          { key: "opponent1" as const, val: opponent1, set: setOpponent1, setOk: setOpponent1Ok },
+          { key: "opponent2" as const, val: opponent2, set: setOpponent2, setOk: setOpponent2Ok },
+        ];
+
+    for (const slot of order) {
+      if (!slot.val?.id && !slot.val?.name) {
+        slot.set(val);
+        slot.setOk(true);
+        setFlashSlot(slot.key);
+        return;
       }
-      if (!partner?.id && !partner?.name) {
-        setPartner(val); setPartnerOk(true); setFlashSlot("partner"); return;
-      }
-    } else {
-      if (!partner?.id && !partner?.name) {
-        setPartner(val); setPartnerOk(true); setFlashSlot("partner"); return;
-      }
-    }
-    if (!opponent1?.id && !opponent1?.name) {
-      setOpponent1(val); setOpponent1Ok(true); setFlashSlot("opponent1"); return;
-    }
-    if (!opponent2?.id && !opponent2?.name) {
-      setOpponent2(val); setOpponent2Ok(true); setFlashSlot("opponent2"); return;
     }
   }
 
@@ -738,7 +741,7 @@ export default function EnterPage() {
                   {tag && (
                     <button
                       type="button"
-                      onClick={() => { setTag(""); setTagTouched(true); }}
+                      onClick={() => { setTag(""); setTagExpanded(true); setTagTouched(true); }}
                       aria-label="Clear event"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
                     >

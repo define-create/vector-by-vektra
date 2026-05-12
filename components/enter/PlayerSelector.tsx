@@ -110,6 +110,8 @@ export default function PlayerSelector({
   );
 
   const clearSelection = useCallback(() => {
+    searchGenRef.current += 1;         // invalidate any in-flight fetch
+    skipNextSearchRef.current = true;  // block the debounce-delayed search from stale inputValue
     isSelectedRef.current = false;
     setInputValue("");
     onChange(null);
