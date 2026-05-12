@@ -81,7 +81,8 @@
       "Bash(node -e \"const {unstable_cache}=require\\('next/cache'\\); console.log\\(unstable_cache.toString\\(\\).slice\\(0,300\\)\\)\")",
       "Bash(xargs -I {} bash -c \"echo '=== {} ===' && head -20 '{}'\")",
       "Bash(Get-ChildItem -Path \"d:\\\\DEV\\\\ClaudeCode\\\\Vektra\\\\Vector\\\\vector-by-vektra\" -Directory)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(npx eslint *)"
     ]
   }
 }

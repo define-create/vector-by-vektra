@@ -1,15 +1,17 @@
-import { getCommandData, type CommandFilter } from "@/lib/services/command";
+import { getCommandData, type CommandFilter, type CommandData } from "@/lib/services/command";
 import { DriverTile } from "@/components/command/DriverTile";
 import { METRIC_INFO, pct, signedFixed, ciToFormState } from "./helpers";
 
 export default async function DriversGrid({
   userId,
   filter,
+  previewOverride,
 }: {
   userId: string;
   filter?: CommandFilter;
+  previewOverride?: CommandData;
 }) {
-  const data = await getCommandData(userId, filter);
+  const data = previewOverride ?? (await getCommandData(userId, filter));
   const formState = ciToFormState(data.compoundingIndex);
 
   return (

@@ -59,7 +59,7 @@ export async function POST(
     console.error(`[POST /api/admin/matches/${id}/void] Recompute failed:`, err);
   }
 
-  revalidateTag("command", "default");
+  revalidateTag("command-data", "default");
   if (match.tag) {
     revalidateTag("event", "default");
   }

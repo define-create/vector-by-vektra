@@ -160,7 +160,7 @@ export async function PATCH(
     });
 
     const recomputeResult = await runRecompute("admin", "auto: score edit", match.matchDate);
-    revalidateTag("command", "default");
+    revalidateTag("command-data", "default");
 
     return NextResponse.json({
       ok: true,

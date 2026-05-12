@@ -9,7 +9,7 @@ import RatingChart from "@/components/trajectory/RatingChart";
 
 type Horizon = "10games" | "7days" | "30days";
 
-interface TrajectoryData {
+export interface TrajectoryData {
   ratingSeries: { matchDate: string; rating: number }[];
   winRate: number | null;
   record: { wins: number; losses: number };
@@ -39,21 +39,24 @@ function StatCard({ label, value }: { label: string; value: string }) {
 // TrajectorySection — reusable client component
 // ---------------------------------------------------------------------------
 
-export function TrajectorySection() {
+export function TrajectorySection({ previewOverride }: { previewOverride?: TrajectoryData } = {}) {
   const [horizon, setHorizon] = useState<Horizon>("10games");
-  const [data, setData] = useState<TrajectoryData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [fetched, setFetched] = useState<TrajectoryData | null>(null);
+  const [loading, setLoading] = useState(previewOverride ? false : true);
 
   useEffect(() => {
+    if (previewOverride) return;
     setLoading(true);
     fetch(`/api/trajectory?horizon=${horizon}`)
       .then((r) => r.json())
       .then((d: TrajectoryData) => {
-        setData(d);
+        setFetched(d);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [horizon]);
+  }, [horizon, previewOverride]);
+
+  const data = previewOverride ?? fetched;
 
   function pct(value: number | null): string {
     if (value === null) return "—";

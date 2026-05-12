@@ -1,4 +1,4 @@
-import { getCommandData, type CommandFilter } from "@/lib/services/command";
+import { getCommandData, type CommandFilter, type CommandData } from "@/lib/services/command";
 import { MetricInfoSheet } from "@/components/command/MetricInfoSheet";
 import { TrajectoryGraph } from "@/components/command/TrajectoryGraph";
 import { RatingContext } from "@/components/command/RatingContext";
@@ -7,11 +7,13 @@ import { METRIC_INFO } from "./helpers";
 export default async function RatingCard({
   userId,
   filter,
+  previewOverride,
 }: {
   userId: string;
   filter?: CommandFilter;
+  previewOverride?: CommandData;
 }) {
-  const data = await getCommandData(userId, filter);
+  const data = previewOverride ?? (await getCommandData(userId, filter));
 
   return (
     <div className="flex flex-col items-center pt-3 pb-1 px-5">

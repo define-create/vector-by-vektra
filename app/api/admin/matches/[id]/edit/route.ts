@@ -152,7 +152,7 @@ export async function POST(
     // until the next nightly recompute or manual admin recompute.
   }
 
-  revalidateTag("command", "default");
+  revalidateTag("command-data", "default");
   if (original.tag || tag) {
     revalidateTag("event", "default");
   }
