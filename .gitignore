@@ -37,6 +37,14 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code local config
+.claude/settings.local.json
+
+# junctioned skills — local-only, point at D:\DEV\ClaudeCode\mattpocock-skills
+# (keep real, non-junctioned skills like frontend-design committed)
+.claude/skills/*
+!.claude/skills/frontend-design/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

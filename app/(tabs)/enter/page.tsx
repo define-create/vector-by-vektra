@@ -113,7 +113,7 @@ export default function EnterPage() {
   // Load recent players + tags on mount
   // ---------------------------------------------------------------------------
 
-  useEffect(() => {
+  function fetchRecentPlayers() {
     fetch("/api/players/recent")
       .then((r) => r.json())
       .then((data: { partners: Player[]; opponents: Player[] }) => {
@@ -121,6 +121,10 @@ export default function EnterPage() {
         setRecentOpponents(data.opponents ?? []);
       })
       .catch(() => {});
+  }
+
+  useEffect(() => {
+    fetchRecentPlayers();
   }, []);
 
   function fetchTags() {
@@ -420,6 +424,7 @@ export default function EnterPage() {
         setRatingsDeferred(data.ratingsDeferred ?? false);
         setSuccess(true);
         fetchTags();
+        fetchRecentPlayers();
       }
     } catch {
       setSubmitError("Network error — please try again");

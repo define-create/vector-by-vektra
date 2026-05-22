@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enter Match — Redesign Prototypes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+  .phone {
+    width: 380px;
+    min-height: 760px;
+    border-radius: 36px;
+    border: 1.5px solid #27272a;
+    box-shadow: 0 0 0 6px #0a0a0b, 0 32px 64px rgba(0,0,0,0.6);
+    overflow: hidden;
+    background: #09090b;
+    position: relative;
+  }
+  .phone-inner { height: 760px; overflow-y: auto; }
+  .phone-inner::-webkit-scrollbar { display: none; }
+  .blank-slot {
+    border-bottom: 2px dashed #52525b;
+    min-width: 96px;
+    display: inline-block;
+    text-align: center;
+    padding: 2px 8px;
+    cursor: pointer;
+    color: #71717a;
+  }
+  .blank-slot:hover { border-bottom-color: #a1a1aa; color: #d4d4d8; }
+  .blank-slot.filled {
+    border-bottom-color: #10b981;
+    color: #fafafa;
+    font-weight: 600;
+  }
+  .blank-score {
+    border-bottom: 2px dashed #52525b;
+    min-width: 48px;
+    display: inline-block;
+    text-align: center;
+    padding: 2px 8px;
+    cursor: pointer;
+    color: #71717a;
+    font-variant-numeric: tabular-nums;
+  }
+  .blank-score.filled {
+    border-bottom-color: #10b981;
+    color: #fafafa;
+    font-weight: 700;
+  }
+  /* Coach-mark callout */
+  .coach {
+    position: relative;
+    border: 1px dashed #f59e0b;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.08);
+    padding: 8px 10px;
+    color: #fbbf24;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .coach::before {
+    content: "💡";
+    margin-right: 4px;
+  }
+  /* Active-field underline cue (baseline patch #4) */
+  .active-cue {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+    background: #a1a1aa;
+  }
+  /* Score-input focus ring helpers */
+  .score-input {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+  .score-input::-webkit-outer-spin-button,
+  .score-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+</style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+
+<!-- ============================================================ -->
+<!-- Sticky top toolbar                                            -->
+<!-- ============================================================ -->
+<div class="sticky top-0 z-50 bg-zinc-900/95 backdrop-blur border-b border-zinc-800">
+  <div class="max-w-6xl mx-auto px-4 py-3">
+    <div class="flex flex-wrap items-center gap-2 justify-between">
+      <div class="flex items-center gap-2">
+        <h1 class="text-sm font-bold tracking-widest uppercase text-zinc-400">Enter Match · Redesigns</h1>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <label class="flex items-center gap-2 text-xs text-zinc-400 mr-3 select-none">
+          <input id="guideToggle" type="checkbox" class="accent-amber-500" checked>
+          <span>Guide me</span>
+        </label>
+
+        <div class="flex items-center gap-1 rounded-full bg-zinc-800 p-1" role="tablist">
+          <button data-variant="baseline" class="variant-btn rounded-full px-3 py-1.5 text-xs font-semibold transition-colors">Baseline+patches</button>
+          <button data-variant="A"        class="variant-btn rounded-full px-3 py-1.5 text-xs font-semibold transition-colors">A · Sentence</button>
+          <button data-variant="B"        class="variant-btn rounded-full px-3 py-1.5 text-xs font-semibold transition-colors">B · Scorecard</button>
+          <button data-variant="D"        class="variant-btn rounded-full px-3 py-1.5 text-xs font-semibold transition-colors">D · Score-first</button>
+        </div>
+      </div>
+    </div>
+    <p id="variantCaption" class="mt-2 text-xs text-zinc-500"></p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Variant stage                                                 -->
+<!-- ============================================================ -->
+<main class="max-w-6xl mx-auto px-4 py-8 flex justify-center">
+
+  <!-- ========================================================== -->
+  <!-- BASELINE + 8 patches                                         -->
+  <!-- ========================================================== -->
+  <section data-variant="baseline" class="variant-section">
+    <div class="phone">
+      <div class="phone-inner">
+        <!-- Header with admin gear in corner (patch #7) -->
+        <div class="flex items-center justify-between px-4 pt-4 pb-3">
+          <h2 class="text-lg font-bold text-zinc-50">Enter Match</h2>
+          <button class="text-zinc-500 hover:text-zinc-300" title="Admin: enter on behalf of players" aria-label="Admin mode">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1l3 6 6 1-4.5 4.5L18 19l-6-3-6 3 1.5-6.5L3 8l6-1z"/></svg>
+          </button>
+        </div>
+
+        <div class="px-4 pb-32">
+          <!-- Scrolls-away progress indicator (patch #8) -->
+          <div class="mb-4 -mx-1">
+            <div class="flex gap-1.5 overflow-x-auto pb-1" style="scrollbar-width:none;">
+              <span class="step-pill flex-shrink-0 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 text-[11px] font-medium">✓ Partner</span>
+              <span class="step-pill flex-shrink-0 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 text-[11px] font-medium">✓ Opp 1</span>
+              <span class="step-pill flex-shrink-0 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700 px-2.5 py-1 text-[11px] font-medium">○ Opp 2</span>
+              <span class="step-pill flex-shrink-0 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700 px-2.5 py-1 text-[11px] font-medium">○ Outcome</span>
+              <span class="step-pill flex-shrink-0 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700 px-2.5 py-1 text-[11px] font-medium">○ Score</span>
+              <span class="step-pill flex-shrink-0 rounded-full bg-zinc-900 text-zinc-600 border border-dashed border-zinc-700 px-2.5 py-1 text-[11px] font-medium">Event ·opt</span>
+            </div>
+          </div>
+
+          <!-- Text mode reframe (patch #1): button + inline example -->
+          <div class="mb-5 rounded-xl border border-zinc-700 bg-zinc-900/60 px-3 py-3">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <p class="text-[11px] text-zinc-500">Faster: type your match</p>
+                <p class="text-xs text-zinc-300 italic truncate">e.g. me &amp; Mike defeated Sam &amp; Taylor 11-7</p>
+              </div>
+              <button class="flex-shrink-0 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-zinc-100 text-xs font-semibold px-3 py-2">Paste text</button>
+            </div>
+          </div>
+
+          <!-- Recent chips -->
+          <div class="flex gap-2 overflow-x-auto pb-1 mb-4" style="scrollbar-width:none;">
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Mike</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Sam</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Taylor</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Alex</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Jordan</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Casey</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Riley</button>
+          </div>
+
+          <!-- Outcome chips (patch #2): replaces per-team WIN? -->
+          <div class="coach guide-only mb-3">Tell us who won — tap "We won" or "They won"</div>
+          <div class="flex gap-2 mb-5">
+            <button class="flex-1 rounded-xl border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 text-sm font-bold py-2.5">We won</button>
+            <button class="flex-1 rounded-xl border border-zinc-700 bg-zinc-800/40 text-zinc-400 text-sm font-bold py-2.5">They won</button>
+          </div>
+
+          <!-- Team 1 card -->
+          <div class="rounded-2xl border border-emerald-500/70 bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 mb-3">
+            <p class="text-xs font-bold uppercase tracking-widest text-emerald-400">Your Partner</p>
+            <div class="rounded-lg bg-zinc-900 border border-zinc-600 px-3 py-2 text-zinc-50 text-sm">Mike</div>
+          </div>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="flex-1 border-t border-zinc-700/60"></div>
+            <span class="text-xs font-bold tracking-widest text-zinc-600">VS</span>
+            <div class="flex-1 border-t border-zinc-700/60"></div>
+          </div>
+          <div class="rounded-2xl border border-rose-500/50 bg-zinc-800/40 px-4 py-3 flex flex-col gap-2 mb-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-rose-400">Opponents</p>
+            <div class="rounded-lg bg-zinc-900 border border-zinc-600 px-3 py-2 text-zinc-50 text-sm">Sam</div>
+            <div class="rounded-lg bg-zinc-900 border border-dashed border-zinc-600 px-3 py-2 text-zinc-500 text-sm">Pick opponent…</div>
+          </div>
+
+          <!-- Scores with per-input steppers (patch #3) and active-field cue (patch #4) -->
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-medium uppercase tracking-widest text-zinc-500">Game Scores</label>
+            <button class="text-xs text-zinc-500">+ add game</button>
+          </div>
+          <div class="coach guide-only mb-3">Enter the final score for each game. Tap +/- or type.</div>
+          <div class="flex items-center justify-center gap-3 mb-5">
+            <!-- left stepper pair flanking team1 input -->
+            <button class="w-9 h-10 rounded-lg text-2xl font-bold text-zinc-300 hover:bg-zinc-800">−</button>
+            <div class="relative">
+              <input type="number" value="11" class="score-input w-14 rounded-lg border border-emerald-500 bg-zinc-800 py-2 text-center text-lg font-bold text-zinc-50" style="box-shadow:0 0 0 3px rgba(16,185,129,0.2);" />
+              <div class="active-cue"></div>
+            </div>
+            <button class="w-9 h-10 rounded-lg text-2xl font-bold text-zinc-300 hover:bg-zinc-800">+</button>
+
+            <span class="text-zinc-600 text-sm">—</span>
+
+            <!-- right stepper pair flanking team2 input -->
+            <button class="w-9 h-10 rounded-lg text-2xl font-bold text-zinc-300 hover:bg-zinc-800">−</button>
+            <input type="number" value="7" class="score-input w-14 rounded-lg border border-rose-500 bg-zinc-800 py-2 text-center text-lg font-bold text-zinc-50" />
+            <button class="w-9 h-10 rounded-lg text-2xl font-bold text-zinc-300 hover:bg-zinc-800">+</button>
+          </div>
+
+          <!-- Event tag (patches #5 + #6 hint) -->
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-medium uppercase tracking-widest text-zinc-500">Event</p>
+            <button class="text-xs text-zinc-500">- close</button>
+          </div>
+          <p class="text-[11px] text-zinc-500 italic mb-1.5">Pre-filled tag — edit or replace if you like</p>
+          <input type="text" value="05/19 · Alex Chen" class="w-full rounded-lg border border-zinc-600 bg-zinc-900 px-4 py-3 text-zinc-400 text-sm" />
+          <div class="flex gap-2 mt-2 overflow-x-auto pb-1" style="scrollbar-width:none;">
+            <button class="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-xs text-zinc-400">Winter League</button>
+            <button class="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-xs text-zinc-400">Club Night</button>
+            <button class="flex-shrink-0 rounded-full border border-zinc-600 px-3 py-1 text-xs text-zinc-400">Friday Open</button>
+          </div>
+        </div>
+
+        <!-- Sticky submit -->
+        <div class="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-zinc-950 px-4 py-3">
+          <button class="w-full rounded-xl py-3 font-semibold bg-zinc-700 text-zinc-500 cursor-not-allowed">Submit Match</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar: success state callout -->
+    <aside class="mt-6 max-w-md text-sm text-zinc-500">
+      <h3 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">Success state (patch #6)</h3>
+      <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 text-center">
+        <div class="text-4xl mb-2">✓</div>
+        <p class="text-zinc-200 font-bold">Match Recorded</p>
+        <p class="text-xs text-zinc-500 mt-1 mb-4">Ratings have been updated.</p>
+        <div class="flex gap-2">
+          <button class="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-200 text-xs font-semibold py-2">Edit match</button>
+          <button class="flex-1 rounded-xl bg-zinc-700 text-zinc-100 text-xs font-semibold py-2">Enter another</button>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- VARIANT A — Sentence builder                                 -->
+  <!-- ========================================================== -->
+  <section data-variant="A" class="variant-section hidden">
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="flex items-center justify-between px-4 pt-4 pb-3">
+          <h2 class="text-lg font-bold text-zinc-50">Enter Match</h2>
+          <button class="text-zinc-500" aria-label="Admin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1l3 6 6 1-4.5 4.5L18 19l-6-3-6 3 1.5-6.5L3 8l6-1z"/></svg>
+          </button>
+        </div>
+
+        <div class="px-5 pb-32">
+          <div class="coach guide-only mb-5">Fill in the blanks like a sentence. Tap any blank to choose a player or type a score.</div>
+
+          <!-- The sentence -->
+          <div class="text-2xl leading-[2.6rem] text-zinc-400 font-light tracking-tight mb-8">
+            <span class="text-zinc-200">Me</span>
+            <span class="text-zinc-500">&amp;</span>
+            <span class="blank-slot filled">Mike</span>
+            <br>
+            <span class="text-zinc-500">vs</span>
+            <span class="blank-slot filled">Sam</span>
+            <span class="text-zinc-500">&amp;</span>
+            <span class="blank-slot">opponent</span>
+            <br>
+            <span class="text-emerald-400 font-semibold">we won</span>
+            <span class="blank-score filled">11</span>
+            <span class="text-zinc-500">—</span>
+            <span class="blank-score filled">7</span>
+          </div>
+
+          <!-- Inline chip strip (contextual to focused blank) -->
+          <div class="mb-5">
+            <p class="text-[11px] uppercase tracking-widest text-zinc-500 mb-2">Recent players</p>
+            <div class="flex flex-wrap gap-2">
+              <button class="rounded-full bg-zinc-700 px-3 py-1.5 text-sm text-zinc-200">Taylor</button>
+              <button class="rounded-full bg-zinc-700 px-3 py-1.5 text-sm text-zinc-200">Alex</button>
+              <button class="rounded-full bg-zinc-700 px-3 py-1.5 text-sm text-zinc-200">Jordan</button>
+              <button class="rounded-full bg-zinc-700 px-3 py-1.5 text-sm text-zinc-200">Casey</button>
+              <button class="rounded-full bg-zinc-700 px-3 py-1.5 text-sm text-zinc-200">Riley</button>
+              <button class="rounded-full border border-zinc-600 px-3 py-1.5 text-sm text-zinc-400">+ new</button>
+            </div>
+          </div>
+
+          <!-- Outcome flipper - smaller, since sentence already shows "we won" -->
+          <div class="flex gap-2 mb-5 text-xs">
+            <button class="flex-1 rounded-lg border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 font-bold py-2">We won</button>
+            <button class="flex-1 rounded-lg border border-zinc-700 bg-zinc-800/40 text-zinc-400 font-bold py-2">They won</button>
+          </div>
+
+          <!-- Faster text-mode entry remains a one-liner above -->
+          <div class="rounded-xl border border-zinc-700 bg-zinc-900/60 px-3 py-2 mb-5">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs text-zinc-400 italic truncate">…or type the whole sentence</p>
+              <button class="rounded-md bg-zinc-700 text-zinc-100 text-xs font-semibold px-2.5 py-1">Paste</button>
+            </div>
+          </div>
+
+          <!-- Event - tucked at bottom -->
+          <p class="text-[11px] uppercase tracking-widest text-zinc-500 mb-1">Event <span class="text-zinc-600 normal-case">(optional)</span></p>
+          <p class="text-[11px] text-zinc-500 italic mb-1.5">Pre-filled — edit or replace</p>
+          <input type="text" value="05/19 · Alex Chen" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-400 text-sm" />
+        </div>
+
+        <div class="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-zinc-950 px-4 py-3">
+          <button class="w-full rounded-xl py-3 font-semibold bg-zinc-700 text-zinc-500 cursor-not-allowed">Submit Match</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="mt-6 max-w-md text-sm text-zinc-500">
+      <h3 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">What A is testing</h3>
+      <p>Does a <strong>readable sentence</strong> beat a stack of cards? Sentence makes structure obvious (who's with whom, who won) but requires fluent tap-to-fill. Closest to your text-mode parser in spirit.</p>
+    </aside>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- VARIANT B — Single scorecard                                 -->
+  <!-- ========================================================== -->
+  <section data-variant="B" class="variant-section hidden">
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="flex items-center justify-between px-4 pt-4 pb-3">
+          <h2 class="text-lg font-bold text-zinc-50">Enter Match</h2>
+          <button class="text-zinc-500" aria-label="Admin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1l3 6 6 1-4.5 4.5L18 19l-6-3-6 3 1.5-6.5L3 8l6-1z"/></svg>
+          </button>
+        </div>
+
+        <div class="px-4 pb-32">
+          <div class="coach guide-only mb-3">Like a paper scorecard. Tap each name slot, tap the winning row to set the result.</div>
+
+          <!-- Single scorecard -->
+          <div class="rounded-2xl border-2 border-zinc-700 bg-zinc-900 overflow-hidden">
+            <!-- Header row -->
+            <div class="grid grid-cols-[1fr_64px] bg-zinc-800/60 px-4 py-2 border-b border-zinc-700">
+              <p class="text-[11px] uppercase tracking-widest text-zinc-500 font-semibold">Team</p>
+              <p class="text-[11px] uppercase tracking-widest text-zinc-500 font-semibold text-center">Score</p>
+            </div>
+
+            <!-- Row 1 — winner (tap to mark winner) -->
+            <button class="w-full text-left grid grid-cols-[1fr_64px] items-center px-4 py-3 border-b border-zinc-800 bg-emerald-500/10 hover:bg-emerald-500/15">
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Winner</span>
+                  <span class="text-[10px] text-emerald-500/70">tap</span>
+                </div>
+                <div class="text-zinc-100 font-semibold">Me &amp; Mike</div>
+              </div>
+              <input type="number" value="11" class="score-input w-14 mx-auto rounded-lg border border-emerald-500 bg-zinc-950 py-2 text-center text-2xl font-bold text-zinc-50" style="box-shadow:0 0 0 2px rgba(16,185,129,0.25);" />
+            </button>
+
+            <!-- VS divider row -->
+            <div class="flex items-center px-4 py-1 bg-zinc-950">
+              <div class="flex-1 border-t border-zinc-800"></div>
+              <span class="px-2 text-[10px] font-bold tracking-widest text-zinc-600">VS</span>
+              <div class="flex-1 border-t border-zinc-800"></div>
+            </div>
+
+            <!-- Row 2 — loser -->
+            <button class="w-full text-left grid grid-cols-[1fr_64px] items-center px-4 py-3 bg-zinc-900 hover:bg-zinc-800/60">
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold uppercase tracking-widest text-rose-400/80">Loser</span>
+                </div>
+                <div class="text-zinc-100 font-semibold">Sam &amp; <span class="text-zinc-500 italic">pick opponent</span></div>
+              </div>
+              <input type="number" value="7" class="score-input w-14 mx-auto rounded-lg border border-rose-500/60 bg-zinc-950 py-2 text-center text-2xl font-bold text-zinc-50" />
+            </button>
+          </div>
+
+          <!-- Recent player chips -->
+          <div class="mt-4">
+            <p class="text-[11px] uppercase tracking-widest text-zinc-500 mb-2">Tap to fill next blank</p>
+            <div class="flex gap-2 overflow-x-auto pb-1" style="scrollbar-width:none;">
+              <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Taylor</button>
+              <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Alex</button>
+              <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Jordan</button>
+              <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Casey</button>
+              <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Riley</button>
+            </div>
+          </div>
+
+          <!-- Add game / swap winner row -->
+          <div class="flex gap-2 mt-4">
+            <button class="flex-1 rounded-lg border border-zinc-700 bg-zinc-800/40 text-zinc-300 text-xs font-semibold py-2">+ Add game</button>
+            <button class="flex-1 rounded-lg border border-zinc-700 bg-zinc-800/40 text-zinc-300 text-xs font-semibold py-2">⇅ Swap winner</button>
+          </div>
+
+          <!-- Event -->
+          <div class="mt-5">
+            <p class="text-[11px] uppercase tracking-widest text-zinc-500 mb-1">Event <span class="text-zinc-600 normal-case">(optional)</span></p>
+            <p class="text-[11px] text-zinc-500 italic mb-1.5">Pre-filled — edit or replace</p>
+            <input type="text" value="05/19 · Alex Chen" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-400 text-sm" />
+          </div>
+
+          <!-- Paste text shortcut -->
+          <div class="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs text-zinc-500 italic truncate">…or paste "me &amp; Mike defeated Sam &amp; Taylor 11-7"</p>
+              <button class="rounded-md bg-zinc-700 text-zinc-100 text-xs font-semibold px-2.5 py-1">Paste</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-zinc-950 px-4 py-3">
+          <button class="w-full rounded-xl py-3 font-semibold bg-zinc-700 text-zinc-500 cursor-not-allowed">Submit Match</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="mt-6 max-w-md text-sm text-zinc-500">
+      <h3 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">What B is testing</h3>
+      <p>Does a <strong>paper-scorecard shape</strong> — winner row on top, loser row on bottom, scores in a fixed column — fit the mental model better than abstract "Team 1/Team 2" cards? Tapping the row sets the winner; no separate outcome chips.</p>
+    </aside>
+  </section>
+
+  <!-- ========================================================== -->
+  <!-- VARIANT D — Score-first                                      -->
+  <!-- ========================================================== -->
+  <section data-variant="D" class="variant-section hidden">
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="flex items-center justify-between px-4 pt-4 pb-3">
+          <h2 class="text-lg font-bold text-zinc-50">Enter Match</h2>
+          <button class="text-zinc-500" aria-label="Admin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1l3 6 6 1-4.5 4.5L18 19l-6-3-6 3 1.5-6.5L3 8l6-1z"/></svg>
+          </button>
+        </div>
+
+        <div class="px-4 pb-32">
+          <!-- STEP 1: Score -->
+          <p class="text-[11px] uppercase tracking-widest text-zinc-500 font-bold mb-2">Step 1 · Score</p>
+          <div class="coach guide-only mb-3">Enter the final score first — it's the part you remember most clearly.</div>
+          <div class="flex items-center justify-center gap-3 mb-6">
+            <button class="w-10 h-12 rounded-lg text-3xl font-bold text-zinc-300 hover:bg-zinc-800">−</button>
+            <input type="number" value="11" class="score-input w-20 rounded-xl border-2 border-emerald-500 bg-zinc-900 py-3 text-center text-3xl font-bold text-zinc-50" style="box-shadow:0 0 0 3px rgba(16,185,129,0.2);" />
+            <span class="text-zinc-500 text-2xl">—</span>
+            <input type="number" value="7" class="score-input w-20 rounded-xl border-2 border-rose-500/60 bg-zinc-900 py-3 text-center text-3xl font-bold text-zinc-50" />
+            <button class="w-10 h-12 rounded-lg text-3xl font-bold text-zinc-300 hover:bg-zinc-800">+</button>
+          </div>
+
+          <!-- STEP 2: Outcome + players in same gesture -->
+          <p class="text-[11px] uppercase tracking-widest text-zinc-500 font-bold mb-2">Step 2 · Who won?</p>
+          <div class="coach guide-only mb-3">Tap "We won" or "They won" — then fill in the winners and losers.</div>
+
+          <!-- Toggle: We won / They won -->
+          <div class="flex gap-2 mb-4">
+            <button class="flex-1 rounded-xl border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 text-sm font-bold py-3">
+              <div>We won</div>
+              <div class="text-[10px] font-normal text-emerald-400/70 mt-0.5">11 — 7</div>
+            </button>
+            <button class="flex-1 rounded-xl border border-zinc-700 bg-zinc-800/40 text-zinc-400 text-sm font-bold py-3">
+              <div>They won</div>
+              <div class="text-[10px] font-normal text-zinc-500 mt-0.5">7 — 11</div>
+            </button>
+          </div>
+
+          <!-- Expanded: winners + losers -->
+          <div class="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 px-4 py-3 mb-3">
+            <p class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">Winners (11)</p>
+            <div class="flex gap-2">
+              <div class="flex-1 rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-zinc-50 text-sm">Me</div>
+              <div class="flex-1 rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-zinc-50 text-sm">Mike</div>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 mb-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-rose-400/90 mb-2">Losers (7)</p>
+            <div class="flex gap-2">
+              <div class="flex-1 rounded-lg bg-zinc-900 border border-zinc-700 px-3 py-2 text-zinc-50 text-sm">Sam</div>
+              <div class="flex-1 rounded-lg bg-zinc-900 border border-dashed border-zinc-600 px-3 py-2 text-zinc-500 text-sm">Pick opponent…</div>
+            </div>
+          </div>
+
+          <!-- Recent chips -->
+          <div class="flex gap-2 overflow-x-auto pb-1 mb-5" style="scrollbar-width:none;">
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Taylor</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Alex</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Jordan</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Casey</button>
+            <button class="flex-shrink-0 rounded-full bg-zinc-700 px-3 py-1 text-sm text-zinc-200">Riley</button>
+          </div>
+
+          <!-- STEP 3: Event optional -->
+          <p class="text-[11px] uppercase tracking-widest text-zinc-500 font-bold mb-2">Step 3 · Event <span class="text-zinc-600 normal-case font-normal">(optional)</span></p>
+          <p class="text-[11px] text-zinc-500 italic mb-1.5">Pre-filled — edit or replace</p>
+          <input type="text" value="05/19 · Alex Chen" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-400 text-sm" />
+        </div>
+
+        <div class="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-zinc-950 px-4 py-3">
+          <button class="w-full rounded-xl py-3 font-semibold bg-emerald-500 text-white hover:bg-emerald-400">Submit Match</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="mt-6 max-w-md text-sm text-zinc-500">
+      <h3 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2">What D is testing</h3>
+      <p>Does <strong>inverting the order</strong> — score → outcome (which expands into Winners/Losers slots) → optional event — match the way users mentally process "I just played a match"? The outcome decision and player assignment collapse into one step.</p>
+    </aside>
+  </section>
+
+</main>
+
+<script>
+  // Variant switcher
+  const sections = document.querySelectorAll('.variant-section');
+  const buttons  = document.querySelectorAll('.variant-btn');
+  const caption  = document.getElementById('variantCaption');
+  const guide    = document.getElementById('guideToggle');
+
+  const captions = {
+    baseline: 'Baseline + 8 patches: text-mode reframe, We/They chips, per-input steppers, active-field cue, tag hint, edit button in success, admin moved to corner, scrolls-away progress pills.',
+    A:        'Variant A — Sentence builder: the screen reads as a sentence, blanks are tappable, score is part of the sentence.',
+    B:        'Variant B — Single scorecard: paper-scorecard shape; tap the row to mark the winner; everything visible at once.',
+    D:        'Variant D — Score-first: score → "Who won?" (which expands into Winners/Losers slots) → optional event.',
+  };
+
+  function show(variant) {
+    sections.forEach(s => s.classList.toggle('hidden', s.dataset.variant !== variant));
+    buttons.forEach(b => {
+      const active = b.dataset.variant === variant;
+      b.classList.toggle('bg-zinc-100', active);
+      b.classList.toggle('text-zinc-900', active);
+      b.classList.toggle('text-zinc-400', !active);
+    });
+    caption.textContent = captions[variant] ?? '';
+    history.replaceState(null, '', '?variant=' + variant);
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => show(b.dataset.variant)));
+
+  // Arrow-key cycling (skip when an input is focused)
+  const order = ['baseline','A','B','D'];
+  document.addEventListener('keydown', (e) => {
+    const tag = (document.activeElement?.tagName ?? '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const params = new URLSearchParams(location.search);
+    const current = params.get('variant') ?? 'baseline';
+    let idx = order.indexOf(current);
+    if (idx < 0) idx = 0;
+    idx = (idx + (e.key === 'ArrowRight' ? 1 : -1) + order.length) % order.length;
+    show(order[idx]);
+  });
+
+  // Guide-me toggle: shows/hides .guide-only callouts across all variants
+  function applyGuide() {
+    document.querySelectorAll('.guide-only').forEach(el => {
+      el.style.display = guide.checked ? '' : 'none';
+    });
+  }
+  guide.addEventListener('change', applyGuide);
+  applyGuide();
+
+  // Initial render: respect ?variant=
+  const initial = new URLSearchParams(location.search).get('variant') ?? 'baseline';
+  show(order.includes(initial) ? initial : 'baseline');
+</script>
+
+</body>
+</html>
