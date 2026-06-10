@@ -1,6 +1,6 @@
 import { replayAllMatches } from "./replay";
 import { type GameScore, type MatchRecord } from "./types";
-import { K_MAX, K_MIN } from "./elo";
+import { K_MAX, K_MIN, NEW_PLAYER_THRESHOLD, dynamicK, teamBaseK } from "./elo";
 
 // Helper: build a simple match record
 function makeMatch(
@@ -195,6 +195,58 @@ describe("replayAllMatches", () => {
     const lopsidedDelta = lopsidedRatings.get("p1")! - 1300;
 
     expect(Math.abs(lopsidedDelta)).toBeLessThan(Math.abs(evenDelta));
+  });
+
+  it("startingMatchCounts: seeded veteran gets effectiveK near K_MIN while unseeded player stays near K_MAX", () => {
+    const match = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const startingMatchCounts = new Map([
+      ["p1", 100],
+      ["p2", 100],
+    ]);
+    const { snapshots } = replayAllMatches([match], "run1", undefined, startingMatchCounts);
+
+    const vetSnap = snapshots.find((s) => s.playerId === "p1")!;
+    const newSnap = snapshots.find((s) => s.playerId === "p3")!;
+
+    // Equal ratings (gapFactor = 1) and no games (movWeight = 1) — effectiveK is the team base K
+    expect(vetSnap.effectiveK).toBeCloseTo(teamBaseK(100, 100), 5);
+    expect(vetSnap.effectiveK).toBeLessThan(K_MIN + 1);
+    expect(newSnap.effectiveK).toBeCloseTo(K_MAX, 5);
+  });
+
+  it("omitting startingMatchCounts preserves full-replay behaviour (first match ≈ K_MAX)", () => {
+    const match = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const { snapshots } = replayAllMatches([match], "run1");
+
+    for (const snap of snapshots) {
+      expect(snap.effectiveK).toBeCloseTo(K_MAX, 5);
+    }
+  });
+
+  it("startingMatchCounts: counter keeps incrementing across the window (Amendment A cap flips at threshold)", () => {
+    // p2 is seeded just under the threshold; p1 is an established veteran.
+    // Match 1: p2 has n=9 (< threshold) → team K capped at min (veteran's K).
+    // Match 2: p2 has n=10 (>= threshold) → both established → average.
+    const seeded = new Map([
+      ["p1", 100],
+      ["p2", NEW_PLAYER_THRESHOLD - 1],
+    ]);
+    const m1 = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const m2 = makeMatch("m2", ["p1", "p2"], ["p3", "p4"], false, d2);
+    const { snapshots } = replayAllMatches([m1, m2], "run1", undefined, seeded);
+
+    const k1 = snapshots.find((s) => s.matchId === "m1" && s.playerId === "p1")!.effectiveK;
+    const k2 = snapshots.find((s) => s.matchId === "m2" && s.playerId === "p1")!.effectiveK;
+
+    // Match 1: cap applies — base K is min(dynamicK(100), dynamicK(9)) = dynamicK(100)
+    expect(teamBaseK(100, NEW_PLAYER_THRESHOLD - 1)).toBeCloseTo(dynamicK(100), 5);
+    // Match 2: both established — base K is the (higher) average
+    const expectedK2Base = teamBaseK(101, NEW_PLAYER_THRESHOLD);
+    expect(expectedK2Base).toBeGreaterThan(teamBaseK(100, NEW_PLAYER_THRESHOLD - 1));
+
+    // Ratings drift between matches so gapFactor ≠ 1 exactly; compare against
+    // each match's own base K scaled by its lopsided factor instead of equality.
+    expect(k2).toBeGreaterThan(k1);
   });
 
   it("upset (underdog beats heavy favourite) produces a larger delta than expected win", () => {

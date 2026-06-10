@@ -19,16 +19,20 @@ const INITIAL_RATING = 1000;
 /**
  * Replays all provided matches in chronological order and computes rating snapshots.
  *
- * @param matches         - Match records to replay (caller is responsible for filtering)
- * @param runId           - The RatingRun.id this replay belongs to
- * @param startingRatings - Optional pre-replay ratings per player (for incremental runs).
- *                          Players absent from the map start at INITIAL_RATING (1000).
+ * @param matches             - Match records to replay (caller is responsible for filtering)
+ * @param runId               - The RatingRun.id this replay belongs to
+ * @param startingRatings     - Optional pre-replay ratings per player (for incremental runs).
+ *                              Players absent from the map start at INITIAL_RATING (1000).
+ * @param startingMatchCounts - Optional pre-replay match counts per player (for incremental
+ *                              runs), so dynamicK matches what a full replay would compute.
+ *                              Players absent from the map start at 0.
  * @returns snapshots: one SnapshotWrite per (player, match); finalRatings: current rating per player
  */
 export function replayAllMatches(
   matches: MatchRecord[],
   runId: string,
   startingRatings?: Map<string, number>,
+  startingMatchCounts?: Map<string, number>,
 ): { snapshots: SnapshotWrite[]; finalRatings: Map<string, number> } {
   // Collect all unique player IDs and initialise ratings + match counts
   const ratings = new Map<string, number>();
@@ -37,7 +41,7 @@ export function replayAllMatches(
     for (const id of [...m.team1PlayerIds, ...m.team2PlayerIds]) {
       if (!ratings.has(id)) {
         ratings.set(id, startingRatings?.get(id) ?? INITIAL_RATING);
-        matchCounts.set(id, 0);
+        matchCounts.set(id, startingMatchCounts?.get(id) ?? 0);
       }
     }
   }

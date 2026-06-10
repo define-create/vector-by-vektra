@@ -13,6 +13,7 @@
  *   1. Creates a new RatingRun record (status: running, replayScope, fromMatchId)
  *   2. Fetches the appropriate matches (all for full, fromDate+ for incremental)
  *   3. For incremental: loads each affected player's pre-window rating from RatingSnapshot
+ *      and pre-window match count from MatchParticipant (so dynamicK stays accurate)
  *   4. Replays matches through the rating engine
  *   5. Deletes only the affected snapshots (all for full, replayed-match IDs for incremental)
  *   6. Bulk-inserts fresh snapshots for this run
@@ -163,8 +164,9 @@ export async function runRecompute(
       ...new Set(matchRecords.flatMap((m) => [...m.team1PlayerIds, ...m.team2PlayerIds])),
     ];
 
-    // --- Starting-ratings lookup (incremental only) ---
+    // --- Starting-ratings + starting-match-counts lookup (incremental only) ---
     let startingRatings: Map<string, number> | undefined;
+    let startingMatchCounts: Map<string, number> | undefined;
 
     if (fromDate && affectedPlayerIds.length > 0) {
       // Fetch the most recent RatingSnapshot per player before fromDate.
@@ -190,10 +192,32 @@ export async function runRecompute(
           startingRatings.set(snap.playerId, snap.rating);
         }
       }
+
+      // Count each player's non-voided matches before the window so dynamicK
+      // matches what a full replay would compute. Boundary (matchDate < fromDate)
+      // is the exact complement of the replay window (matchDate >= fromDate).
+      const priorCounts = await prisma.matchParticipant.groupBy({
+        by: ["playerId"],
+        where: {
+          playerId: { in: affectedPlayerIds },
+          match: { voidedAt: null, matchDate: { lt: fromDate } },
+        },
+        _count: { playerId: true },
+      });
+
+      startingMatchCounts = new Map<string, number>();
+      for (const row of priorCounts) {
+        startingMatchCounts.set(row.playerId, row._count.playerId);
+      }
     }
 
     // Run the replay
-    const { snapshots, finalRatings } = replayAllMatches(matchRecords, run.id, startingRatings);
+    const { snapshots, finalRatings } = replayAllMatches(
+      matchRecords,
+      run.id,
+      startingRatings,
+      startingMatchCounts,
+    );
 
     // --- Snapshot delete (scoped to replayed matches for incremental) ---
     if (fromDate) {

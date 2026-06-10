@@ -102,7 +102,7 @@ None of these changes require a database schema migration. On deployment, a full
 - **Partial outcome / game-share actual** — treating a 2–1 set result differently from 2–0. Excluded because most matches are single-game.
 - **Individual (non-team) K values** — each player on a doubles team receives the same delta; splitting deltas per player is out of scope.
 - **Rating decay for inactivity** — the existing `ratingConfidence` metric already captures recency; decaying the raw rating is not part of this feature.
-- **Starting-match-count for incremental replays** — incremental recomputes will slightly undercount `n` for existing players (corrected by the nightly full replay). A full fix is a future enhancement.
+- ~~**Starting-match-count for incremental replays**~~ — originally excluded; now implemented, see Amendment B.
 - **UI changes** — no changes to any player profile or leaderboard display are required.
 
 ---
@@ -181,6 +181,38 @@ No schema changes. No `npx prisma generate` needed. Requires a full recompute af
 
 - This amendment does not address the case where both players are new — high K for both is correct behaviour.
 - This does not implement per-player deltas (team still moves in lockstep); that remains out of scope.
+
+---
+
+## Amendment B — Starting Match Counts for Incremental Replays (implemented)
+
+### Problem
+
+Section 5 originally excluded this as a non-goal: incremental replays started every player's
+in-memory match counter at 0, so a 150-match veteran was treated as brand new (`dynamicK ≈ 48`
+instead of ≈ 16) for any match replayed incrementally (new match, score edit). Ratings could
+overswing ~3× intraday until the nightly full replay corrected them.
+
+### Solution
+
+Mirror the existing `startingRatings` pattern with a `startingMatchCounts` map:
+
+- `replayAllMatches()` accepts an optional fourth parameter `startingMatchCounts?: Map<string, number>`;
+  players absent from the map start at 0 (full-replay behaviour unchanged).
+- In the incremental branch of `runRecompute()`, a single `matchParticipant.groupBy` query counts
+  each affected player's non-voided matches with `matchDate < fromDate` — the exact complement of
+  the replay window (`matchDate >= fromDate`), consistent with the `startingRatings` snapshot lookup.
+
+With this, incremental `dynamicK` is identical to what a full replay computes (both count the same
+set of matches). No schema changes; nothing persisted — counts remain in-memory per run.
+
+### Files modified
+
+| File | Change |
+|---|---|
+| `lib/rating-engine/replay.ts` | Add `startingMatchCounts` parameter; seed counter init |
+| `lib/services/recompute.ts` | `groupBy` prior-match counts in incremental branch; pass map |
+| `lib/rating-engine/replay.test.ts` | Tests: seeded veteran K, unseeded default, threshold crossover |
 
 ---
 
