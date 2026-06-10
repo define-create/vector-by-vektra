@@ -39,11 +39,13 @@ yarn-error.log*
 
 # claude code local config
 .claude/settings.local.json
+.claude/.review-stamp
 
 # junctioned skills — local-only, point at D:\DEV\ClaudeCode\mattpocock-skills
 # (keep real, non-junctioned skills like frontend-design committed)
 .claude/skills/*
 !.claude/skills/frontend-design/
+!.claude/skills/review-my-changes/
 
 # typescript
 *.tsbuildinfo

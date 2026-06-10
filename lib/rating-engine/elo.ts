@@ -78,7 +78,8 @@ export const NEW_PLAYER_THRESHOLD = 10;
 /**
  * Team base-K that caps at the veteran's dynamicK when one partner is below the
  * NEW_PLAYER_THRESHOLD. Prevents a new partner's high K from inflating the veteran's delta.
- * When both partners are below the threshold (or both above), uses the simple average.
+ * Averages the two Ks only when both partners are at/above the threshold; otherwise takes
+ * the lower (more experienced) K — still high when both partners are new.
  */
 export function teamBaseK(n_a: number, n_b: number): number {
   const bothEstablished = n_a >= NEW_PLAYER_THRESHOLD && n_b >= NEW_PLAYER_THRESHOLD;

@@ -66,7 +66,8 @@ export function replayAllMatches(
     const E2 = 1 - E1;                       // team 2's expected win probability
 
     // Dynamic K: decays from K_MAX to K_MIN as each player gains experience.
-    // Team base-K is the average of the two players' individual Ks (both get same delta).
+    // Team base-K averages both players' Ks, but caps at the veteran's K when a
+    // partner is below NEW_PLAYER_THRESHOLD (see teamBaseK) — both get same delta.
     const n1a = matchCounts.get(team1PlayerIds[0]!) ?? 0;
     const n1b = matchCounts.get(team1PlayerIds[1]!) ?? 0;
     const n2a = matchCounts.get(team2PlayerIds[0]!) ?? 0;
