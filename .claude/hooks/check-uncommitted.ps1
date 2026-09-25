@@ -20,25 +20,24 @@ if ([string]::IsNullOrWhiteSpace($repoRoot)) { exit 0 }
 $repoRoot = $repoRoot.Trim().Replace('/', '\')
 
 # --- Collect working-tree changes -------------------------------------------
-$porcelain = git status --porcelain
-if ([string]::IsNullOrWhiteSpace($porcelain)) { exit 0 }
+# Native command output reaches PowerShell as string[], one element per line.
+$porcelainLines = @(git status --porcelain)
+if ($porcelainLines.Count -eq 0) { exit 0 }
 
 # --- Filter out non-code paths ----------------------------------------------
 # Drop: mockups/, plans/, ai-dev-tasks/, .claude/.review-stamp, any *.md file
 $ignorePattern = '^(mockups/|plans/|ai-dev-tasks/|\.claude/\.review-stamp$|.*\.md$)'
 
-$codeChanges = $porcelain -split "`n" | ForEach-Object {
-    $line = $_.Trim()
-    if ([string]::IsNullOrWhiteSpace($line)) { return }
-    # Porcelain format: "XY path" â€” path starts at column 3 (index 3 after trim)
-    # Take everything after the first space (handles renames "XY old -> new" loosely)
-    $path = ($line -replace '^..\s+', '')
-    # Normalize backslashes to forward slashes for the regex
-    $path = $path -replace '\\', '/'
-    if ($path -notmatch $ignorePattern) { $line }
-} | Where-Object { $_ }
+$codeChanges = @($porcelainLines | ForEach-Object {
+    # Porcelain v1: two status columns and a space, then the path. Do not trim
+    # first: an unstaged change (" M path") starts with a space, and trimming
+    # shifts the path. Renames read "old -> new"; keep the new path.
+    if ($_.Length -lt 4) { return }
+    $path = ($_.Substring(3) -replace '^.* -> ', '').Trim('"') -replace '\\', '/'
+    if ($path -notmatch $ignorePattern) { $_ }
+})
 
-if (-not $codeChanges -or $codeChanges.Count -eq 0) { exit 0 }
+if ($codeChanges.Count -eq 0) { exit 0 }
 
 # --- Trivial-edit threshold (< 6 changed lines) -----------------------------
 # Count tracked-file changes (insertions + deletions) and untracked-file lines.
@@ -73,12 +72,22 @@ if ($totalChanged -lt 6) { exit 0 }
 # Including untracked file contents is essential â€” `git diff HEAD` ignores
 # untracked files, so without this an untracked-file edit would not invalidate
 # the review stamp.
-$diffText = git diff HEAD
+#
+# Every part must be appended as a single string. StringBuilder.Append() given
+# the string[] that native output produces appends the literal text
+# "System.Object[]", which is how this hook once stopped noticing any edit to a
+# tracked file after the first review stamp. git writes the diff to a temp file,
+# read back as UTF-8, so the hash is exact and does not depend on the console
+# code page (the /review-my-changes stamp script must produce the same bytes).
+$diffFile = [System.IO.Path]::GetTempFileName()
+git diff HEAD --output="$diffFile" 2>$null
+$diffText = [System.IO.File]::ReadAllText($diffFile)
+Remove-Item -LiteralPath $diffFile -Force
 $sha = [System.Security.Cryptography.SHA1]::Create()
 $hashBuilder = New-Object System.Text.StringBuilder
 [void]$hashBuilder.Append($diffText)
 [void]$hashBuilder.Append("`n")
-[void]$hashBuilder.Append($porcelain)
+[void]$hashBuilder.Append(($porcelainLines -join "`n"))
 if ($untracked) {
     $untracked -split "`n" | Sort-Object | ForEach-Object {
         $u = $_.Trim()
@@ -113,7 +122,7 @@ if (Test-Path -LiteralPath $stampPath) {
 }
 
 # --- Emit Stop-hook block decision ------------------------------------------
-$fileCount = ($codeChanges | Measure-Object).Count
+$fileCount = $codeChanges.Count
 $reason = @"
 Uncommitted code changes detected ($fileCount file(s), $totalChanged line(s)).
 

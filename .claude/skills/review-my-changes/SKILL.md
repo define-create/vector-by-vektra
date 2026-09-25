@@ -76,21 +76,26 @@ Do not pad sections with content unrelated to the diff. Empty sections should sa
 
 After producing the report, write the current diff hash to `.claude/.review-stamp` so the Stop hook does not re-nudge for the same state.
 
-Compute the hash exactly as the hook does — SHA-1 of `git diff HEAD` output concatenated with a newline and `git status --porcelain` output, hex-encoded lowercase.
+Compute the hash exactly as the hook does — SHA-1 of the `git diff HEAD` text, a newline, the `git status --porcelain` lines joined by newlines, then each untracked non-ignored file's contents; hex-encoded lowercase.
 
-Run this PowerShell script via the PowerShell tool. The logic must mirror `.claude/hooks/check-uncommitted.ps1`'s hash block (tracked diff + porcelain + untracked file contents, sorted, with delimiters). Two failure modes to avoid:
+Run this PowerShell script via the PowerShell tool. The logic must mirror `.claude/hooks/check-uncommitted.ps1`'s hash block (tracked diff + porcelain + untracked file contents, sorted, with delimiters). Four failure modes to avoid:
 
 1. **Wrong CWD**: paths must be anchored to `git rev-parse --show-toplevel`, not the harness CWD. `[System.IO.File]::WriteAllText` uses the .NET process directory, which may differ from PowerShell's CWD.
 2. **UTF-8 BOM**: do not use `Set-Content -Encoding utf8` in Windows PowerShell 5.1 — it writes a BOM and the stamp will never byte-match the hook's recomputed hash. Use `[System.IO.File]::WriteAllText` with an explicit no-BOM `UTF8Encoding`.
+3. **Arrays appended as `System.Object[]`**: native command output is a `string[]`. `StringBuilder.Append()` on it appends the literal type name, not the content — the hash then ignores every tracked-file edit. Join lines with ``-join "`n"`` before appending.
+4. **Console code page**: piping `git diff` through PowerShell decodes it with the console code page, which can differ between the hook's process and this tool, so non-ASCII characters (→, —, ·) would hash differently. Have git write the diff to a temp file with `--output` and read it back as UTF-8.
 
 ```powershell
 $root = (git rev-parse --show-toplevel).Trim().Replace('/', '\')
 $ignorePattern = '^(mockups/|plans/|ai-dev-tasks/|\.claude/\.review-stamp$|.*\.md$)'
-$diffText = git diff HEAD
-$porcelain = git status --porcelain
+$diffFile = [System.IO.Path]::GetTempFileName()
+git diff HEAD --output="$diffFile" 2>$null
+$diffText = [System.IO.File]::ReadAllText($diffFile)
+Remove-Item -LiteralPath $diffFile -Force
+$porcelainLines = @(git status --porcelain)
 $untracked = git ls-files --others --exclude-standard
 $hb = New-Object System.Text.StringBuilder
-[void]$hb.Append($diffText); [void]$hb.Append("`n"); [void]$hb.Append($porcelain)
+[void]$hb.Append($diffText); [void]$hb.Append("`n"); [void]$hb.Append(($porcelainLines -join "`n"))
 if ($untracked) {
     $untracked -split "`n" | Sort-Object | ForEach-Object {
         $u = $_.Trim()
