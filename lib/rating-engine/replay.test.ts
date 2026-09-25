@@ -1,6 +1,6 @@
 import { replayAllMatches } from "./replay";
 import { type GameScore, type MatchRecord } from "./types";
-import { K_MAX, K_MIN, NEW_PLAYER_THRESHOLD, dynamicK, teamBaseK } from "./elo";
+import { K_MAX, K_MIN, NEW_PLAYER_THRESHOLD, dynamicK } from "./elo";
 
 // Helper: build a simple match record
 function makeMatch(
@@ -208,8 +208,9 @@ describe("replayAllMatches", () => {
     const vetSnap = snapshots.find((s) => s.playerId === "p1")!;
     const newSnap = snapshots.find((s) => s.playerId === "p3")!;
 
-    // Equal ratings (gapFactor = 1) and no games (movWeight = 1) — effectiveK is the team base K
-    expect(vetSnap.effectiveK).toBeCloseTo(teamBaseK(100, 100), 5);
+    // Equal ratings (gapFactor = 1) and no games (movWeight = 1) — effectiveK
+    // is the player's own dynamicK
+    expect(vetSnap.effectiveK).toBeCloseTo(dynamicK(100), 5);
     expect(vetSnap.effectiveK).toBeLessThan(K_MIN + 1);
     expect(newSnap.effectiveK).toBeCloseTo(K_MAX, 5);
   });
@@ -223,14 +224,9 @@ describe("replayAllMatches", () => {
     }
   });
 
-  it("startingMatchCounts: counter keeps incrementing across the window (Amendment A cap flips at threshold)", () => {
-    // p2 is seeded just under the threshold; p1 is an established veteran.
-    // Match 1: p2 has n=9 (< threshold) → team K capped at min (veteran's K).
-    // Match 2: p2 has n=10 (>= threshold) → both established → average.
-    const seeded = new Map([
-      ["p1", 100],
-      ["p2", NEW_PLAYER_THRESHOLD - 1],
-    ]);
+  it("startingMatchCounts: counter keeps incrementing across the window", () => {
+    // p1's K should keep decaying match over match as their count grows.
+    const seeded = new Map([["p1", 100]]);
     const m1 = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
     const m2 = makeMatch("m2", ["p1", "p2"], ["p3", "p4"], false, d2);
     const { snapshots } = replayAllMatches([m1, m2], "run1", undefined, seeded);
@@ -238,15 +234,83 @@ describe("replayAllMatches", () => {
     const k1 = snapshots.find((s) => s.matchId === "m1" && s.playerId === "p1")!.effectiveK;
     const k2 = snapshots.find((s) => s.matchId === "m2" && s.playerId === "p1")!.effectiveK;
 
-    // Match 1: cap applies — base K is min(dynamicK(100), dynamicK(9)) = dynamicK(100)
-    expect(teamBaseK(100, NEW_PLAYER_THRESHOLD - 1)).toBeCloseTo(dynamicK(100), 5);
-    // Match 2: both established — base K is the (higher) average
-    const expectedK2Base = teamBaseK(101, NEW_PLAYER_THRESHOLD);
-    expect(expectedK2Base).toBeGreaterThan(teamBaseK(100, NEW_PLAYER_THRESHOLD - 1));
+    // dynamicK(101) < dynamicK(100), so the second match uses a smaller base K.
+    // Ratings drift between matches so gapFactor ≠ 1 exactly — assert direction.
+    expect(k2).toBeLessThan(k1);
+  });
 
-    // Ratings drift between matches so gapFactor ≠ 1 exactly; compare against
-    // each match's own base K scaled by its lopsided factor instead of equality.
-    expect(k2).toBeGreaterThan(k1);
+  // --- Per-player K (supersedes Amendment A) --------------------------------
+  // All four players start at 1000 and no games are supplied, so gapFactor = 1
+  // and movWeight = 1. effectiveK therefore reduces to each player's dynamicK.
+
+  it("teammates with different experience get different effectiveK", () => {
+    const seeded = new Map([
+      ["p1", 100],
+      ["p2", 0],
+      ["p3", 100],
+      ["p4", 100],
+    ]);
+    const match = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const { snapshots } = replayAllMatches([match], "run1", undefined, seeded);
+
+    const vet = snapshots.find((s) => s.playerId === "p1")!;
+    const rookie = snapshots.find((s) => s.playerId === "p2")!;
+
+    expect(vet.effectiveK).toBeCloseTo(dynamicK(100), 5);
+    expect(rookie.effectiveK).toBeCloseTo(dynamicK(0), 5);
+    expect(rookie.effectiveK).toBeGreaterThan(vet.effectiveK);
+  });
+
+  it("a veteran's effectiveK is unaffected by how new their partner is", () => {
+    const match = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const kFor = (partnerCount: number) => {
+      const seeded = new Map([
+        ["p1", 100],
+        ["p2", partnerCount],
+        ["p3", 100],
+        ["p4", 100],
+      ]);
+      const { snapshots } = replayAllMatches([match], "run1", undefined, seeded);
+      return snapshots.find((s) => s.playerId === "p1")!.effectiveK;
+    };
+
+    // Amendment A's whole purpose, now achieved without capping anyone.
+    expect(kFor(0)).toBeCloseTo(kFor(100), 10);
+    expect(kFor(NEW_PLAYER_THRESHOLD - 1)).toBeCloseTo(kFor(100), 10);
+  });
+
+  it("a rookie partnered with a veteran still moves at rookie speed", () => {
+    // The regression Amendment A introduced: the newcomer used to be dragged
+    // down to the veteran's slow K, delaying convergence.
+    const match = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const seeded = new Map([
+      ["p1", 100],
+      ["p2", 0],
+      ["p3", 100],
+      ["p4", 100],
+    ]);
+    const { snapshots, finalRatings } = replayAllMatches([match], "run1", undefined, seeded);
+
+    expect(snapshots.find((s) => s.playerId === "p2")!.effectiveK).toBeCloseTo(K_MAX, 5);
+    // Rookie's rating moves further than the veteran's from the same result
+    expect(finalRatings.get("p2")! - 1000).toBeGreaterThan(finalRatings.get("p1")! - 1000);
+  });
+
+  it("teammates share the same expectedScore even with different K", () => {
+    // The outcome surprise is a team property; only the learning rate is personal.
+    const seeded = new Map([
+      ["p1", 100],
+      ["p2", 0],
+    ]);
+    const match = makeMatch("m1", ["p1", "p2"], ["p3", "p4"], true, d1);
+    const { snapshots } = replayAllMatches([match], "run1", undefined, seeded);
+
+    const t1 = snapshots.filter((s) => s.playerId === "p1" || s.playerId === "p2");
+    expect(t1[0]!.expectedScore).toBeCloseTo(t1[1]!.expectedScore, 10);
+
+    // ...and the two teams' expectations still sum to 1
+    const t2 = snapshots.find((s) => s.playerId === "p3")!;
+    expect(t1[0]!.expectedScore + t2.expectedScore).toBeCloseTo(1, 10);
   });
 
   it("upset (underdog beats heavy favourite) produces a larger delta than expected win", () => {

@@ -100,7 +100,7 @@ None of these changes require a database schema migration. On deployment, a full
 ## 5. Non-Goals (Out of Scope)
 
 - **Partial outcome / game-share actual** — treating a 2–1 set result differently from 2–0. Excluded because most matches are single-game.
-- **Individual (non-team) K values** — each player on a doubles team receives the same delta; splitting deltas per player is out of scope.
+- ~~**Individual (non-team) K values**~~ — originally excluded; now implemented, see Amendment C.
 - **Rating decay for inactivity** — the existing `ratingConfidence` metric already captures recency; decaying the raw rating is not part of this feature.
 - ~~**Starting-match-count for incremental replays**~~ — originally excluded; now implemented, see Amendment B.
 - **UI changes** — no changes to any player profile or leaderboard display are required.
@@ -108,6 +108,14 @@ None of these changes require a database schema migration. On deployment, a full
 ---
 
 ## Amendment A — Partner K Isolation (veteran protected from new-player uncertainty)
+
+> **SUPERSEDED 2026-08-23 by Amendment C (per-player K).** Amendment A shipped and
+> solved the problem below, but over-corrected: capping the shared team K at the
+> veteran's `dynamicK` also dragged the *newcomer* down to the veteran's slow K,
+> delaying their convergence. The engine now gives each player their own K, which
+> preserves the veteran protection described here without the side effect.
+> `teamBaseK` remains in `elo.ts` but is unused by the live engine.
+> See Amendment C below and `docs/rating-engine-ablation.md`.
 
 ### Problem
 
@@ -216,6 +224,163 @@ set of matches). No schema changes; nothing persisted — counts remain in-memor
 
 ---
 
+## Amendment C — Per-Player K (implemented 2026-08-23, supersedes Amendment A)
+
+### Problem
+
+Amendment A capped the **shared team K** at the veteran's `dynamicK` whenever a
+partner sat below `NEW_PLAYER_THRESHOLD`. It protected the veteran, but because
+the K was shared, it also pinned the *newcomer* to the veteran's slow K —
+`dynamicK ≈ 16` instead of their own ≈ 48 — so the player the engine knew least
+about moved the least, delaying convergence to a true rating.
+
+The deeper issue is that a single K was being asked to describe two players. In
+Elo, K is a statement about *uncertainty in one player*.
+
+### Solution
+
+Split the two things that were conflated:
+
+- **Outcome surprise `(actual − expected)` stays shared.** The team won or lost
+  as a unit, so both partners see the same `expectedScore`.
+- **Learning rate becomes personal.** Each player moves by their own
+  `dynamicK(theirPriorMatches)`, scaled by the match-level lopsided and MOV
+  multipliers.
+
+The veteran's protection is now structural rather than a special case: their own
+K is low, and no partner can raise it. Section 5's "Individual (non-team) K
+values" non-goal is retired.
+
+### Evidence
+
+The only variant in `docs/rating-engine-ablation.md` to clear the noise floor:
+Δ log-loss **−0.0039 [−0.0069, −0.0009]** over 566 matches, **−0.0044
+[−0.0085, −0.0003]** on seasoned matches, and **−0.0080** on a held-out final
+170 — growing out of sample, unlike every tuned-parameter candidate, which
+reversed. It fits zero free parameters.
+
+Blast radius: median rating shift 10.6, max 89; veterans (50+ matches) shift by
+a median 8.7 / max 16.9. Movement concentrates on low-experience players.
+
+### Interaction with Amendment B
+
+Amendment B matters *more* now. Per-player K reads each player's own prior-match
+count, so an incremental replay that seeded counts incorrectly would mis-K
+individuals rather than a whole team. `runRecompute()`'s `groupBy` covers every
+affected player (absent ⇒ 0), so this is already correct.
+
+### Files modified
+
+| File | Change |
+|---|---|
+| `lib/rating-engine/replay.ts` | Per-player K and per-player delta; shared `expectedScore` |
+| `lib/rating-engine/elo.ts` | `teamBaseK` marked superseded (retained, unused by the live engine) |
+| `lib/rating-engine/replay.test.ts` | Removed Amendment A threshold test; added 4 per-player-K tests |
+| `scripts/rating-ablation.ts` | New evidence harness (ablation, sweeps, holdout, blast radius) |
+| `docs/rating-engine-ablation.md` | Study write-up and amended evidence bar |
+
+### Resolves OQ2
+
+`RatingSnapshot.effectiveK` is now genuinely the individual player's K rather
+than a team-level value, which is the answer to Open Question 2 below. Consumers
+that reconstruct deltas from it (`app/api/matchup/route.ts`,
+`lib/metrics/compounding-index.ts`, `lib/metrics/momentum.ts`) rely on the
+invariant `delta = effectiveK × (actual − expected)`, which still holds exactly
+— and is now per-player accurate.
+
+---
+
+## Amendment D — Weighting the Stronger Partner, TEAM_ALPHA = 0.60 (adopted 2026-08-23, NOT deployed)
+
+> **Status (2026-09-25):** Amendments C and D are implemented and tested but
+> **parked** on branch `parked/rating-engine-and-plans`. They are not on
+> `feature/dev` or `main`, and production still runs Amendment A. Deploying
+> either amendment triggers a full recompute on the next nightly cron, moving
+> every player's rating at once.
+
+### Problem
+
+Partners with very different ratings routinely received the **identical** rating
+change. Rating never entered the delta split — only experience did — and
+experience saturates at the K floor, so two floored partners get the same delta
+by arithmetic. Across all 566 matches, **31% of partner pairs rated 100+ apart
+moved identically** (45% for pairs 200+ apart). Raised by a user from real match
+logs: "Why did both Stone and Almir lose the same −7.6 when they have very
+different ratings?"
+
+### Solution
+
+1. **Team strength weights the stronger partner.**
+   `teamRating = 0.60 × max(r1, r2) + 0.40 × min(r1, r2)` instead of a plain
+   average.
+2. **The delta is split by the same weights.** `partnerDeltaShare()` gives the
+   stronger partner 1.2× and the weaker 0.8×, normalised so an even pair gets
+   1.0 each. This is the correct gradient step for the weighted team model, not
+   a bolt-on, and it is **symmetric**: the stronger partner moves more on wins
+   *and* on losses, so it redistributes between partners without compressing the
+   leaderboard.
+3. **Tie band.** Partners within `PARTNER_TIE_EPSILON = 1` point split evenly,
+   so a 0.01-point gap cannot cause a 50% swing. 25 of 1132 partner pairs (2.2%)
+   fall inside it.
+
+The share is folded into `effectiveK`, so the invariant
+`delta = effectiveK × (actual − expected)` from Amendment C still holds exactly.
+
+### Evidence
+
+From `docs/rating-engine-ablation.md`, Result 5:
+
+| | Per-player K only | **+ TEAM_ALPHA 0.60** |
+|---|---|---|
+| Pairs 100+ apart moving identically | 31% | **2%** |
+| Log-loss, full history (paired) | — | +0.0004 [−0.0040, +0.0047] — noise |
+| Log-loss, held-out split | — | −0.0051 [−0.0136, +0.0034] — noise |
+| Rating spread (std dev) | 76.6 | 77.3 |
+
+The justification is the defect fix, not accuracy, which is flat. The direction
+(α > 0.5) is supported by two independent analyses; the exact value is not —
+0.60, 0.65 and 0.70 are statistically indistinguishable, and 0.60 is the most
+conservative.
+
+### Side effects
+
+- **The Matchups forecast changes too.** `lib/matchup.ts` imports `teamRating`,
+  so win probabilities and moneylines on the Matchups screen shift with this
+  amendment. Measured as neutral-to-slightly-better; not manually verified on
+  screen.
+- **A player's responsiveness depends on their partner** — the 1.2× partner in
+  one match can be the 0.8× partner in the next.
+- **Analysis scripts must not use `elo.ts`'s `teamRating`**, or they silently
+  replay history under the new model. The historical scripts carry their own
+  plain average.
+
+### Blast radius
+
+Production is on the legacy engine (Amendment A), so deploying C and D together
+is what players feel: median shift **9.9**, p90 **30.1**, max **125.3**. Spread
+widens 68.2 → 77.3 (+13%).
+
+### Files modified
+
+| File | Change |
+|---|---|
+| `lib/rating-engine/elo.ts` | `TEAM_ALPHA`, weighted `teamRating`, `partnerDeltaShare`, `PARTNER_TIE_EPSILON` |
+| `lib/rating-engine/replay.ts` | Share folded into each player's `effectiveK` |
+| `lib/rating-engine/index.ts` | New exports |
+| `lib/rating-engine/elo.test.ts`, `replay.test.ts`, `lib/matchup.test.ts` | Tie band, symmetry and order-independence tests |
+
+### Considered and rejected (see the ablation doc)
+
+- **Per-player expected score** ("the favourite was expected to carry, so reward
+  them less") — Result 4. Degrades accuracy with dose and compresses the
+  leaderboard 23.6%.
+- **Per-match rating conservation** to stop the rating point leak — Result 6.
+  Distorts individual matches (median 18.7%, max 319%) and makes a player's
+  delta depend on their opponents' experience. The leak is accepted as-is; a
+  ±10% cap is the recorded starting point if it is revisited.
+
+---
+
 ## 6. Technical Considerations
 
 ### Files to modify (in implementation order)
@@ -270,5 +435,5 @@ No schema changes are made, so the generated Prisma client does not need to be r
 ## 8. Open Questions
 
 - **OQ1:** Should `K_MAX`, `K_MIN`, and `K_DECAY_RATE` be configurable by an admin via the UI in the future, or are hardcoded constants acceptable long-term?
-- **OQ2:** Should the `effectiveK` stored in `RatingSnapshot` reflect the team-level K (current plan) or the individual player's K before averaging? (Affects how rating history is displayed.)
+- ~~**OQ2:**~~ **RESOLVED by Amendment C (2026-08-23)** — `effectiveK` is now the individual player's K. Teammates share `expectedScore` but not `effectiveK`.
 - **OQ3:** After the full recompute on deploy, should a notification or summary be shown to admins indicating how many players' ratings changed significantly?

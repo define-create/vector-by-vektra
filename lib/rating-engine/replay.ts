@@ -9,7 +9,8 @@ import {
   expectedScore,
   kFactor,
   computeRatingDelta,
-  teamBaseK,
+  dynamicK,
+  partnerDeltaShare,
   lopsidedGapFactor,
   marginOfVictoryMultiplier,
 } from "./elo";
@@ -69,20 +70,18 @@ export function replayAllMatches(
     const E1 = expectedScore(t1Avg, t2Avg); // team 1's expected win probability
     const E2 = 1 - E1;                       // team 2's expected win probability
 
-    // Dynamic K: decays from K_MAX to K_MIN as each player gains experience.
-    // Team base-K averages both players' Ks, but caps at the veteran's K when a
-    // partner is below NEW_PLAYER_THRESHOLD (see teamBaseK) — both get same delta.
+    // Read every pre-match count before any rating is written, so a player's K
+    // reflects their experience going *into* this match.
     const n1a = matchCounts.get(team1PlayerIds[0]!) ?? 0;
     const n1b = matchCounts.get(team1PlayerIds[1]!) ?? 0;
     const n2a = matchCounts.get(team2PlayerIds[0]!) ?? 0;
     const n2b = matchCounts.get(team2PlayerIds[1]!) ?? 0;
-    const teamBaseK1 = teamBaseK(n1a, n1b);
-    const teamBaseK2 = teamBaseK(n2a, n2b);
 
     // Lopsided-matchup adjustment: favourite's K shrinks, underdog's K grows.
+    // Match-level, so it scales whatever base K each player brings.
     const gapFactor = lopsidedGapFactor(t1Avg - t2Avg);
-    const adjBaseK1 = t1Avg >= t2Avg ? teamBaseK1 * gapFactor : teamBaseK1 * (2 - gapFactor);
-    const adjBaseK2 = t2Avg >= t1Avg ? teamBaseK2 * gapFactor : teamBaseK2 * (2 - gapFactor);
+    const lopsided1 = t1Avg >= t2Avg ? gapFactor : 2 - gapFactor;
+    const lopsided2 = t2Avg >= t1Avg ? gapFactor : 2 - gapFactor;
 
     // Margin of victory: larger score gap → larger weight (capped at [MOV_MIN, MOV_MAX]).
     const team1Scores = games.map((g) => g.team1Score);
@@ -92,28 +91,44 @@ export function replayAllMatches(
       : [team2Scores, team1Scores];
     const movWeight = marginOfVictoryMultiplier(winnerScores, loserScores);
 
-    const effectiveK1 = kFactor(adjBaseK1, 1.0, movWeight);
-    const effectiveK2 = kFactor(adjBaseK2, 1.0, movWeight);
+    // Per-player K. The outcome surprise (actual − expected) is a team property
+    // — the team won or lost as a unit — but the *learning rate* is personal:
+    // K encodes how uncertain we are about that individual. So both teammates
+    // share E, and each moves by their own dynamicK.
+    //
+    // This replaces Amendment A's shared-team-K cap. The veteran is protected
+    // for the same reason as before (their own K is low and a new partner
+    // cannot raise it), but the newcomer is no longer dragged down to the
+    // veteran's pace and converges at their proper speed. Evidence: the only
+    // change in docs/rating-engine-ablation.md to clear the noise floor.
+    const sides = [
+      { playerIds: team1PlayerIds, counts: [n1a, n1b], ratings: [r1a, r1b], lopsided: lopsided1, actual: team1Won ? 1 : 0, expected: E1 },
+      { playerIds: team2PlayerIds, counts: [n2a, n2b], ratings: [r2a, r2b], lopsided: lopsided2, actual: team1Won ? 0 : 1, expected: E2 },
+    ];
 
-    const delta1 = computeRatingDelta(effectiveK1, team1Won ? 1 : 0, E1);
-    const delta2 = computeRatingDelta(effectiveK2, team1Won ? 0 : 1, E2);
-
-    // Apply deltas, write snapshots, increment match counters — team 1
-    for (const playerId of team1PlayerIds) {
-      const prev = ratings.get(playerId) ?? INITIAL_RATING;
-      const next = prev + delta1;
-      ratings.set(playerId, next);
-      matchCounts.set(playerId, (matchCounts.get(playerId) ?? 0) + 1);
-      snapshots.push({ playerId, matchId, matchDate, rating: next, effectiveK: effectiveK1, expectedScore: E1, runId });
-    }
-
-    // Apply deltas, write snapshots, increment match counters — team 2
-    for (const playerId of team2PlayerIds) {
-      const prev = ratings.get(playerId) ?? INITIAL_RATING;
-      const next = prev + delta2;
-      ratings.set(playerId, next);
-      matchCounts.set(playerId, (matchCounts.get(playerId) ?? 0) + 1);
-      snapshots.push({ playerId, matchId, matchDate, rating: next, effectiveK: effectiveK2, expectedScore: E2, runId });
+    for (const side of sides) {
+      side.playerIds.forEach((playerId, i) => {
+        // Stronger partner takes a larger share of the change (see
+        // partnerDeltaShare). Folded into effectiveK so that the stored value
+        // still satisfies delta = effectiveK * (actual - expected) — several
+        // metrics (CI, Momentum, the Matchups delta column) rely on that.
+        const share = partnerDeltaShare(side.ratings[i]!, side.ratings[1 - i]!);
+        const effectiveK = kFactor(dynamicK(side.counts[i]!) * share * side.lopsided, 1.0, movWeight);
+        const delta = computeRatingDelta(effectiveK, side.actual, side.expected);
+        const prev = ratings.get(playerId) ?? INITIAL_RATING;
+        const next = prev + delta;
+        ratings.set(playerId, next);
+        matchCounts.set(playerId, (matchCounts.get(playerId) ?? 0) + 1);
+        snapshots.push({
+          playerId,
+          matchId,
+          matchDate,
+          rating: next,
+          effectiveK,
+          expectedScore: side.expected,
+          runId,
+        });
+      });
     }
   }
 

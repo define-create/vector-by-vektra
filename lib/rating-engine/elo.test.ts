@@ -1,5 +1,8 @@
 import {
   teamRating,
+  TEAM_ALPHA,
+  PARTNER_TIE_EPSILON,
+  partnerDeltaShare,
   expectedScore,
   kFactor,
   computeRatingDelta,
@@ -15,11 +18,60 @@ import {
 } from "./elo";
 
 describe("teamRating", () => {
-  it("returns the average of two ratings", () => {
-    expect(teamRating(1000, 1000)).toBe(1000);
-    expect(teamRating(1200, 800)).toBe(1000);
-    expect(teamRating(1100, 900)).toBe(1000);
-    expect(teamRating(1500, 1300)).toBe(1400);
+  it("weights the stronger partner at TEAM_ALPHA", () => {
+    // 0.6 * max + 0.4 * min
+    expect(teamRating(1200, 800)).toBeCloseTo(1040, 6);
+    expect(teamRating(1100, 900)).toBeCloseTo(1020, 6);
+    expect(teamRating(1500, 1300)).toBeCloseTo(1420, 6);
+  });
+
+  it("is the plain rating when both partners are equal", () => {
+    expect(teamRating(1000, 1000)).toBeCloseTo(1000, 6);
+  });
+
+  it("is order-independent", () => {
+    expect(teamRating(1200, 800)).toBeCloseTo(teamRating(800, 1200), 10);
+  });
+
+  it("always sits between the two ratings, nearer the stronger one", () => {
+    const t = teamRating(1300, 900);
+    expect(t).toBeGreaterThan(1100); // above the plain average
+    expect(t).toBeLessThan(1300);
+  });
+});
+
+describe("partnerDeltaShare", () => {
+  it("splits evenly for exactly equal partners", () => {
+    expect(partnerDeltaShare(1000, 1000)).toBe(1);
+  });
+
+  it("splits evenly for partners within the tie band", () => {
+    // A sub-point gap is noise, not a skill ordering.
+    expect(partnerDeltaShare(1000.01, 1000)).toBe(1);
+    expect(partnerDeltaShare(1000, 1000.01)).toBe(1);
+    expect(partnerDeltaShare(1000.9, 1000)).toBe(1);
+  });
+
+  it("resumes the weighted split just outside the tie band", () => {
+    expect(partnerDeltaShare(1000 + PARTNER_TIE_EPSILON, 1000)).toBeCloseTo(2 * TEAM_ALPHA, 10);
+    expect(partnerDeltaShare(1000, 1000 + PARTNER_TIE_EPSILON)).toBeCloseTo(
+      2 * (1 - TEAM_ALPHA),
+      10,
+    );
+  });
+
+  it("gives the stronger partner the larger share", () => {
+    expect(partnerDeltaShare(1200, 800)).toBeCloseTo(2 * TEAM_ALPHA, 10);
+    expect(partnerDeltaShare(800, 1200)).toBeCloseTo(2 * (1 - TEAM_ALPHA), 10);
+  });
+
+  it("the pair's two shares always sum to 2, so team movement is preserved", () => {
+    expect(partnerDeltaShare(1200, 800) + partnerDeltaShare(800, 1200)).toBeCloseTo(2, 10);
+    expect(partnerDeltaShare(1000, 1000) + partnerDeltaShare(1000, 1000)).toBeCloseTo(2, 10);
+  });
+
+  it("does not depend on the size of the gap, only its direction", () => {
+    expect(partnerDeltaShare(1001, 1000)).toBeCloseTo(partnerDeltaShare(1500, 1000), 10);
   });
 });
 

@@ -19,10 +19,30 @@ describe("computeWinProbability", () => {
     expect(p).toBeLessThan(1);
   });
 
-  it("uses team averages (mixed ratings)", () => {
-    // Pair A avg = 1050, Pair B avg = 1000 → A should be favoured
+  it("favours the stronger pair (mixed ratings)", () => {
+    // Pair A = 0.6*1100 + 0.4*1000 = 1060 vs Pair B 1000 → A favoured
     const p = computeWinProbability(1100, 1000, 1000, 1000);
     expect(p).toBeGreaterThan(0.5);
+  });
+
+  it("rates a lopsided pair above an even pair with the same average", () => {
+    // Both average 1000, but the stronger partner carries 60% of the weight,
+    // so (1100, 900) is rated 1020 against (1000, 1000)'s 1000.
+    const p = computeWinProbability(1100, 900, 1000, 1000);
+    expect(p).toBeGreaterThan(0.5);
+  });
+
+  it("is symmetric — swapping both pairs inverts the probability", () => {
+    const p = computeWinProbability(1200, 900, 1050, 1000);
+    const q = computeWinProbability(1050, 1000, 1200, 900);
+    expect(p + q).toBeCloseTo(1, 10);
+  });
+
+  it("does not depend on the order of players within a pair", () => {
+    expect(computeWinProbability(1200, 900, 1000, 1000)).toBeCloseTo(
+      computeWinProbability(900, 1200, 1000, 1000),
+      10,
+    );
   });
 });
 

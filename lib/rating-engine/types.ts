@@ -33,7 +33,7 @@ export interface SnapshotWrite {
   matchId: string;
   matchDate: Date;
   rating: number; // player's rating after this match
-  effectiveK: number; // K-factor used in this match
+  effectiveK: number; // this player's own K for this match (per-player since 2026-08-23)
   expectedScore: number; // model's expected win probability for this player's team
   runId: string;
 }
