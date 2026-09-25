@@ -7,6 +7,7 @@ import PlayerSelector from "@/components/enter/PlayerSelector";
 import GameScoreInput, { type GameScore, type GameScoreHandle } from "@/components/enter/GameScoreInput";
 import MatchTextInput from "@/components/MatchTextInput";
 import { parseMatchText } from "@/lib/import/parse-match";
+import { nextChipSlot, type SlotKey } from "@/lib/chip-order";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,9 +98,7 @@ export default function EnterPage() {
   const [ratingsDeferred, setRatingsDeferred] = useState(false);
 
   // Flash slot for chip-tap feedback
-  const [flashSlot, setFlashSlot] = useState<"team1Player1" | "partner" | "opponent1" | "opponent2" | null>(null);
-  // Currently focused player slot — chip taps target this field first
-  const [focusedSlot, setFocusedSlot] = useState<"team1Player1" | "partner" | "opponent1" | "opponent2" | null>(null);
+  const [flashSlot, setFlashSlot] = useState<SlotKey | null>(null);
 
   // Ref to GameScoreInput for imperative focus on win selection
   const gameScoreRef = useRef<GameScoreHandle>(null);
@@ -160,7 +159,6 @@ export default function EnterPage() {
     setPartnerOk(true);
     setOpponent1Ok(true);
     setOpponent2Ok(true);
-    setFocusedSlot(null);
   }
 
   function resetTextMode() {
@@ -237,6 +235,14 @@ export default function EnterPage() {
     : !!(partner?.id || partner?.name) &&
       !!(opponent1?.id || opponent1?.name) && !!(opponent2?.id || opponent2?.name);
 
+  const showChips = entryMode === "manual" && !allSlotsFilled && availableChips.length > 0;
+
+  // The slot the next chip tap fills — also highlighted, so the user can see it.
+  // Null while no chips are shown, so the highlight never points at nothing.
+  const chipTarget = showChips
+    ? nextChipSlot(adminMode, { team1Player1, partner, opponent1, opponent2 })
+    : null;
+
   function playersComplete(): boolean {
     const partnerReady = !!(partner?.id || partner?.name) && partnerOk;
     if (adminMode) {
@@ -281,55 +287,22 @@ export default function EnterPage() {
   }, [duplicateMatchId]);
 
   // ---------------------------------------------------------------------------
-  // Chip-tap assignment — fills the next empty slot in order
+  // Chip-tap assignment — always fills the next empty slot in reading order
+  // (see lib/chip-order.ts; which field was last focused plays no part)
   // ---------------------------------------------------------------------------
 
+  const slotSetters: Record<SlotKey, { set: (v: PlayerValue) => void; setOk: (ok: boolean) => void }> = {
+    team1Player1: { set: setTeam1Player1, setOk: setTeam1Player1Ok },
+    partner:      { set: setPartner,      setOk: setPartnerOk },
+    opponent1:    { set: setOpponent1,    setOk: setOpponent1Ok },
+    opponent2:    { set: setOpponent2,    setOk: setOpponent2Ok },
+  };
+
   function assignChip(player: Player) {
-    const val = { id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount };
-
-    // If a field is focused AND empty, target it directly
-    if (focusedSlot) {
-      const slotValue =
-        focusedSlot === "team1Player1" ? team1Player1 :
-        focusedSlot === "partner"      ? partner :
-        focusedSlot === "opponent1"    ? opponent1 : opponent2;
-
-      if (!slotValue?.id && !slotValue?.name) {
-        switch (focusedSlot) {
-          case "team1Player1": setTeam1Player1(val); setTeam1Player1Ok(true); break;
-          case "partner":      setPartner(val);      setPartnerOk(true);      break;
-          case "opponent1":    setOpponent1(val);    setOpponent1Ok(true);    break;
-          case "opponent2":    setOpponent2(val);    setOpponent2Ok(true);    break;
-        }
-        setFlashSlot(focusedSlot);
-        setFocusedSlot(null);
-        return;
-      }
-      // Focused slot is already filled — fall through to next-empty-slot logic
-    }
-
-    // Fill the first empty slot in sequential order
-    const order = adminMode
-      ? [
-          { key: "team1Player1" as const, val: team1Player1, set: setTeam1Player1, setOk: setTeam1Player1Ok },
-          { key: "partner"      as const, val: partner,      set: setPartner,      setOk: setPartnerOk },
-          { key: "opponent1"    as const, val: opponent1,    set: setOpponent1,    setOk: setOpponent1Ok },
-          { key: "opponent2"    as const, val: opponent2,    set: setOpponent2,    setOk: setOpponent2Ok },
-        ]
-      : [
-          { key: "partner"   as const, val: partner,   set: setPartner,   setOk: setPartnerOk },
-          { key: "opponent1" as const, val: opponent1, set: setOpponent1, setOk: setOpponent1Ok },
-          { key: "opponent2" as const, val: opponent2, set: setOpponent2, setOk: setOpponent2Ok },
-        ];
-
-    for (const slot of order) {
-      if (!slot.val?.id && !slot.val?.name) {
-        slot.set(val);
-        slot.setOk(true);
-        setFlashSlot(slot.key);
-        return;
-      }
-    }
+    if (!chipTarget) return;
+    slotSetters[chipTarget].set({ id: player.id, name: player.displayName, rating: player.rating, matchCount: player.matchCount });
+    slotSetters[chipTarget].setOk(true);
+    setFlashSlot(chipTarget);
   }
 
   // ---------------------------------------------------------------------------
@@ -572,7 +545,7 @@ export default function EnterPage() {
 
         <div className="flex flex-col gap-5">
           {/* Shared recent-player chip strip */}
-          {entryMode === "manual" && !allSlotsFilled && availableChips.length > 0 && (
+          {showChips && (
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {availableChips.map((p) => (
                 <button
@@ -629,7 +602,7 @@ export default function EnterPage() {
                 onDisambiguated={setTeam1Player1Ok}
                 excludeIds={selectedIds}
                 flashConfirm={flashSlot === "team1Player1"}
-                onSlotFocus={() => setFocusedSlot("team1Player1")}
+                isNextTarget={chipTarget === "team1Player1"}
               />
             )}
             <PlayerSelector
@@ -639,7 +612,7 @@ export default function EnterPage() {
               onDisambiguated={setPartnerOk}
               excludeIds={selectedIds}
               flashConfirm={flashSlot === "partner"}
-              onSlotFocus={() => setFocusedSlot("partner")}
+              isNextTarget={chipTarget === "partner"}
             />
           </div>
 
@@ -688,7 +661,7 @@ export default function EnterPage() {
               onDisambiguated={setOpponent1Ok}
               excludeIds={selectedIds}
               flashConfirm={flashSlot === "opponent1"}
-              onSlotFocus={() => setFocusedSlot("opponent1")}
+              isNextTarget={chipTarget === "opponent1"}
             />
             <PlayerSelector
               key={`opponent2-${adminMode}`}
@@ -697,7 +670,7 @@ export default function EnterPage() {
               onDisambiguated={setOpponent2Ok}
               excludeIds={selectedIds}
               flashConfirm={flashSlot === "opponent2"}
-              onSlotFocus={() => setFocusedSlot("opponent2")}
+              isNextTarget={chipTarget === "opponent2"}
             />
           </div>
 

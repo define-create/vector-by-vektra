@@ -21,8 +21,8 @@ interface PlayerSelectorProps {
   excludeIds?: string[];
   /** When true, briefly flashes an emerald ring on the input to signal it was just filled */
   flashConfirm?: boolean;
-  /** Called when this input receives focus — lets parent know which slot is active */
-  onSlotFocus?: () => void;
+  /** When true, the empty input gets a dashed emerald border: the next recent-player chip lands here */
+  isNextTarget?: boolean;
 }
 
 const EMPTY_IDS: string[] = [];
@@ -43,7 +43,7 @@ export default function PlayerSelector({
   onDisambiguated,
   excludeIds = EMPTY_IDS,
   flashConfirm = false,
-  onSlotFocus,
+  isNextTarget = false,
 }: PlayerSelectorProps) {
   const [inputValue, setInputValue] = useState(
     value?.name ?? "",
@@ -254,11 +254,11 @@ export default function PlayerSelector({
             onKeyDown={handleKeyDown}
             onFocus={() => {
               if (results.length > 0 && !showWarning) setOpen(true);
-              onSlotFocus?.();
             }}
             placeholder="Search or type a name…"
             className={[
-              "w-full rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none transition",
+              "w-full rounded-lg border bg-zinc-800 px-4 py-3 text-zinc-50 placeholder-zinc-500 focus:border-zinc-400 focus:outline-none transition",
+              isNextTarget ? "border-dashed border-emerald-500/60" : "border-zinc-600",
               flashing ? "ring-2 ring-emerald-400" : "",
             ].join(" ").trim()}
           />
